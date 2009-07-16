@@ -10,7 +10,6 @@
 
 #include "Singleton.h"
 #include "Platform.h"
-#include "MeshManager.h"
 
 class System : public Singleton<System>
 {

@@ -19,6 +19,10 @@
 
 #include <string>
 
+
+//#define FORCE_VERTEX_ARRAY
+
+
 GLRenderer::GLRenderer()
 : m_hWnd(0), m_hDC(0), m_hRC(0),
   m_WindowWidth(0), m_WindowHeight(0), // m_FullScreen(false),
@@ -119,12 +123,14 @@ bool GLRenderer::Initialize(RenderWindowParam* windowParam)
 	//glEnable(GL_LIGHT0);
 	//glEnable(GL_LIGHT1);
 
+#ifndef FORCE_VERTEX_ARRAY
 	if (m_HardwareFeature.supportedVBO)
 	{
 		GLVertexBufferObject::ChooseFunc(__GLEW_VERSION_1_5==GL_TRUE);
 		m_VertexBufferFactoryFunc = FactoryCreateVertexBufferObject;
 	}
 	else
+#endif
 		m_VertexBufferFactoryFunc = FactoryCreateVertexArray;
 
 	if (__GLEW_ARB_texture_non_power_of_two==GL_FALSE)
@@ -677,11 +683,16 @@ int GLRenderer::GetMaxLightsNumber()
 
 void GLRenderer::SetupLight(int index, ILight* light)
 {
+	static bool lightEnable[8] = { false };
 	int lightIndex = GL_LIGHT0 + index;
 
 	if (light)
 	{
-		glEnable(lightIndex);
+		if (!lightEnable[index])
+		{
+			glEnable(lightIndex);
+			lightEnable[index] = true;
+		}
 		float lightPos[4] = {0.0f, 0.0f, 0.0f, 1.0f};
 
 		switch(light->GetLightType())
@@ -711,7 +722,11 @@ void GLRenderer::SetupLight(int index, ILight* light)
 	}
 	else
 	{
-		glDisable(lightIndex);
+		if (lightEnable[index])
+		{
+			glDisable(lightIndex);
+			lightEnable[index] = false;
+		}
 	}
 }
 
@@ -845,6 +860,7 @@ void GLRenderer::BindTextureRenderState(const texRenderState_t& texState)
 			glEnable(GL_TEXTURE_GEN_R);
 			glDisable(GL_TEXTURE_GEN_Q);
 
+			// 使Cube Mapping使用视点旋转，这个方法潜在可能影响到纹理坐标，需要注意
 			glMatrixMode(GL_TEXTURE);
 			//glPushMatrix();
 			glLoadIdentity();
@@ -967,7 +983,13 @@ void GLRenderer::SetupMaterial(Material* material)
 	if (material)
 	{
 		//glColor4fv(mat->GetColor().GetArray());
-		ToggleLighting(material->GetLighting());
+		bool lighting = material->GetLighting();
+
+		ToggleLighting(lighting);
+		if (!lighting)
+		{
+			glColor4fv(material->GetColor().GetArray());
+		}
 
 		static Color4f ambient(0.2f, 0.2f, 0.2f);
 		static Color4f diffuse(0.8f, 0.8f, 0.8f);

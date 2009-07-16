@@ -17,6 +17,8 @@
 
 using namespace std;
 
+class BaseSceneObject;
+
 class SceneRootObject : public ISceneObject
 {
 public:
@@ -36,7 +38,7 @@ public:
 	void AttachChildObject(BaseSceneObject* object);
 	bool DetachChildObject(BaseSceneObject* object);
 
-	void CollectRayPickingSceneObject(const Ray& ray, ObjectsCollisionInfos& baseSceneObjects, CollisionType type);
+	void CollectRayPickingSceneObject(const Ray& ray, ObjectsCollisionInfos& baseSceneObjects, int type, int collisionGroup);
 private:
 
 	ChildrenSceneObjectsSet	m_ChildrenObjects;

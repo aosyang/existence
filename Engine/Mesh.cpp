@@ -12,6 +12,9 @@
 
 using namespace std;
 
+unsigned int ResourceManager<Mesh>::m_sIndex = 0;
+ResourceManager<Mesh>::LoadFunc ResourceManager<Mesh>::m_sLoadFunc = &Mesh::LoadMeshFromFile;
+
 Mesh::Mesh()
 :
   m_BoundingRadius(0.0f)
@@ -28,11 +31,11 @@ Mesh::~Mesh()
 	ClearMeshElements();
 }
 
-bool Mesh::LoadFromFile(const string& filename)
+Mesh* Mesh::LoadMeshFromFile(const string& filename)
 {
-
-	ClearMeshElements();
-	m_BoundingRadius = 0;
+	Mesh* mesh = new Mesh();
+	mesh->ClearMeshElements();
+	mesh->m_BoundingRadius = 0;
 
 	// TODO: 以后放到一个公共地方调用，只需要调用一次
 	// 设置语言，正确读取带中文名的文件
@@ -57,7 +60,7 @@ bool Mesh::LoadFromFile(const string& filename)
 		Log.OutputTime();
 		Log << "Loading mesh with no version info found.\n";
 		fin.seekg(ios_base::beg);
-		LoadMesh_NoVersion(this, fin);
+		LoadMesh_NoVersion(mesh, fin);
 	}
 	else
 	{
@@ -71,7 +74,7 @@ bool Mesh::LoadFromFile(const string& filename)
 		{
 		case 10:
 			Log << "Loading mesh version 0.10.\n";
-			LoadMesh_010(this, fin);
+			LoadMesh_010(mesh, fin);
 			break;
 		default:
 			// unsupported version
@@ -82,85 +85,9 @@ bool Mesh::LoadFromFile(const string& filename)
 
 	fin.close();
 
-	return true;
+	return mesh;
 
 }
-
-//bool Mesh::LoadFromFile(const char* filename)
-//{
-//	// TODO: 以后放到一个公共地方调用，只需要调用一次
-//	// 设置语言，正确读取带中文名的文件
-//	locale   langLocale("");
-//	setlocale(LC_ALL, langLocale.name().data());
-//
-//	ifstream fin;
-//	fin.open(filename);
-//
-//	if (!fin.is_open())
-//		return false;
-//
-//	// Slow...
-//	// TODO: Try binary file
-//
-//	fin >> m_FaceNum;
-//
-//	m_FaceArray = new unsigned int[m_FaceNum * 3];
-//
-//	for (unsigned int i=0; i<m_FaceNum*3; i++)
-//	{
-//		fin >> m_FaceArray[i];
-//	}
-//
-//	fin >> m_VertexNum;
-//
-//	m_VertexArray = new float[m_VertexNum * 3];
-//	m_NormalArray = new float[m_VertexNum * 3];
-//	m_TexCoordArray = new float[m_VertexNum * 2];
-//
-//	for (unsigned int i=0; i<m_VertexNum; i++)
-//	{
-//		fin >> m_VertexArray[i * 3];
-//		fin >> m_VertexArray[i * 3 + 1];
-//		fin >> m_VertexArray[i * 3 + 2];
-//
-//		fin >> m_NormalArray[i * 3];
-//		fin >> m_NormalArray[i * 3 + 1];
-//		fin >> m_NormalArray[i * 3 + 2];
-//
-//		fin >> m_TexCoordArray[i * 2];
-//		fin >> m_TexCoordArray[i * 2 + 1];
-//	}
-//	
-//	ofstream test_out("test_txt.out");
-//	for (int i=0; i<m_FaceNum; i++)
-//	{
-//		test_out << m_FaceArray[i * 3] << " " << m_FaceArray[i * 3 + 1] << " " << m_FaceArray[i * 3 + 2] << endl;
-//	}
-//
-//	//for (int i=0; i<m_VertexNum; i++)
-//	//{
-//	//	test_out << m_VertexArray[i * 3];
-//	//	test_out << m_VertexArray[i * 3 + 1];
-//	//	test_out << m_VertexArray[i * 3 + 2];
-//
-//	//	test_out << m_NormalArray[i * 3];
-//	//	test_out << m_NormalArray[i * 3 + 1];
-//	//	test_out << m_NormalArray[i * 3 + 2];
-//
-//	//	test_out << m_TexCoordArray[i * 2];
-//	//	test_out << m_TexCoordArray[i * 2 + 1];
-//
-//	//	test_out << endl;
-//	////test_out.write((char*)m_VertexArray, sizeof(float) * 3 * m_VertexNum);
-//	////test_out.write((char*)m_NormalArray, sizeof(float) * 3 * m_VertexNum);
-//	////test_out.write((char*)m_TexCoordArray, sizeof(float) * 2 * m_VertexNum);
-//	//}
-//	test_out.close();
-//	fin.close();
-//
-//	return true;
-//
-//}
 
 void Mesh::CreateBox(float side)
 {

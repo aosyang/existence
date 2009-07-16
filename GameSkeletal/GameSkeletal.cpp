@@ -29,7 +29,7 @@ void GameSkeletal::StartGame()
 	m_Scene->SetCamera(m_Camera);
 
 	m_Sky = new DistantViewObject();
-	m_Sky->SetMesh(MeshManager::Instance().GetMesh("skybox"));
+	m_Sky->SetMesh(ResourceManager<Mesh>::Instance().GetByName("skybox"));
 	m_Scene->AddObject(m_Sky);
 
 	skel.LoadFromFile("E:/testout.txt");

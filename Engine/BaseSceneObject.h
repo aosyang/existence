@@ -19,6 +19,7 @@
 using namespace std;
 
 class BaseSceneObject;
+class SceneGraph;
 
 //typedef vector<BaseSceneObject*>	VecBaseSceneObjects;
 typedef set<BaseSceneObject*>		ChildrenSceneObjectsSet;
@@ -32,6 +33,8 @@ enum CollisionType
 	// collide with everything...
 	COLLISION_ALL = COLLISION_TYPE_MESH | COLLISION_TYPE_CAMERA | COLLISION_TYPE_BSP,
 };
+
+#define COLLISION_GROUP_ALL 0xFFFFFFFF
 
 struct CollisionInfo
 {
@@ -53,6 +56,7 @@ typedef vector<CollisionInfo>		ObjectsCollisionInfos;
 //-----------------------------------------------------------------------------------
 class BaseSceneObject : public ISceneObject
 {
+	friend class SceneGraph;
 public:
 	BaseSceneObject();
 	~BaseSceneObject();
@@ -67,11 +71,17 @@ public:
 
 	virtual void PrepareRenderObjects(ChildrenSceneObjectsSet& objects);
 
-	void CollectRayPickingSceneObject(const Ray& ray, ObjectsCollisionInfos& baseSceneObjects, CollisionType type);
-	virtual bool IntersectsRay(const Ray& ray, CollisionInfo& info, CollisionType type);
+	// collisions
+
+	int GetCollisionGroupMask() const { return m_CollisionGroupMask; }
+	void SetCollisionGroupMask(int mask) { m_CollisionGroupMask = mask; }
+
+	virtual int GetCollisionType() const { return 0; }
+	void CollectRayPickingSceneObject(const Ray& ray, ObjectsCollisionInfos& baseSceneObjects, int type, int collisionGroup);
+	virtual bool IntersectsRay(const Ray& ray, CollisionInfo& info, int type);
 
 	// 绑定其他对象作为该对象的子对象
-	void AttachChildObject(BaseSceneObject* child, bool keepWorldTransform = false);
+	void AttachChildObject(BaseSceneObject* child, bool keepRotation = false, bool keepWorldTransform = false);
 	void DetachFromParent(bool keepWorldTransform);
 
 	virtual void SetPosition(const Vector3f& pos);
@@ -90,13 +100,15 @@ public:
 
 	void SetVisibleRecursively(bool visible);
 
+	inline SceneGraph* GetScene() { return m_Scene; }
+
 	void SetRenderOrder(unsigned int order) { m_RenderOrder = order; }
 	inline unsigned int GetRenderOrder() const { return m_RenderOrder; }
 
 protected:
 
 	// 指定父对象
-	void SetParentObject(BaseSceneObject* parent);
+	void SetParentObject(BaseSceneObject* parent, bool keepRotation);
 
 
 protected:
@@ -106,15 +118,20 @@ protected:
 	Matrix4							m_Transform;				///< 记录对象本地空间变换
 	Matrix4							m_WorldTransform;			///< 记录对象世界空间变换，注：通常不需要手动更新，由Update方法负责从父对象更新
 
+	bool							m_KeepRotation;
+
 	bool							m_DebugRender;
 	float							m_BoundingSphereRadius;		///< 包围球半径
 
 	bool							m_Visible;					///< 可见性
+	SceneGraph*						m_Scene;					///< 该物体所属的场景
 
 	OBB								m_OBB;
 	AABB							m_AABB;
 
 	unsigned int					m_RenderOrder;
+
+	int								m_CollisionGroupMask;
 };
 
 #endif

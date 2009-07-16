@@ -205,7 +205,7 @@ void MeshElement::UpdateOBB()
 void MeshElement::BuildVertexBufferData()
 {
 	m_VertexBuffer->Clear();
-	m_VertexBuffer->CreateBuffer(m_VertexArray, m_NormalArray, m_TexCoordArray, m_VertexNum, m_FaceArray, m_FaceNum);
+	m_VertexBuffer->CreateBuffer(VFormat_Position|VFormat_Normal|VFormat_Texcoord0, m_VertexArray, m_NormalArray, NULL, m_TexCoordArray, m_VertexNum, m_FaceArray, m_FaceNum);
 }
 
 

@@ -25,8 +25,9 @@ public:
 
 	// ----- Overwrite BaseSceneObject
 
+	int GetCollisionType() const { return COLLISION_TYPE_BSP; }
 	void PrepareRenderObjects(ChildrenSceneObjectsSet& objects);
-	bool IntersectsRay(const Ray& ray, CollisionInfo& info, CollisionType type);
+	bool IntersectsRay(const Ray& ray, CollisionInfo& info, int type);
 
 	// BspObject Methods
 

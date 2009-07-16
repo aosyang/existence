@@ -1,6 +1,6 @@
 #include "Existence.h"
 
-#include "ParticleGame.h"
+#include "particleGame.h"
 
 
 int WINAPI WinMain(	HINSTANCE hInstance,
@@ -10,11 +10,11 @@ int WINAPI WinMain(	HINSTANCE hInstance,
 {
 	Debug::EnableBreakOnAlloc();
 
-	ParticleGame* game = new ParticleGame();
+	particleGame* game = new particleGame();
 	Engine::Instance().SetGame(game);
 
 	// 创建并初始化渲染窗口
-	System::Instance().CreateRenderWindow("Particle", 640, 480, 32, false);
+	System::Instance().CreateRenderWindow("particle", 640, 480, 32, false);
 	renderer->Initialize(System::Instance().GetRenderWindowParameters());
 	Input::Instance().Initialize();
 

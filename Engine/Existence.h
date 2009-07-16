@@ -39,7 +39,6 @@ class Camera;
 class Material;
 class TextureManager;
 class Mesh;
-class MeshManager;
 class Input;
 class Timer;
 class System;
@@ -62,6 +61,8 @@ class BspObject;
 class Log;
 class Skeletal;
 class Image;
+class ParticlePool;
+class ParticleEmitter;
 
 #pragma warning ( disable : 4819 )
 
@@ -90,7 +91,6 @@ class Image;
 #include "Material.h"
 #include "Singleton.h"
 #include "Mesh.h"
-#include "MeshManager.h"
 #include "Input.h"
 #include "Timer.h"
 #include "IGame.h"
@@ -114,6 +114,8 @@ class Image;
 #include "Log.h"
 #include "Skeletal.h"
 #include "Image.h"
+#include "ParticlePool.h"
+#include "ParticleEmitter.h"
 
 #include "ResourceManager.h"
 

@@ -70,7 +70,7 @@ bool D3D9VertexBuffer::CreateBuffer(const float* vertexArray,
 		vert[i].v = textureCoordArray[t++];
 	}
 
-	Lock(vertexNum, faceNum);
+	Lock();
 	SetVertexData(vert, vertexNum);
 	SetIndexData(faceArray, faceNum);
 	Unlock();
@@ -101,10 +101,10 @@ void D3D9VertexBuffer::Clear()
 }
 
 
-void D3D9VertexBuffer::Lock(unsigned int vertSize, unsigned int faceSize)
+void D3D9VertexBuffer::Lock()
 {
-	m_D3DVertexBuffer->Lock(0, 0/*sizeof(D3DVertex) * vertSize*/, (void**)(&m_Vertices), 0);
-	m_D3DIndexBuffer->Lock(0, 0/*sizeof(unsigned int) * faceSize * 3*/, (void**)(&m_Indices), 0);
+	m_D3DVertexBuffer->Lock(0, 0, (void**)(&m_Vertices), 0);
+	m_D3DIndexBuffer->Lock(0, 0, (void**)(&m_Indices), 0);
 	m_Locked = true;
 }
 

@@ -19,7 +19,7 @@ void AudioListener::Update(unsigned long deltaTime)
 
 void AudioListener::DebugRender() {}
 
-bool AudioListener::IntersectsRay(const Ray& ray, CollisionInfo& info, CollisionType type)
+bool AudioListener::IntersectsRay(const Ray& ray, CollisionInfo& info, int type)
 {
 	return false;
 }

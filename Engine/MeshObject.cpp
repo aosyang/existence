@@ -80,29 +80,24 @@ void MeshObject::PrepareRenderObjects(ChildrenSceneObjectsSet& objects)
 	}
 }
 
-bool MeshObject::IntersectsRay(const Ray& ray, CollisionInfo& info, CollisionType type)
+bool MeshObject::IntersectsRay(const Ray& ray, CollisionInfo& info, int type)
 {
-	if (type & COLLISION_TYPE_MESH)
+	Vector3f p, n;
+	float d;
+
+	bool result = RayPicking(ray, p, n, d);
+	if (result)
 	{
-		Vector3f p, n;
-		float d;
+		info.point = p;
+		info.normal = n;
+		info.squaredDistance = (p - ray.origin).SquaredLength();
+		info.obj = this;
 
-		bool result = RayPicking(ray, p, n, d);
-		if (result)
-		{
-			info.point = p;
-			info.normal = n;
-			info.squaredDistance = (p - ray.origin).SquaredLength();
-			info.obj = this;
-
-			//mesh_point = p;
-			//mesh_normal = n;
-		}
-
-		return result;
+		//mesh_point = p;
+		//mesh_normal = n;
 	}
 
-	return false;
+	return result;
 }
 
 

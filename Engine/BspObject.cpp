@@ -54,27 +54,22 @@ void BspObject::PrepareRenderObjects(ChildrenSceneObjectsSet& objects)
 }
 
 
-bool BspObject::IntersectsRay(const Ray& ray, CollisionInfo& info, CollisionType type)
+bool BspObject::IntersectsRay(const Ray& ray, CollisionInfo& info, int type)
 {
-	bool result = false;
+	Vector3f localPoint;
+	Ray localRay = m_WorldTransform.GetInverseMatrix() * ray;
+	BspTriangle* triangle;
 
-	if (type & COLLISION_TYPE_BSP)
+	bool result = m_Bsp->Intersects(localRay, &localPoint, &triangle);
+
+	if (result)
 	{
-		Vector3f localPoint;
-		Ray localRay = m_WorldTransform.GetInverseMatrix() * ray;
-		BspTriangle* triangle;
-
-		result = m_Bsp->Intersects(localRay, &localPoint, &triangle);
-
-		if (result)
-		{
-			info.point = m_WorldTransform * localPoint;
-			info.normal = m_WorldTransform * triangle->normal;
-			info.squaredDistance = (localRay.origin - localPoint).SquaredLength();
-			info.obj = this;
-		}
+		info.point = m_WorldTransform * localPoint;
+		info.normal = m_WorldTransform * triangle->normal;
+		info.squaredDistance = (localRay.origin - localPoint).SquaredLength();
+		info.obj = this;
 	}
-	
+
 	return result;
 }
 

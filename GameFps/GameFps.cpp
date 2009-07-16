@@ -80,12 +80,12 @@ void GameFps::StartGame()
 	no_mat->ModifyRectData(32, 32, 32, 32, &color);
 	//unsigned int bpp = no_mat->GetBpp();
 
-	Mesh* bspScene = MeshManager::Instance().GetMesh("scene");
+	Mesh* bspScene = ResourceManager<Mesh>::Instance().GetByName("scene");
 
 	//BuildBspTreeFromMesh(&bsp, bspScene);
 
 	m_ViewGun = new MeshObject();
-	m_ViewGun->SetMesh(MeshManager::Instance().GetMesh("mp5"));
+	m_ViewGun->SetMesh(ResourceManager<Mesh>::Instance().GetByName("mp5"));
 	LightingManager::Instance().AddLightableObject(m_ViewGun);
 
 	Material* matFlare = ResourceManager<Material>::Instance().GetByName("flare");
@@ -94,10 +94,10 @@ void GameFps::StartGame()
 	matFlare->SetDepthWriting(false);
 
 	Image cubeMap[6];
-	cubeMap[0].LoadFromFile("../../../data/sky/snowlake_ft.tga");
-	cubeMap[1].LoadFromFile("../../../data/sky/snowlake_bk.tga");
-	cubeMap[2].LoadFromFile("../../../data/sky/snowlake_dn.tga");
-	cubeMap[3].LoadFromFile("../../../data/sky/snowlake_up.tga");
+	cubeMap[0].LoadFromFile("../../../data/sky/snowlake_bk.tga");
+	cubeMap[1].LoadFromFile("../../../data/sky/snowlake_ft.tga");
+	cubeMap[2].LoadFromFile("../../../data/sky/snowlake_up.tga");
+	cubeMap[3].LoadFromFile("../../../data/sky/snowlake_dn.tga");
 	cubeMap[4].LoadFromFile("../../../data/sky/snowlake_rt.tga");
 	cubeMap[5].LoadFromFile("../../../data/sky/snowlake_lf.tga");
 	unsigned char* data[6];
@@ -111,8 +111,16 @@ void GameFps::StartGame()
 	matShell->GetTextureRenderState(1)->envMode = ENV_MODE_ADD;
 	matShell->GetTextureRenderState(1)->genMode = GEN_MODE_SPHERE;
 
+	//Material* matCubeSky = ResourceManager<Material>::Instance().Create("cube_sky");
+	//matCubeSky->GetTextureRenderState(0)->texture = renderer->GetTexture("cubeMap");
+	//matCubeSky->GetTextureRenderState(0)->envMode = ENV_MODE_MODULATE;
+	//matCubeSky->GetTextureRenderState(0)->genMode = GEN_MODE_CUBE_MAP;
+
+	for (int i=0; i<6; i++)
+		ResourceManager<Mesh>::Instance().GetByName("skybox")->GetMaterial(i)->GetTextureRenderState(0)->envMode = ENV_MODE_REPLACE;
+
 	m_Sky = new DistantViewObject();
-	m_Sky->SetMesh(MeshManager::Instance().GetMesh("skybox"));
+	m_Sky->SetMesh(ResourceManager<Mesh>::Instance().GetByName("skybox"));
 	//m_Sky->SetOffsetScale(Vector3f(0.1f, 0.1f, 0.1f));
 	//m_Sky->SetOffsetScale(Vector3f(1.f, 1.f, 1.f));
 	m_Scene->AddObject(m_Sky);
@@ -135,7 +143,7 @@ void GameFps::StartGame()
 	matSphere->GetTextureRenderState(1)->genMode = GEN_MODE_CUBE_MAP;
 
 	MeshObject* sphere = new MeshObject();
-	sphere->SetMesh(MeshManager::Instance().GetMesh("sphere"));
+	sphere->SetMesh(ResourceManager<Mesh>::Instance().GetByName("sphere"));
 	sphere->SetMaterial(matSphere, 0);
 	m_Scene->AddObject(sphere);
 	sphere->SetPosition(Vector3f(0.0f, 30.0f, 0.0f));
@@ -144,7 +152,7 @@ void GameFps::StartGame()
 
 
 	m_ViewGunFlare = new MeshObject();
-	m_ViewGunFlare->SetMesh(MeshManager::Instance().GetMesh("gunflare"));
+	m_ViewGunFlare->SetMesh(ResourceManager<Mesh>::Instance().GetByName("gunflare"));
 	m_ViewGunFlare->SetVisible(false);
 
 	// TODO: AddObject和AttachChildObject二者只需要一个？
@@ -184,6 +192,20 @@ void GameFps::StartGame()
 	m_UIFps = new TextUIControl();
 	//m_UIFps->SetFont("DefaultFont");
 	m_Scene->AddUIObject(m_UIFps);
+
+
+	ParticlePool* pool = new ParticlePool;
+	m_Scene->AddObject(pool);
+
+	for (int i=0; i<50; i++)
+	{
+		Particle p;
+		p.m_Active = true;
+		
+		p.m_Position = Vector3f(MathRandom(-10.0f, 10.0f), MathRandom(-10.0f, 10.0f), MathRandom(-10.0f, 10.0f));
+
+		pool->AddParticle(p);
+	}
 }
 
 void GameFps::Shutdown()
@@ -377,20 +399,20 @@ void GameFps::Update(unsigned long deltaTime)
 	{
 		// 从摄像机所在位置向下作一条射线，如果触到墙壁则不应用重力
 		Vector3f cam_hit;
-		if (toggleGravity)
-			campos += Vector3f(0.0f, -0.05f * deltaTime, 0.0f);
+		//if (toggleGravity)
+		//	campos += Vector3f(0.0f, -0.05f * deltaTime, 0.0f);
 
-		BspTriangle* cam_hit_tri;
-		if (!m_BspScene->Intersects(Ray(campos, campos + Vector3f(0.0f, -10.0f, 0.0f)), &cam_hit, &cam_hit_tri))
-		{
+		//BspTriangle* cam_hit_tri;
+		//if (!m_BspScene->Intersects(Ray(campos, campos + Vector3f(0.0f, -10.0f, 0.0f)), &cam_hit, &cam_hit_tri))
+		//{
 
-			// 重力
-			//campos = cam_hit + cam_hit_tri->normal;
-		}
-		else
-		{
-			campos = cam_hit + Vector3f(0.0f, 10.0f, 0.0f);
-		}
+		//	// 重力
+		//	//campos = cam_hit + cam_hit_tri->normal;
+		//}
+		//else
+		//{
+		//	campos = cam_hit + Vector3f(0.0f, 10.0f, 0.0f);
+		//}
 
 		Vector3f newcampos;
 
@@ -399,13 +421,13 @@ void GameFps::Update(unsigned long deltaTime)
 		if (pushed) m_Camera->SetPosition(newcampos);
 		else m_Camera->SetPosition(campos);
 
-		// 更新阴影位置
-		if (m_BspScene->Intersects(Ray(campos, campos + Vector3f(0.0f, -100.0f, 0.0f)), &cam_hit, &cam_hit_tri))
-		{
-			Vector3f shadowNormal = m_BspScene->WorldTransform() * cam_hit_tri->normal;
-			m_PlayerShadow->SetPosition(cam_hit + shadowNormal * 0.005f);
-			m_PlayerShadow->SetDirection(shadowNormal);
-		}
+		//// 更新阴影位置
+		//if (m_BspScene->Intersects(Ray(campos, campos + Vector3f(0.0f, -100.0f, 0.0f)), &cam_hit, &cam_hit_tri))
+		//{
+		//	Vector3f shadowNormal = m_BspScene->WorldTransform() * cam_hit_tri->normal;
+		//	m_PlayerShadow->SetPosition(cam_hit + shadowNormal * 0.005f);
+		//	m_PlayerShadow->SetDirection(shadowNormal);
+		//}
 	}
 	
 	// TODO: 临时在此更新
@@ -542,7 +564,7 @@ void GameFps::EjectShell(const Vector3f& pos, const Vector3f& dir)
 	if (!m_Shells[shellIndex].obj)
 	{
 		m_Shells[shellIndex].obj = new MeshObject();
-		m_Shells[shellIndex].obj->SetMesh(MeshManager::Instance().GetMesh("shell"));
+		m_Shells[shellIndex].obj->SetMesh(ResourceManager<Mesh>::Instance().GetByName("shell"));
 		m_Scene->AddObject(m_Shells[shellIndex].obj);
 
 		LightingManager::Instance().AddLightableObject(m_Shells[shellIndex].obj);

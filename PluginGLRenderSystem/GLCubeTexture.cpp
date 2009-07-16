@@ -44,8 +44,6 @@ void GLCubeTexture::Create(unsigned int width, unsigned int height, unsigned int
 
 	// 绑定纹理id
 	glBindTexture(GL_TEXTURE_CUBE_MAP, m_GLTextureID);
-	if (glGetError()==GL_INVALID_ENUM)
-		int whatever = 0;
 
 	// 自动生成mipmap
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_GENERATE_MIPMAP, GL_TRUE);

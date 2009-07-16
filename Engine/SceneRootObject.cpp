@@ -89,14 +89,14 @@ bool SceneRootObject::DetachChildObject(BaseSceneObject* object)
 }
 
 
-void SceneRootObject::CollectRayPickingSceneObject(const Ray& ray, ObjectsCollisionInfos& baseSceneObjects, CollisionType type)
+void SceneRootObject::CollectRayPickingSceneObject(const Ray& ray, ObjectsCollisionInfos& baseSceneObjects, int type, int collisionGroup)
 {
 	ChildrenSceneObjectsSet::iterator iter;
 	for (iter = m_ChildrenObjects.begin();
 		iter != m_ChildrenObjects.end();
 		iter++)
 	{
-		(*iter)->CollectRayPickingSceneObject(ray, baseSceneObjects, type);
+		(*iter)->CollectRayPickingSceneObject(ray, baseSceneObjects, type, collisionGroup);
 	}
 }
 

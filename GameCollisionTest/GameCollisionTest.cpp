@@ -33,7 +33,7 @@ void GameCollisionTest::StartGame()
 
 	Material* sceneMat = ResourceManager<Material>::Instance().Create();
 	m_SceneObject = new MeshObject();
-	m_SceneObject->SetMesh(MeshManager::Instance().GetMesh("scene"));
+	m_SceneObject->SetMesh(ResourceManager<Mesh>::Instance().GetByName("scene"));
 	m_SceneObject->SetMaterial(sceneMat);
 	m_Scene->AddObject(m_SceneObject);
 

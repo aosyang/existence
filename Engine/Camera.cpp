@@ -85,17 +85,17 @@ void Camera::PrepareRenderObjects(ChildrenSceneObjectsSet& objects)
 	// Do nothing here, cameras don't even need rendering...
 	objects.insert(this);
 }
-
-bool Camera::IntersectsRay(const Ray& ray, CollisionInfo& info, CollisionType type)
-{
-	if (type & COLLISION_TYPE_CAMERA)
-	{
-		return BaseSceneObject::IntersectsRay(ray, info, type);
-	}
-
-	return false;
-}
-
+//
+//bool Camera::IntersectsRay(const Ray& ray, CollisionInfo& info, int type)
+//{
+//	if (type & COLLISION_TYPE_CAMERA)
+//	{
+//		return BaseSceneObject::IntersectsRay(ray, info, type);
+//	}
+//
+//	return false;
+//}
+//
 
 //-----------------------------------------------------------------------------------
 /// \brief

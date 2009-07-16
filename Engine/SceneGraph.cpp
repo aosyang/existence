@@ -38,6 +38,7 @@ void SceneGraph::AddObject(BaseSceneObject* object, bool autoDelete)
 	//m_SceneObjects.push_back(object);
 
 	m_RootObject->AttachChildObject(object);
+	object->m_Scene = this;
 
 	if (autoDelete)
 	{
@@ -47,9 +48,17 @@ void SceneGraph::AddObject(BaseSceneObject* object, bool autoDelete)
 
 void SceneGraph::RemoveObject(BaseSceneObject* object, bool deleteObj)
 {
+	// TODO: 这个方法删除有子对象的对象时候会怎样？
+
+	// TODO: 在Update过程中调用这个方法会导致潜在错误
+
 	if (m_RootObject->DetachChildObject(object))
 	{
-		m_AutoDeleteList.erase(m_AutoDeleteList.find(object));
+		// 从自动删除列表中删除对象
+		set<BaseSceneObject*>::iterator iter = m_AutoDeleteList.find(object);
+		if (iter!=m_AutoDeleteList.end())
+			m_AutoDeleteList.erase(iter);
+
 		if (deleteObj)
 			delete object;
 	}
@@ -147,9 +156,9 @@ void SceneGraph::RenderScene()
 	m_LineElements.clear();
 }
 
-void SceneGraph::CollectRayPickingSceneObject(const Ray& ray, ObjectsCollisionInfos& baseSceneObjects, CollisionType type)
+void SceneGraph::CollectRayPickingSceneObject(const Ray& ray, ObjectsCollisionInfos& baseSceneObjects, int type, int collisionGroup)
 {
-	m_RootObject->CollectRayPickingSceneObject(ray, baseSceneObjects, type);
+	m_RootObject->CollectRayPickingSceneObject(ray, baseSceneObjects, type, collisionGroup);
 }
 
 //-----------------------------------------------------------------------------------

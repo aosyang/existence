@@ -11,10 +11,13 @@
 
 BaseSceneObject::BaseSceneObject()
 : m_ParentObject(NULL),
+  m_KeepRotation(false),
   m_DebugRender(false),
   m_BoundingSphereRadius(1.0f),
   m_Visible(true),
-  m_RenderOrder(100)
+  m_Scene(NULL),
+  m_RenderOrder(100),
+  m_CollisionGroupMask(-1)
 {
 	m_OBB.localMin = Vector3f(-0.5f, -0.5f, -0.5f);
 	m_OBB.localMax = Vector3f(0.5f, 0.5f, 0.5f);
@@ -37,7 +40,10 @@ void BaseSceneObject::Update(unsigned long deltaTime)
 
 	if (m_ParentObject)
 	{
-		m_WorldTransform = m_ParentObject->m_WorldTransform * m_Transform;
+		if (m_KeepRotation)
+			m_WorldTransform.SetPosition((m_ParentObject->m_WorldTransform * m_Transform).GetPosition());
+		else
+			m_WorldTransform = m_ParentObject->m_WorldTransform * m_Transform;
 	}
 	else
 	{
@@ -98,12 +104,12 @@ void BaseSceneObject::PrepareRenderObjects(ChildrenSceneObjectsSet& objects)
 	objects.insert(this);
 }
 
-void BaseSceneObject::CollectRayPickingSceneObject(const Ray& ray, ObjectsCollisionInfos& baseSceneObjects, CollisionType type)
+void BaseSceneObject::CollectRayPickingSceneObject(const Ray& ray, ObjectsCollisionInfos& baseSceneObjects, int type, int collisionGroup)
 {
 	// TODO: 这里添加射线与对象相交检测代码
 	CollisionInfo info;
 
-	if (IntersectsRay(ray, info, type))
+	if ((collisionGroup & m_CollisionGroupMask) && (type & GetCollisionType()) && IntersectsRay(ray, info, type))
 	{
 		baseSceneObjects.push_back(info);
 	}
@@ -113,11 +119,11 @@ void BaseSceneObject::CollectRayPickingSceneObject(const Ray& ray, ObjectsCollis
 		iter != m_ChildrenObjects.end();
 		iter++)
 	{
-		(*iter)->CollectRayPickingSceneObject(ray, baseSceneObjects, type);
+		(*iter)->CollectRayPickingSceneObject(ray, baseSceneObjects, type, collisionGroup);
 	}
 }
 
-bool BaseSceneObject::IntersectsRay(const Ray& ray, CollisionInfo& info, CollisionType type)
+bool BaseSceneObject::IntersectsRay(const Ray& ray, CollisionInfo& info, int type)
 {
 	// 使用包围球作为射线拣选的依据
 	//bool result = ray.IntersectsSphere(this->m_WorldTransform.GetPosition(), m_BoundingSphereRadius);
@@ -147,7 +153,7 @@ bool BaseSceneObject::IntersectsRay(const Ray& ray, CollisionInfo& info, Collisi
 }
 
 
-void BaseSceneObject::AttachChildObject(BaseSceneObject* child, bool keepWorldTransform)
+void BaseSceneObject::AttachChildObject(BaseSceneObject* child, bool keepRotation, bool keepWorldTransform)
 {
 	// 检查child是否已经存在于列表中
 	if (m_ChildrenObjects.find(child) != m_ChildrenObjects.end())
@@ -162,7 +168,7 @@ void BaseSceneObject::AttachChildObject(BaseSceneObject* child, bool keepWorldTr
 	{
 		child->DetachFromParent(keepWorldTransform);
 	}
-	child->SetParentObject(this);
+	child->SetParentObject(this, keepRotation);
 
 	// 维持子对象在世界空间中的变换
 	if (keepWorldTransform)
@@ -199,9 +205,10 @@ void BaseSceneObject::SetRotation(const Matrix3& rot)
 	m_Transform.SetRotation(rot);
 }
 
-void BaseSceneObject::SetParentObject(BaseSceneObject* parent)
+void BaseSceneObject::SetParentObject(BaseSceneObject* parent, bool keepRotation)
 {
 	m_ParentObject = parent;
+	m_KeepRotation = keepRotation;
 }
 
 Matrix4& BaseSceneObject::Transform()

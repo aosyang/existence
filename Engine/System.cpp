@@ -9,7 +9,7 @@
 
 #include "System.h"
 #include "Image.h"
-
+#include "Mesh.h"
 #include "Log.h"
 
 #include <fstream>
@@ -125,7 +125,7 @@ void System::LoadMeshes(ConfigFileKeys* list)
 	for (iter=list->begin(); iter!=list->end(); iter++)
 	{
 		char buf[1024];
-		if (MeshManager::Instance().LoadMesh(iter->key, iter->value))
+		if (ResourceManager<Mesh>::Instance().LoadResource(iter->key, iter->value))
 		{
 			sprintf(buf, "Loading mesh %s... OK.", iter->value.data());
 			Log.MsgLn(buf);

@@ -50,6 +50,7 @@ public:
 	void AddUIObject(BaseUIObject* object);
 
 	void SetCamera(Camera* camera, bool useCameraFrustum = true);
+	Camera* GetCamera() { return m_Camera; }
 	//void NotifyUpdatingProjectionMatrix();
 	void SetFrustum(Frustum* frustum);
 
@@ -57,7 +58,7 @@ public:
 	void UpdateScene(unsigned long deltaTime);
 	void RenderScene();
 
-	void CollectRayPickingSceneObject(const Ray& ray, ObjectsCollisionInfos& baseSceneObjects, CollisionType type);
+	void CollectRayPickingSceneObject(const Ray& ray, ObjectsCollisionInfos& baseSceneObjects, int type, int collisionGroup = COLLISION_GROUP_ALL);
 
 	void SetAmbientColor(const Color4f color);
 	const Color4f GetAmbientColor() const { return m_Ambient; }
@@ -77,6 +78,7 @@ private:
 	vector<ElementLine> m_LineElements;
 
 	set<BaseSceneObject*>	m_AutoDeleteList;
+	//vector<BaseSceneObject*>	m_RemoveList;
 
 	Camera*				m_Camera;
 

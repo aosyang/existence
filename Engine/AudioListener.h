@@ -29,7 +29,7 @@ public:
 
 	// ----- Overwrite BaseSceneObject
 
-	bool IntersectsRay(const Ray& ray, CollisionInfo& info, CollisionType type);
+	bool IntersectsRay(const Ray& ray, CollisionInfo& info, int type);
 
 };
 

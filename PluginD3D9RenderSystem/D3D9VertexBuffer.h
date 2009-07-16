@@ -42,7 +42,7 @@ public:
 	void Clear();
 
 	// 锁定缓冲，以进行修改
-	void Lock(unsigned int vertSize, unsigned int faceSize);
+	void Lock();
 	void Unlock();
 	void SetVertexData(void* vertexData, unsigned int vertexNum);
 	void SetIndexData(void* indexData, unsigned int indexNum);

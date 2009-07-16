@@ -28,7 +28,9 @@ using namespace std;
 
 class BspTree;
 class MeshElement;
+class Mesh;
 
+ResourceManager<Mesh>;
 
 enum EMDL_LUMP
 {
@@ -52,10 +54,9 @@ class Mesh
 {
 	//friend class Shape;			// TODO: Remove this
 	friend class MeshObject;
+	friend class ResourceManager<Mesh>;
 
 public:
-	Mesh();
-	~Mesh();
 
 	//-----------------------------------------------------------------------------------
 	/// \brief
@@ -69,7 +70,7 @@ public:
 	/// 
 	/// 读取一个模型，保存顶点信息
 	//-----------------------------------------------------------------------------------
-	bool LoadFromFile(const string& filename);
+	static Mesh* LoadMeshFromFile(const string& filename);
 
 	//-----------------------------------------------------------------------------------
 	/// \brief
@@ -90,6 +91,13 @@ public:
 	{
 		return (index<m_Materials.size()) ? m_Materials[index] : NULL;
 	}
+	void SetMaterial(Material* mat, unsigned int index)
+	{
+		if (index<m_Materials.size())
+		{
+			m_Materials[index] = mat;
+		}
+	}
 
 	// 清除所有子元素
 	void ClearMeshElements();
@@ -106,6 +114,9 @@ public:
 	friend bool LoadMesh_NoVersion(Mesh* mesh, ifstream& fin);
 
 private:
+	Mesh();
+	~Mesh();
+
 	float					m_BoundingRadius;
 	vector<MeshElement*>	m_MeshElements;
 	vector<Material*>		m_Materials;

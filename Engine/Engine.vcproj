@@ -584,14 +584,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\MeshManager.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\MeshManager.h"
-				>
-			</File>
-			<File
 				RelativePath=".\Skeletal.cpp"
 				>
 			</File>
@@ -625,6 +617,34 @@
 			</File>
 			<File
 				RelativePath=".\BspTriangle.h"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="Particle"
+			>
+			<File
+				RelativePath=".\Particle.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Particle.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ParticleEmitter.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ParticleEmitter.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ParticlePool.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ParticlePool.h"
 				>
 			</File>
 		</Filter>

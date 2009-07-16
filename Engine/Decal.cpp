@@ -42,7 +42,7 @@ void Decal::PrepareRenderObjects(ChildrenSceneObjectsSet& objects)
 	}
 }
 
-bool Decal::IntersectsRay(const Ray& ray, CollisionInfo& info, CollisionType type)
+bool Decal::IntersectsRay(const Ray& ray, CollisionInfo& info, int type)
 {
 	// Do not collide with decal,  for now...
 	return false;
@@ -102,7 +102,7 @@ void Decal::BuildVertexArray()
 	//memcpy(m_TexCoordArray, uv, sizeof(float) * 8);
 
 	m_VertexBuffer->Clear();
-	m_VertexBuffer->CreateBuffer(vert, normal, uv, 4, face, 2);
+	m_VertexBuffer->CreateBuffer(VFormat_Position|VFormat_Normal|VFormat_Texcoord0, vert, normal, NULL, uv, 4, face, 2);
 
 	m_BoundingSphereRadius = m_Size * 0.5f;
 	m_OBB.localMax = Vector3f(m_Size * 0.5f, m_Size * 0.5f, m_Size * 0.5f);

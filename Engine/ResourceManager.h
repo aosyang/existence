@@ -56,6 +56,18 @@ public:
 		return res;
 	}
 
+	T* LoadResource(const string& resname, const string& filename)
+	{
+		if (m_ResourceMap.find(resname)!=m_ResourceMap.end())
+			return NULL;
+
+		T* res = (*m_sLoadFunc)(filename);
+		if (res)
+			m_ResourceMap[resname] = res;
+
+		return res;
+	}
+
 	//void Destroy(T* res)
 	//{
 	//	m_ResourceMap.erase(res);
@@ -82,14 +94,20 @@ public:
 		}
 	}
 
+	typedef map<const string, T*>	ResourceMap;
+	
+	ResourceMap& GetResourceMap() { return m_ResourceMap; }
+
 	static unsigned int m_sIndex;
+
+	typedef T*(*LoadFunc)(const string& filename);
+	static LoadFunc m_sLoadFunc;
 
 private:
 	ResourceManager() {}
 	~ResourceManager() { UnloadAllResources(); }
 
 protected:
-	typedef map<const string, T*>	ResourceMap;
 	ResourceMap			m_ResourceMap;
 };
 

@@ -1,27 +1,31 @@
-#ifndef _PARTICLEGAME_H
-#define _PARTICLEGAME_H
+#ifndef _particleGAME_H
+#define _particleGAME_H
 
 #include "Existence.h"
 #include <list>
 
 using namespace std;
 
-#define MAX_PARTICLE_COUNT 100
+#define MAX_particle_COUNT 100
 
-struct Particle
+struct particle
 {
 	Billboard*	bb;
 	Vector3f	dir;
 	long		life;
+	float		scale;
+	float		scale_inc;
+	float		rot;
+	float		rot_inc;
 };
 
-typedef list<Particle> ParticlePool;
+typedef list<particle> particlePool;
 
-class ParticleGame : public IGame
+class particleGame : public IGame
 {
 public:
-	ParticleGame();
-	~ParticleGame();
+	particleGame();
+	~particleGame();
 
 	void StartGame();
 	void Shutdown();
@@ -41,11 +45,11 @@ private:
 	Camera*			m_Camera;
 	TextUIControl*	m_UIFps;
 
-	ParticlePool	m_ParticlePool;
+	particlePool	m_particlePool;
 	long			m_EmitTime;
 };
 
-void EmitParticle(const Vector3f& pos, SceneGraph* scene, ParticlePool& pool);
+void Emitparticle(const Vector3f& pos, SceneGraph* scene, particlePool& pool);
 
 
 #endif

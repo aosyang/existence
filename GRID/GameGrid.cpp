@@ -55,15 +55,16 @@ void GameGrid::StartGame()
 	sunDir.normalize();
 	m_Sun->SetDirection(sunDir);
 	LightingManager::Instance().AddGlobalLight(m_Sun);
+	m_Scene->AddObject(m_Sun);
 
-	m_MeshPlane = new Mesh();
+	m_MeshPlane = ResourceManager<Mesh>::Instance().Create();
 	m_MeshPlane->CreatePositiveYPlane(WORLD_SIZE);
 
 	m_BasePlane = new MeshObject();
 	m_BasePlane->SetMesh(m_MeshPlane);
 	m_Scene->AddObject(m_BasePlane);
 
-	m_MeshBox = new Mesh();
+	m_MeshBox = ResourceManager<Mesh>::Instance().Create();
 	m_MeshBox->CreateBox(1.0f);
 
 	m_BoxMaterial = ResourceManager<Material>::Instance().Create();
@@ -72,7 +73,7 @@ void GameGrid::StartGame()
 	//m_BoxMaterial->SetDepthTest(false);
 	//m_BoxMaterial->SetEmissive(Color4f(0.6f, 0.6f, 0.6f));
 
-	Mesh* marker = MeshManager::Instance().GetMesh("marker");
+	Mesh* marker = ResourceManager<Mesh>::Instance().GetByName("marker");
 	
 	Material* matMarkerStart = ResourceManager<Material>::Instance().Create();
 	matMarkerStart->SetDiffuse(Color4f(0.0f, 1.0f, 0.0f));
@@ -85,11 +86,11 @@ void GameGrid::StartGame()
 
 	m_MarkerStart = new MeshObject();
 	m_MarkerStart->SetMesh(marker);
-	m_MarkerStart->SetMaterial(matMarkerStart);
+	m_MarkerStart->SetMaterial(matMarkerStart, 0);
 	LightingManager::Instance().AddLightableObject(m_MarkerStart);
 	m_MarkerGoal = new MeshObject();
 	m_MarkerGoal->SetMesh(marker);
-	m_MarkerGoal->SetMaterial(matMarkerGoal);
+	m_MarkerGoal->SetMaterial(matMarkerGoal, 0);
 	LightingManager::Instance().AddLightableObject(m_MarkerGoal);
 	m_Scene->AddObject(m_MarkerStart);
 	m_Scene->AddObject(m_MarkerGoal);
@@ -121,16 +122,7 @@ void GameGrid::Shutdown()
 				SAFE_DELETE(m_World[x][y][z].obj);
 			}
 
-	SAFE_DELETE(m_MarkerStart);
-	SAFE_DELETE(m_MarkerGoal);
-	SAFE_DELETE(m_IntersectionObject);
-	SAFE_DELETE(m_MeshBox);
-	SAFE_DELETE(m_BasePlane);
-	SAFE_DELETE(m_MeshPlane);
-	SAFE_DELETE(m_Sun);
 	SAFE_DELETE(m_UIFps);
-	SAFE_DELETE(m_FPSCam);
-	SAFE_DELETE(m_Camera);
 	SAFE_DELETE(m_Scene);
 }
 
@@ -600,9 +592,9 @@ void GameGrid::AddBox(const Point3& pos)
 		MeshObject* obj = new MeshObject();
 		obj->SetMesh(m_MeshBox);
 		obj->SetPosition(p);
-		obj->SetMaterial(m_BoxMaterial);
+		obj->SetMaterial(m_BoxMaterial, 0);
 
-		m_Scene->AddObject(obj);
+		m_Scene->AddObject(obj, false);
 		LightingManager::Instance().AddLightableObject(obj);
 
 		grid->obj = obj;
@@ -840,7 +832,7 @@ void GameGrid::PathFinding(const Point3& start, const Point3& end)
 			break;
 	}
 
-	Mesh* sphere = MeshManager::Instance().GetMesh("sphere");
+	Mesh* sphere = ResourceManager<Mesh>::Instance().GetByName("sphere");
 
 	for (WorldGrid* g=&m_World[pos.x][pos.y][pos.z]; parents.find(g)!=parents.end(); g=parents[g])
 	{

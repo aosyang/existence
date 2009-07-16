@@ -37,6 +37,7 @@ void EmptyGame::StartGame()
 
 	m_AudioListener = new AudioListener();
 	m_Camera1->AttachChildObject(m_AudioListener, false);
+	m_Scene->AddObject(m_AudioListener);
 
 	m_Sun = new Light();
 	m_Sun->SetLightType(LIGHT_TYPE_DIRECTIONAL);
@@ -45,6 +46,7 @@ void EmptyGame::StartGame()
 	m_Sun->SetDirection(sunDir);
 	LightingManager::Instance().AddGlobalLight(m_Sun);
 	//ShadowManager::Instance().SetLight(m_Sun);
+	m_Scene->AddObject(m_Sun);
 
 	// 不添加到场景的摄像机将无法移动
 	m_Scene->AddObject(m_Camera1);
@@ -57,46 +59,52 @@ void EmptyGame::StartGame()
 	//matSmoke->SetLighting(false);
 	m_Billboard = new Billboard();
 	m_Billboard->SetMaterial(matSmoke);
+	m_Billboard->SetColor(Color4f(1.0f, 0.0f, 0.0f, 0.5f));
+	m_Billboard->SetZOffset(1.0f);
 	m_Scene->AddObject(m_Billboard);
 
 	m_UIControl = new BaseUIObject();
 	m_Scene->AddUIObject(m_UIControl);
 
 	// 创建一个立方体Mesh
-	m_BoxMesh = new Mesh();
+	m_BoxMesh = ResourceManager<Mesh>::Instance().Create();
 	m_BoxMesh->CreateBox(1.0f);
 
-	//m_CharacterMesh = new Mesh();
+	//m_CharacterMesh = ResourceManager<Mesh>::Instance().Create();
 	//m_CharacterMesh->CreateBox(1.0f);
 	//m_CharacterMesh->LoadFromFile("../../../data/scene.emd");
 	//m_CharacterMesh->LoadFromFile("../../../data/marcus_bin.emd");
 	//m_CharacterMesh->LoadFromFile("../../../data/marcus.emd");
-	m_CharacterMesh = MeshManager::Instance().GetMesh("scene");
+	m_CharacterMesh = ResourceManager<Mesh>::Instance().GetByName("scene");
 
 	//BuildBspTreeFromMesh(&m_BspScene, m_CharacterMesh);
+	m_BspScene = new BspObject();
 	m_BspScene->SetMesh(m_CharacterMesh);
-	m_Scene->AddObject(&m_BspScene);
+	m_Scene->AddObject(m_BspScene);
 
 	// 将三个Box添加到渲染列表中
 	for (int i=0; i<2; i++)
 	{
-		m_Box[i].SetMesh(m_BoxMesh);
+		m_Box[i] = new MeshObject();
+		m_Box[i]->SetMesh(m_BoxMesh);
 		
-		m_Scene->AddObject(&m_Box[i]);
-		LightingManager::Instance().AddLightableObject(&m_Box[i]);
+		m_Scene->AddObject(m_Box[i]);
+		LightingManager::Instance().AddLightableObject(m_Box[i]);
 	}
 
-	m_CameraAttachedBox.SetMesh(MeshManager::Instance().GetMesh("mp5"));
-	//m_CameraAttachedBox.SetPosition(Vector3f(0.0f, 0.0f, -5.0f));
-	LightingManager::Instance().AddLightableObject(&m_CameraAttachedBox);
+	m_CameraAttachedBox = new MeshObject();
+	m_CameraAttachedBox->SetMesh(ResourceManager<Mesh>::Instance().GetByName("mp5"));
+	//m_CameraAttachedBox->SetPosition(Vector3f(0.0f, 0.0f, -5.0f));
+	LightingManager::Instance().AddLightableObject(m_CameraAttachedBox);
 
 	// TODO: AddObject和AttachChildObject二者只需要一个？
-	m_Scene->AddObject(&m_CameraAttachedBox);
-	m_Camera1->AttachChildObject(&m_CameraAttachedBox, false);
+	m_Scene->AddObject(m_CameraAttachedBox);
+	m_Camera1->AttachChildObject(m_CameraAttachedBox, false);
 
-	m_Box[2].SetMesh(m_CharacterMesh);
-	m_Scene->AddObject(&m_Box[2]);
-	LightingManager::Instance().AddLightableObject(&m_Box[2]);
+	m_Box[2] = new MeshObject();
+	m_Box[2]->SetMesh(m_CharacterMesh);
+	m_Scene->AddObject(m_Box[2]);
+	LightingManager::Instance().AddLightableObject(m_Box[2]);
 
 	m_Light = new Light();
 	m_Light->SetConstantAttenuation(0.0f);
@@ -105,47 +113,47 @@ void EmptyGame::StartGame()
 	m_Light->SetPosition(Vector3f(0.0f, 3.0f, 3.0f));
 
 	LightingManager::Instance().AddLight(m_Light);
-	LightingManager::Instance().AddLightableObject(&m_CameraAttachedBox);
+	LightingManager::Instance().AddLightableObject(m_CameraAttachedBox);
 
 	Material* matColorTest = ResourceManager<Material>::Instance().Create();
 	//matColorTest->SetTexture(renderer->GetTexture("colortest"));
 	//renderer->GetTexture("colortest")->SetUseEyeSpaceTexCoord(true);
 	//renderer->GetTexture("no_material")->SetWrapType(WRAP_TYPE_REPEAT);
 	// 为三个Box指定不同的材质
-	m_Box[0].SetPosition(Vector3f(1.0f, 0.0f, 0.0f));
+	m_Box[0]->SetPosition(Vector3f(1.0f, 0.0f, 0.0f));
 	Material* matRed = ResourceManager<Material>::Instance().Create();
 	matRed->SetDiffuse(Color::RED);
 	matRed->SetAmbient(Color::RED);
 	ITexture* texCheck = renderer->GetTexture("check");
 	matRed->SetTexture(texCheck);
-	m_Box[0].SetMaterial(matRed);
+	m_Box[0]->SetMaterial(matRed, 0);
 
 	//texCheck->SetVertexProgram("C2E1v_green.cg", "C2E1v_green");
 	//texCheck->SetFragmentProgram("C2E2f_passthru.cg", "C2E2f_passthru");
 
-	m_Box[1].SetPosition(Vector3f(0.0f, 1.0f, 0.0f));
+	m_Box[1]->SetPosition(Vector3f(0.0f, 1.0f, 0.0f));
 	Material* matGreen = ResourceManager<Material>::Instance().Create();
 	matGreen->SetDiffuse(Color::GREEN);
 	matGreen->SetAmbient(Color4f(0.0f, 0.2f, 0.0f));
 	matGreen->SetTexture(renderer->GetTexture("check"));
-	m_Box[1].SetMaterial(matGreen);
+	m_Box[1]->SetMaterial(matGreen, 0);
 
-	//m_Box[2].SetPosition(Vector3f(1.0f, 1.0f, 2.0f));
+	//m_Box[2]->SetPosition(Vector3f(1.0f, 1.0f, 2.0f));
 	Material* matBlue = ResourceManager<Material>::Instance().Create();
 	matBlue->SetDiffuse(Color4f(0.7f, 0.7f, 0.7f));
 	matBlue->SetSpecular(Color4f(1.0f, 1.0f, 1.0f));
 	matBlue->SetSpecularLevel(128.0f);
 	//m_MatBlue->SetEmissive(Color4f(1.0f, 1.0f, 1.0f));
 	//matBlue->SetTexture(renderer->GetTexture("check"));
-	m_Box[2].SetMaterial(matBlue);
-	//m_Box[2].SetMaterial(matColorTest);
+	m_Box[2]->SetMaterial(matBlue, 0);
+	//m_Box[2]->SetMaterial(matColorTest);
 
-	//m_CameraAttachedBox.SetMaterial(matBlue);
+	//m_CameraAttachedBox->SetMaterial(matBlue);
 
 	//Material* testMat = ResourceManager<Material>::Instance().Create();
 	//ResourceManager<Material>::Instance().Destroy(testMat);
 
-	//m_CameraAttachedBox.SetMaterial(m_MatBlue);
+	//m_CameraAttachedBox->SetMaterial(m_MatBlue);
 
 	//FontManager::Instance().LoadFont("simhei", "../../../Data/simhei.ttf");
 
@@ -158,16 +166,6 @@ void EmptyGame::Shutdown()
 {
 	SAFE_DELETE(m_UIFps);
 	delete m_UIControl;
-
-	SAFE_DELETE(m_Billboard);
-
-	delete m_BoxMesh;
-	//delete m_CharacterMesh;
-	SAFE_DELETE(m_Light);
-	SAFE_DELETE(m_Sun);
-	SAFE_DELETE(m_AudioListener);
-	SAFE_DELETE(m_Camera2);
-	SAFE_DELETE(m_Camera1);
 
 	delete m_Scene;
 }
@@ -304,8 +302,8 @@ void EmptyGame::Update(unsigned long deltaTime)
 
 			//Vector3f lookat = nearest->normal;
 			//Vector3f vec_right = CrossProduct(lookat, Vector3f(0.0f, 1.0f, 0.0f));
-			//m_Box[1].Transform().SetLookAt(lookat, CrossProduct(vec_right, lookat));
-			//m_Box[1].SetPosition(nearest->point);
+			//m_Box[1]->Transform().SetLookAt(lookat, CrossProduct(vec_right, lookat));
+			//m_Box[1]->SetPosition(nearest->point);
 		}
 
 		//sprintf(buf, "Picking num: %d", vec_obj.size());
@@ -318,12 +316,12 @@ void EmptyGame::Update(unsigned long deltaTime)
 
 	m_Angle += 0.005f * deltaTime;
 
-	m_Box[0].SetRotation(Matrix3::BuildRollRotationMatrix(m_Angle));
+	m_Box[0]->SetRotation(Matrix3::BuildRollRotationMatrix(m_Angle));
 
-	//Vector3f lookat = m_Camera1->WorldTransform().GetPosition() - m_Box[2].Transform().GetPosition();
+	//Vector3f lookat = m_Camera1->WorldTransform().GetPosition() - m_Box[2]->Transform().GetPosition();
 	//lookat.normalize();
 	//Vector3f vec_right = CrossProduct(lookat, Vector3f(0.0f, 1.0f, 0.0f));
-	//m_Box[2].Transform().SetLookAt(lookat, CrossProduct(vec_right, lookat));
+	//m_Box[2]->Transform().SetLookAt(lookat, CrossProduct(vec_right, lookat));
 
 	//Vector3f sunDir = Vector3f(0.5f * sin(m_Angle), 1.0f, 0.5f * cos(m_Angle));
 	//sunDir.normalize();
@@ -352,7 +350,7 @@ void EmptyGame::Update(unsigned long deltaTime)
 	//rotMat.Identity();
 	//rotMat.SetRotation(Matrix3::BuildRollRotationMatrix(m_Angle / 5.0f));
 	// In Object Space?
-	//renderer->GetTexture("no_material")->SetEyeSpaceMatrix(biasMat * rotMat/* * m_CameraAttachedBox.WorldTransform()*/);
+	//renderer->GetTexture("no_material")->SetEyeSpaceMatrix(biasMat * rotMat/* * m_CameraAttachedBox->WorldTransform()*/);
 
 	Vector3f campos = m_CurrentCamera->WorldTransform().GetPosition();
 
@@ -367,10 +365,7 @@ void EmptyGame::Update(unsigned long deltaTime)
 	{
 		Vector3f cam_hit;
 		BspTriangle* cam_hit_tri;
-		//if (m_BspScene->Intersects(Ray(campos_old, campos), &cam_hit, &cam_hit_tri))
-		//{
-		//	campos = cam_hit + cam_hit_tri->normal;
-		//}
+
 		Vector3f newpos;
 		m_BspScene->PushSphere(campos, newpos, 5.0f);
 

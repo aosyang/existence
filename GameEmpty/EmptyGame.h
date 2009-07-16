@@ -31,11 +31,11 @@ private:
 
 	AudioListener*	m_AudioListener;
 
-	BspObject	m_BspScene;
+	BspObject*	m_BspScene;
 	Mesh*		m_BoxMesh;
 	Mesh*		m_CharacterMesh;
-	MeshObject	m_Box[3];
-	MeshObject	m_CameraAttachedBox;
+	MeshObject*	m_Box[3];
+	MeshObject*	m_CameraAttachedBox;
 
 	Billboard*	m_Billboard;
 

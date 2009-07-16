@@ -68,7 +68,7 @@ void DistantViewObject::PrepareRenderObjects(ChildrenSceneObjectsSet& objects)
 	BaseSceneObject::PrepareRenderObjects(objects);
 }
 
-bool DistantViewObject::IntersectsRay(const Ray& ray, CollisionInfo& info, CollisionType type)
+bool DistantViewObject::IntersectsRay(const Ray& ray, CollisionInfo& info, int type)
 {
 	// never get cought by a ray
 	return false;

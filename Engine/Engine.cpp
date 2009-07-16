@@ -15,6 +15,7 @@ using namespace std;
 #include "Input.h"
 #include "System.h"
 #include "NullAudioSystem.h"
+#include "Mesh.h"
 
 void LoadConfigFile(const string& filename, ConfigGroups& group, string groupname)
 {
@@ -170,7 +171,7 @@ void Engine::Shutdown()
 	delete m_AudioSystem;
 
 	// 在渲染器摧毁前清除所有Mesh
-	MeshManager::Instance().UnloadAllMeshes();
+	ResourceManager<Mesh>::Instance().UnloadAllResources();
 
 	Log.MsgLn("Shutitng down renderer");
 	m_Renderer->Shutdown();
