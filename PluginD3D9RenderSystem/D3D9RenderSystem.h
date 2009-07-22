@@ -76,10 +76,10 @@ public:
 	void SetAmbientColor(const Color4f& color);
 	const Color4f GetAmbientColor();
 
-	ITexture* BuildTexture(const string& textureName, unsigned int width, unsigned int height, unsigned int bpp, unsigned char* data);
-	ITexture* BuildDepthTexture(const string& textureName, unsigned int width, unsigned int height) { return NULL; }
+	ITexture* BuildTexture(const String& textureName, unsigned int width, unsigned int height, unsigned int bpp, unsigned char* data);
+	ITexture* BuildDepthTexture(const String& textureName, unsigned int width, unsigned int height) { return NULL; }
 
-	ITexture* GetTexture(const string& textureName);
+	ITexture* GetTexture(const String& textureName);
 
 	int GetMaxLightsNumber();
 
@@ -92,7 +92,7 @@ protected:
 
 	void SetupMaterial(Material* material);
 
-	bool UnloadTexture(const string& textureName);
+	bool UnloadTexture(const String& textureName);
 	void UnloadAllTextures();
 protected:
 	HWND	m_hWnd;
@@ -113,7 +113,7 @@ protected:
 
 	Frustum*		m_Frustum;
 
-	typedef map<string, ITexture*>	TextureList;
+	typedef map<String, ITexture*>	TextureList;
 	TextureList		m_TextureList;
 };
 

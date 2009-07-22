@@ -72,7 +72,7 @@ public:
 	void RenderSphere(const Vector3f& point, float radius, const Color4f& color, unsigned int segment);
 	void RenderLine(const Vector3f& begin, const Vector3f& end, const Color4f& color);
 
-	void RenderScreenQuad(float left, float top, float right, float bottom, ITexture* texture);
+	void RenderScreenQuad(float left, float top, float right, float bottom, ITexture* texture, const Color4f& color);
 
 	// 屏幕坐标
 	void RenderScreenQuad(int x1, int y1, int x2, int y2, ITexture* texture, const Color4f& color);
@@ -80,13 +80,13 @@ public:
 	void SetAmbientColor(const Color4f& color);
 	const Color4f GetAmbientColor();
 
-	ITexture* BuildTexture(const string& textureName, unsigned int width, unsigned int height, unsigned int bpp, unsigned char* data);
-	ITexture* BuildCubeTexture(const string& textureName, unsigned int width, unsigned int height, unsigned int bpp, unsigned char* data[6]);
+	ITexture* BuildTexture(const String& textureName, unsigned int width, unsigned int height, unsigned int bpp, unsigned char* data);
+	ITexture* BuildCubeTexture(const String& textureName, unsigned int width, unsigned int height, unsigned int bpp, unsigned char* data[6]);
 
 	// 构造阴影映射用的贴图 for test only
-	ITexture* BuildDepthTexture(const string& textureName, unsigned int width, unsigned int height);
+	ITexture* BuildDepthTexture(const String& textureName, unsigned int width, unsigned int height);
 
-	ITexture* GetTexture(const string& textureName);
+	ITexture* GetTexture(const String& textureName);
 
 	int GetMaxLightsNumber();
 
@@ -108,7 +108,7 @@ protected:
 	GLint GetEnvMode(int mode);
 	void SetupMaterial(Material* material);
 
-	bool UnloadTexture(const string& textureName);
+	bool UnloadTexture(const String& textureName);
 	void UnloadAllTextures();
 protected:
 	HWND	m_hWnd;
@@ -126,7 +126,7 @@ protected:
 
 	Frustum*		m_Frustum;
 
-	typedef map<string, ITexture*>	TextureList;
+	typedef map<String, ITexture*>	TextureList;
 	TextureList		m_TextureList;
 
 	bool			m_DepthWriting;

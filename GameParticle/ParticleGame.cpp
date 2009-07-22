@@ -45,7 +45,7 @@ bool ParticleUpdate(Particle* particle, unsigned long deltaTime)
 	particle->m_Scale += particle->m_ScaleInc * (float)deltaTime * 0.001f;
 
 	float alpha = (float)particle->m_LifeTime / 5000 * kPi;
-	particle->m_Color.a = sinf(alpha) * 0.5f;
+	particle->m_Color.a = sinf(alpha)/* * 0.1f*/;
 
 	return particle->m_Active;
 }
@@ -65,15 +65,21 @@ void particleGame::StartGame()
 	m_Scene->AddObject(m_Camera);
 	m_Scene->SetCamera(m_Camera);
 
-	m_MatSmoke = ResourceManager<Material>::Instance().Create();
-	m_MatSmoke->SetTexture(renderer->GetTexture("smoke"));
-	m_MatSmoke->SetLighting(false);
-	m_MatSmoke->SetDepthWriting(false);
+	m_AudioListener = new AudioListener();
+	m_Scene->AddObject(m_AudioListener);
+	m_Camera->AttachChildObject(m_AudioListener, false);
+
+	m_MatSmoke = ResourceManager<Material>::Instance().GetByName("smoke");
+	//m_MatSmoke->SetTexture(renderer->GetTexture("smoke"));
+	//m_MatSmoke->SetLighting(false);
+	//m_MatSmoke->SetDepthWriting(false);
+
 	//m_MatSmoke->SetAlphaTest(true);
-	//m_MatSmoke->SetAlphaReference(0.2f);
+	//m_MatSmoke->SetAlphaRef(0.2f);
 	//m_MatSmoke->GetTextureRenderState(0)->envMode = ENV_MODE_ADD;
 
 	m_UIFps = new TextUIControl();
+	m_UIFps->SetWidth(640);
 	m_Scene->AddUIObject(m_UIFps);
 
 	//Mesh* mesh = ResourceManager<Mesh>::Instance().GetByName("marcus");
@@ -103,17 +109,17 @@ void particleGame::StartGame()
 		pool->AddParticle(p);
 	}
 
-	Material* matFlare = ResourceManager<Material>::Instance().Create();
-	ITexture* tex_flare = renderer->GetTexture("flare");
-	matFlare->SetTexture(tex_flare);
-	matFlare->SetLighting(false);
-	matFlare->SetDepthWriting(false);
+	Material* matFlare = ResourceManager<Material>::Instance().GetByName("flare");
+	//ITexture* tex_flare = renderer->GetTexture("flare");
+	//matFlare->SetTexture(tex_flare);
+	//matFlare->SetLighting(false);
+	//matFlare->SetDepthWriting(false);
 
-	// 混合模式 叠加
-	matFlare->GetTextureRenderState(0)->useBlending = true;
-	matFlare->GetTextureRenderState(0)->srcBlendFactor = BLEND_FACTOR_ONE;
-	matFlare->GetTextureRenderState(0)->dstBlendFactor = BLEND_FACTOR_ONE;
-	//matFlare->GetTextureRenderState(0)->envMode = ENV_MODE_ADD;
+	//// 混合模式 叠加
+	//matFlare->GetTextureRenderState(0)->useBlending = true;
+	//matFlare->GetTextureRenderState(0)->srcBlendFactor = BLEND_FACTOR_ONE;
+	//matFlare->GetTextureRenderState(0)->dstBlendFactor = BLEND_FACTOR_ONE;
+	////matFlare->GetTextureRenderState(0)->envMode = ENV_MODE_ADD;
 
 	// 光晕
 	bb = new Billboard();
@@ -135,10 +141,29 @@ void particleGame::StartGame()
 	m_Scene->AddObject(emitter);
 	//m_Camera->AttachChildObject(emitter, true);
 	emitter->AttachChildObject(bb);
+
+	IAudioBuffer* buffer = Engine::Instance().AudioSystem()->GetAudioBuffer("down");
+	IAudioSource* source = Engine::Instance().AudioSystem()->CreateSourceInstance(buffer, Vector3f(0.0f, 0.0f, 0.0f));
+	source->SetLooping(true);
+	source->Play();
+
+	//Sleep(2000);
+	//IAudioSource* source2 = Engine::Instance().AudioSystem()->CreateSourceInstance(buffer, Vector3f(5.0f, 0.0f, 0.0f));
+	//source2->SetLoop(true);
+	//source2->Play();
 }
 
 void particleGame::Shutdown()
 {
+	ResourceManager<Material>::ResourceMap::iterator iter;
+	ResourceManager<Material>::ResourceMap map = ResourceManager<Material>::Instance().GetResourceMap();
+	for (iter=ResourceManager<Material>::Instance().GetResourceMap().begin();
+		 iter!=ResourceManager<Material>::Instance().GetResourceMap().end();
+		 iter++)
+	{
+		iter->second->SaveToFile(iter->first + ".emt");
+	}
+
 	SAFE_DELETE(m_UIFps);
 	SAFE_DELETE(m_Scene);
 }
@@ -166,6 +191,7 @@ void particleGame::OnResizeWindow(unsigned int width, unsigned int height)
 
 void particleGame::Update(unsigned long deltaTime)
 {
+	//deltaTime *= 0.1f;
 	float boost;
 	char buf[1024] = "\0";
 

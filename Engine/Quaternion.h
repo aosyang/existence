@@ -5,49 +5,78 @@
 /// 
 /// Copyright (c) 2009 by Mwolf
 //-----------------------------------------------------------------------------------
-#ifndef __QUATERNION_H_INCLUDED__
-#define __QUATERNION_H_INCLUDED__
+//#ifndef __QUATERNION_H_INCLUDED__
+//#define __QUATERNION_H_INCLUDED__
+//
+//class Vector3f;
+//class EulerAngle;
+//class Matrix3;
+//
+//class Quaternion
+//{
+//public:
+//	float w, x, y, z;
+//
+//	void identity(){ w = 1.0f; x = y = z = 0.0f;}
+//
+//	void setToRotateAboutX(float theta);
+//	void setToRotateAboutY(float theta);
+//	void setToRotateAboutZ(float theta);
+//
+//	void setToRotateAboutAxis(const Vector3f &axis, float theta);
+//
+//	void setToRotateObjectToInertial(const EulerAngle &orientation);
+//	void setToRotateInertialToObject(const EulerAngle &orientation);
+//
+//	Matrix3 GetRotMatrix();
+//
+//	Quaternion operator *(const Quaternion &a) const;
+//
+//	Quaternion &operator *=(const Quaternion &a);
+//
+//	void normalize();
+//
+//	float getRotationAngle() const;
+//	Vector3f getRotationAxis() const;
+//};
+//
+//extern const Quaternion kQuaternionIdentity;
+//
+//extern float dotProduct(const Quaternion &a, const Quaternion &b);
+//
+//extern Quaternion slerp(const Quaternion &p, const Quaternion &q, float t);
+//
+//extern Quaternion conjugate (const Quaternion &q);			//共轭
+//
+//extern Quaternion pow(const Quaternion &q, float exponent);
+//
+//#endif
 
-class Vector3f;
-class EulerAngle;
+#ifndef _QUATERNION_H
+#define _QUATERNION_H
+
+#include "Matrix3.h"
+#include "Vector3f.h"
+
 class Matrix3;
+class Vector3f;
 
 class Quaternion
 {
 public:
-	float w, x, y, z;
+	float x, y, z, w;
 
-	void identity(){ w = 1.0f; x = y = z = 0.0f;}
+	Quaternion();
 
-	void setToRotateAboutX(float theta);
-	void setToRotateAboutY(float theta);
-	void setToRotateAboutZ(float theta);
+	Quaternion operator*(const Quaternion& rhs) const;
+	Quaternion operator*=(const Quaternion& rhs);
 
-	void setToRotateAboutAxis(const Vector3f &axis, float theta);
+	void Normalize();
 
-	void setToRotateObjectToInertial(const EulerAngle &orientation);
-	void setToRotateInertialToObject(const EulerAngle &orientation);
+	// 给定任意轴，在局部空间中沿该轴作逆时针旋转指定弧度
+	void CreateFromLocalAxisAngle(const Vector3f axis, float angle_rad);
 
-	Matrix3 GetRotMatrix();
-
-	Quaternion operator *(const Quaternion &a) const;
-
-	Quaternion &operator *=(const Quaternion &a);
-
-	void normalize();
-
-	float getRotationAngle() const;
-	Vector3f getRotationAxis() const;
+	Matrix3 GetRotationMatrix() const;
 };
-
-extern const Quaternion kQuaternionIdentity;
-
-extern float dotProduct(const Quaternion &a, const Quaternion &b);
-
-extern Quaternion slerp(const Quaternion &p, const Quaternion &q, float t);
-
-extern Quaternion conjugate (const Quaternion &q);			//共轭
-
-extern Quaternion pow(const Quaternion &q, float exponent);
 
 #endif

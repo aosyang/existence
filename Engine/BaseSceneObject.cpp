@@ -38,6 +38,8 @@ void BaseSceneObject::Update(unsigned long deltaTime)
 	// 更新自身状态
 	// 更新子对象
 
+	//m_Transform.SetRotation(m_Rotation.GetRotationMatrix());
+
 	if (m_ParentObject)
 	{
 		if (m_KeepRotation)
@@ -109,7 +111,7 @@ void BaseSceneObject::CollectRayPickingSceneObject(const Ray& ray, ObjectsCollis
 	// TODO: 这里添加射线与对象相交检测代码
 	CollisionInfo info;
 
-	if ((collisionGroup & m_CollisionGroupMask) && (type & GetCollisionType()) && IntersectsRay(ray, info, type))
+	if ((collisionGroup & m_CollisionGroupMask) && (type & GetCollisionType()) && IntersectsRay(ray, info))
 	{
 		baseSceneObjects.push_back(info);
 	}
@@ -123,7 +125,7 @@ void BaseSceneObject::CollectRayPickingSceneObject(const Ray& ray, ObjectsCollis
 	}
 }
 
-bool BaseSceneObject::IntersectsRay(const Ray& ray, CollisionInfo& info, int type)
+bool BaseSceneObject::IntersectsRay(const Ray& ray, CollisionInfo& info)
 {
 	// 使用包围球作为射线拣选的依据
 	//bool result = ray.IntersectsSphere(this->m_WorldTransform.GetPosition(), m_BoundingSphereRadius);
@@ -200,9 +202,10 @@ void BaseSceneObject::SetPosition(const Vector3f& pos)
 	m_Transform.SetPosition(pos);
 }
 
-void BaseSceneObject::SetRotation(const Matrix3& rot)
+void BaseSceneObject::SetRotation(const Quaternion& rot)
 {
-	m_Transform.SetRotation(rot);
+	m_Rotation = rot;
+	m_Transform.SetRotation(rot.GetRotationMatrix());
 }
 
 void BaseSceneObject::SetParentObject(BaseSceneObject* parent, bool keepRotation)
@@ -210,6 +213,13 @@ void BaseSceneObject::SetParentObject(BaseSceneObject* parent, bool keepRotation
 	m_ParentObject = parent;
 	m_KeepRotation = keepRotation;
 }
+
+void BaseSceneObject::RotateLocal(const Quaternion& quat)
+{
+	m_Rotation *= quat;
+	m_Transform.SetRotation(m_Rotation.GetRotationMatrix());
+}
+
 
 Matrix4& BaseSceneObject::Transform()
 {

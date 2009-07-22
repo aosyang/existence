@@ -31,7 +31,7 @@ Mesh::~Mesh()
 	ClearMeshElements();
 }
 
-Mesh* Mesh::LoadMeshFromFile(const string& filename)
+Mesh* Mesh::LoadMeshFromFile(const String& filename)
 {
 	Mesh* mesh = new Mesh();
 	mesh->ClearMeshElements();
@@ -43,7 +43,7 @@ Mesh* Mesh::LoadMeshFromFile(const string& filename)
 	setlocale(LC_ALL, langLocale.name().data());
 
 	ifstream fin;
-	fin.open(filename.data(), ios_base::in|ios_base::binary);
+	fin.open(filename.Data(), ios_base::in|ios_base::binary);
 
 	if (!fin.is_open())
 		return false;
@@ -187,11 +187,16 @@ bool LoadMesh_010(Mesh* mesh, ifstream& fin)
 					texName[len] = 0;
 
 					Material* mat;
-					if ((mat=ResourceManager<Material>::Instance().GetByName(texName)) == NULL)
-					{
-						mat = ResourceManager<Material>::Instance().Create(texName);
-						mat->SetTexture(renderer->GetTexture(texName));
-					}
+					mat = ResourceManager<Material>::Instance().GetByName(texName);
+
+					// 材质如果没找到，从纹理创建相应材质
+					// TODO: 使用了材质读取以后放弃这个方法
+
+					//if ((mat=ResourceManager<Material>::Instance().GetByName(texName)) == NULL)
+					//{
+					//	mat = ResourceManager<Material>::Instance().Create(texName);
+					//	mat->SetTexture(renderer->GetTexture(texName));
+					//}
 					mesh->AddMaterial(mat);
 				}
 

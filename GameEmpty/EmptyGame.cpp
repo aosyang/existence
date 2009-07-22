@@ -197,6 +197,22 @@ void EmptyGame::OnKeyPressed(unsigned int key)
 	case KC_G:
 		toggleWireframe = !toggleWireframe;
 		break;
+	case KC_U:
+		{
+			Quaternion quat;
+			Matrix4 worldInv = m_Box[2]->WorldTransform().GetInverseMatrix();
+			quat.CreateFromLocalAxisAngle(worldInv * Vector3f(1.0f, 0.0f, 0.0f), 0.1f);
+			m_Box[2]->RotateLocal(quat);
+		}
+		break;
+	case KC_J:
+		{
+			Quaternion quat;
+			Matrix4 worldInv = m_Box[2]->WorldTransform().GetInverseMatrix();
+			quat.CreateFromLocalAxisAngle(worldInv * Vector3f(0.0f, 1.0f, 0.0f), 0.1f);
+			m_Box[2]->RotateLocal(quat);
+		}
+		break;
 	}
 
 	m_Scene->SetCamera(m_CurrentCamera, false);

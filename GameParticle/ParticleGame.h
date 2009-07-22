@@ -43,6 +43,7 @@ public:
 private:
 	SceneGraph*		m_Scene;
 	Camera*			m_Camera;
+	AudioListener*	m_AudioListener;
 	TextUIControl*	m_UIFps;
 
 	particlePool	m_particlePool;

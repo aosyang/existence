@@ -11,10 +11,20 @@
 #include "ITexture.h"
 #include "Color4f.h"
 #include "ResourceManager.h"
+#include <map>
+
+using namespace std;
 
 class Material;
 
 ResourceManager<Material>;
+
+typedef void(*SetMaterialAttribFunc)(Material*, const String&);
+typedef map<const String, SetMaterialAttribFunc> MaterialLoadFuncMap;
+
+typedef void(*SetRenderStateAttribFunc)(texRenderState_t*, const String&);
+typedef map<const String, SetRenderStateAttribFunc> RenderStateLoadFuncMap;
+
 
 class Material
 {
@@ -74,36 +84,47 @@ public:
 	inline void SetAlphaTest(bool test) { m_AlphaTest = test; }
 	inline bool GetAlphaTest() const { return m_AlphaTest; }
 
-	inline void SetAlphaReference(float ref) { m_AlphaReference = ref; }
-	inline float GetAlphaReference() const { return m_AlphaReference; }
+	inline void SetAlphaRef(float ref) { m_AlphaReference = ref; }
+	inline float GetAlphaRef() const { return m_AlphaReference; }
+
+	// 从文件读取材质
+	static Material* LoadMaterial(const String& filename);
+	static MaterialLoadFuncMap	s_FuncMap;
+	static RenderStateLoadFuncMap s_RSFuncMap;
+
+	void SaveToFile(const String& filename, bool outputDefault = false);
 
 private:
 	// 声明为private，这样只有ResMgr可以创建实例
 	Material();
 	~Material();
 
+	static void LoadAttrib(Material* material, const String& attrib, const String& val);
+	static void LoadRenderState(texRenderState* rs, const String& attrib, const String& val);
+
 private:
-	Color4f		m_Color;			///< 材质颜色
+	const String*	m_Name;				///< 材质名称指针
+	Color4f			m_Color;			///< 材质颜色
 
-	bool		m_Lighting;			///< 材质是否受光照影响
+	bool			m_Lighting;			///< 材质是否受光照影响
 
-	Color4f		m_Ambient;			///< 环境光颜色
-	Color4f		m_Diffuse;			///< 漫反射颜色
-	Color4f		m_Specular;			///< 高光颜色
-	Color4f		m_Emissive;			///< 自发光颜色
+	Color4f			m_Ambient;			///< 环境光颜色
+	Color4f			m_Diffuse;			///< 漫反射颜色
+	Color4f			m_Specular;			///< 高光颜色
+	Color4f			m_Emissive;			///< 自发光颜色
 
-	float		m_SpecularLevel;	///< 高光级别
+	float			m_SpecularLevel;	///< 高光级别
 
 	texRenderState_t	m_TextureRenderState[8];
-	bool		m_TextureLayerEnabled[8];
+	bool			m_TextureLayerEnabled[8];
 	// TODO: 这里ITexture换成texRenderState_t
 	//ITexture*	m_Texture;			///< 材质使用的纹理贴图
 
-	bool		m_DepthWriting;		///< 是否写入深度缓冲(FIXME: 不正确，参见PluginGLRenderSystem)
-	bool		m_DepthTest;		///< 是否进行深度测试
+	bool			m_DepthWriting;		///< 是否写入深度缓冲(FIXME: 不正确，参见PluginGLRenderSystem)
+	bool			m_DepthTest;		///< 是否进行深度测试
 
-	bool		m_AlphaTest;
-	float		m_AlphaReference;
+	bool			m_AlphaTest;
+	float			m_AlphaReference;
 };
 
 #endif

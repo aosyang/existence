@@ -18,7 +18,7 @@
 class FontManager;
 class Font;
 
-#include <string>
+#include "EString.h"
 #include <map>
 
 using namespace std;
@@ -40,8 +40,8 @@ struct CharacterInfo
 	//int			advance_y;			// 这个没用
 };
 
-typedef map<const string, CharacterInfo>	CharacterMap;
-typedef map<const string, Font*>			FontMap;
+typedef map<const String, CharacterInfo>	CharacterMap;
+typedef map<const String, Font*>			FontMap;
 
 class FontManager : public Singleton<FontManager>
 {
@@ -53,10 +53,10 @@ public:
 	void UnloadAllFonts();
 
 	// 读取一个字体文件
-	bool LoadFont(const string& font_name, const string& filename);
+	bool LoadFont(const String& font_name, const String& filename);
 
 	// 从指定字体中获得一个字符
-	bool GetCharacter(const string& font_name, const wchar_t wch, unsigned int char_height, CharacterInfo* info);
+	bool GetCharacter(const String& font_name, const wchar_t wch, unsigned int char_height, CharacterInfo* info);
 
 private:
 	FontManager();

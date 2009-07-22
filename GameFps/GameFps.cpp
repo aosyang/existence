@@ -89,9 +89,12 @@ void GameFps::StartGame()
 	LightingManager::Instance().AddLightableObject(m_ViewGun);
 
 	Material* matFlare = ResourceManager<Material>::Instance().GetByName("flare");
-	matFlare->GetTextureRenderState()->srcBlendFactor = BLEND_FACTOR_ONE;
-	matFlare->GetTextureRenderState()->dstBlendFactor = BLEND_FACTOR_ONE;
-	matFlare->SetDepthWriting(false);
+	if (matFlare)
+	{
+		matFlare->GetTextureRenderState()->srcBlendFactor = BLEND_FACTOR_ONE;
+		matFlare->GetTextureRenderState()->dstBlendFactor = BLEND_FACTOR_ONE;
+		matFlare->SetDepthWriting(false);
+	}
 
 	Image cubeMap[6];
 	cubeMap[0].LoadFromFile("../../../data/sky/snowlake_bk.tga");
@@ -106,10 +109,15 @@ void GameFps::StartGame()
 	renderer->BuildCubeTexture("cubeMap", cubeMap[0].GetWidth(), cubeMap[0].GetHeight(), cubeMap[0].GetBPP(), data);
 
 	Material* matShell = ResourceManager<Material>::Instance().GetByName("goldshell");
-	matShell->SetTextureLayerEnabled(1, true);
-	matShell->GetTextureRenderState(1)->texture = renderer->GetTexture("env_sphere");
-	matShell->GetTextureRenderState(1)->envMode = ENV_MODE_ADD;
-	matShell->GetTextureRenderState(1)->genMode = GEN_MODE_SPHERE;
+	if (matShell)
+	{
+		matShell->SetTextureLayerEnabled(1, true);
+		matShell->GetTextureRenderState(1)->texture = renderer->GetTexture("env_sphere");
+		matShell->GetTextureRenderState(1)->envMode = ENV_MODE_ADD;
+		matShell->GetTextureRenderState(1)->genMode = GEN_MODE_SPHERE;
+
+		matShell->SaveToFile("Shell.emt", true);
+	}
 
 	//Material* matCubeSky = ResourceManager<Material>::Instance().Create("cube_sky");
 	//matCubeSky->GetTextureRenderState(0)->texture = renderer->GetTexture("cubeMap");
@@ -125,7 +133,7 @@ void GameFps::StartGame()
 	//m_Sky->SetOffsetScale(Vector3f(1.f, 1.f, 1.f));
 	m_Scene->AddObject(m_Sky);
 
-	string matName[] = { "lowerrec", "buttstock", "handle", "barrel", "clip", "forearm", "rearsight" };
+	String matName[] = { "lowerrec", "buttstock", "handle", "barrel", "clip", "forearm", "rearsight" };
 	for (int i=0; i<7; i++)
 	{
 		Material* gunMat = ResourceManager<Material>::Instance().GetByName(matName[i]);
@@ -176,7 +184,7 @@ void GameFps::StartGame()
 	matDecal->SetAlphaTest(true);
 	matDecal->SetDepthWriting(false);
 	//matDecal->SetDepthTest(false);
-	matDecal->SetAlphaReference(0.01f);
+	matDecal->SetAlphaRef(0.01f);
 	matDecal->SetTexture(renderer->GetTexture("bullethole"));
 
 	m_PlayerShadow = new Decal();

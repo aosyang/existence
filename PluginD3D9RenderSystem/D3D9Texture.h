@@ -10,8 +10,8 @@ public:
 	D3D9Texture();
 	~D3D9Texture();
 
-	void SetVertexProgram(const string& filename, const string& entry) {}
-	void SetFragmentProgram(const string& filename, const string& entry) {}
+	void SetVertexProgram(const String& filename, const String& entry) {}
+	void SetFragmentProgram(const String& filename, const String& entry) {}
 
 	void SetD3DTexture(IDirect3DTexture9* texture) { m_D3DTexture = texture; }
 	IDirect3DTexture9* GetD3DTexture() { return m_D3DTexture; }

@@ -22,8 +22,8 @@ public:
 	void Create(unsigned int width, unsigned int height, unsigned int bpp, unsigned char* data, int cubePos);
 	void ModifyRectData(int xoffset, int yoffset, int width, int heigh, void* data);
 
-	void SetVertexProgram(const string& filename, const string& entry) {}
-	void SetFragmentProgram(const string& filename, const string& entry) {}
+	void SetVertexProgram(const String& filename, const String& entry) {}
+	void SetFragmentProgram(const String& filename, const String& entry) {}
 
 	void BindTexture();
 

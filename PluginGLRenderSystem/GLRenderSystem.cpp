@@ -17,7 +17,7 @@
 
 #include "GL/glu.h"
 
-#include <string>
+#include "EString.h"
 
 
 //#define FORCE_VERTEX_ARRAY
@@ -494,11 +494,13 @@ void GLRenderer::RenderLine(const Vector3f& begin, const Vector3f& end, const Co
 	ToggleTexture(true);
 }
 
-void GLRenderer::RenderScreenQuad(float left, float top, float right, float bottom, ITexture* texture)
+void GLRenderer::RenderScreenQuad(float left, float top, float right, float bottom, ITexture* texture, const Color4f& color)
 {
 	for (int i=1; i<8; i++)
 		ToggleTexture(false, i);
 	ToggleTexture(true);
+
+	glColor4f(color.r, color.g, color.b, color.a);
 
 	if (texture)
 	{
@@ -554,7 +556,11 @@ void GLRenderer::RenderScreenQuad(int x1, int y1, int x2, int y2, ITexture* text
 
 	if (texture)
 	{
-		BindTextureRenderState(texRenderState(texture));
+		texRenderState rs(texture);
+		//rs.magFilterType = FILTER_TYPE_NEAREST;
+		//rs.minFilterType = FILTER_TYPE_NEAREST;
+		//rs.wrapType = WRAP_TYPE_CLAMP;
+		BindTextureRenderState(rs);
 	}
 	else
 	{
@@ -605,7 +611,7 @@ const Color4f GLRenderer::GetAmbientColor()
 	return Color4f(ambientColor);
 }
 
-ITexture* GLRenderer::BuildTexture(const string& textureName, unsigned int width, unsigned int height, unsigned int bpp, unsigned char* data)
+ITexture* GLRenderer::BuildTexture(const String& textureName, unsigned int width, unsigned int height, unsigned int bpp, unsigned char* data)
 {
 	if (width==0 || height==0)
 		return NULL;
@@ -623,10 +629,11 @@ ITexture* GLRenderer::BuildTexture(const string& textureName, unsigned int width
 
 	//store the texture ID mapping
 	m_TextureList[textureName] = tex;
+	tex->SetName(&(m_TextureList.find(textureName)->first));
 	return tex;
 }
 
-ITexture* GLRenderer::BuildCubeTexture(const string& textureName, unsigned int width, unsigned int height, unsigned int bpp, unsigned char* data[6])
+ITexture* GLRenderer::BuildCubeTexture(const String& textureName, unsigned int width, unsigned int height, unsigned int bpp, unsigned char* data[6])
 {
 	if (width==0 || height==0)
 		return NULL;
@@ -645,10 +652,11 @@ ITexture* GLRenderer::BuildCubeTexture(const string& textureName, unsigned int w
 
 	//store the texture ID mapping
 	m_TextureList[textureName] = tex;
+	tex->SetName(&(m_TextureList.find(textureName)->first));
 	return tex;
 }
 
-ITexture* GLRenderer::BuildDepthTexture(const string& textureName, unsigned int width, unsigned int height)
+ITexture* GLRenderer::BuildDepthTexture(const String& textureName, unsigned int width, unsigned int height)
 {
 	// TODO: 纹理类结构发生变化，这里需要修改
 	if(m_TextureList.find(textureName) != m_TextureList.end())
@@ -666,7 +674,7 @@ ITexture* GLRenderer::BuildDepthTexture(const string& textureName, unsigned int 
 	return tex;
 }
 
-ITexture* GLRenderer::GetTexture(const string& textureName)
+ITexture* GLRenderer::GetTexture(const String& textureName)
 {
 	TextureList::iterator iter;
 
@@ -1033,7 +1041,7 @@ void GLRenderer::SetupMaterial(Material* material)
 		if (material->GetAlphaTest())
 		{
 			glEnable(GL_ALPHA_TEST);
-			glAlphaFunc(GL_GEQUAL, material->GetAlphaReference());
+			glAlphaFunc(GL_GEQUAL, material->GetAlphaRef());
 		}
 		else
 			glDisable(GL_ALPHA_TEST);
@@ -1089,7 +1097,7 @@ void GLRenderer::SetupMaterial(Material* material)
 	}
 }
 
-bool GLRenderer::UnloadTexture(const string& textureName)
+bool GLRenderer::UnloadTexture(const String& textureName)
 {
 	bool result(true);
 	//if this texture ID mapped, unload it's texture, and remove it from the map

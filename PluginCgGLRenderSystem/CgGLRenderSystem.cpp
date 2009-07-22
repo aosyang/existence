@@ -6,7 +6,7 @@
 
 #include "GL/glu.h"
 
-#include <string>
+#include "EString.h"
 
 CgGLRenderSystem::CgGLRenderSystem()
 : m_hWnd(0), m_hDC(0), m_hRC(0),
@@ -544,7 +544,7 @@ const Color4f CgGLRenderSystem::GetAmbientColor()
 	return Color4f(ambientColor);
 }
 
-ITexture* CgGLRenderSystem::BuildTexture(const string& textureName, unsigned int width, unsigned int height, unsigned int bpp, unsigned char* data)
+ITexture* CgGLRenderSystem::BuildTexture(const String& textureName, unsigned int width, unsigned int height, unsigned int bpp, unsigned char* data)
 {
 	
 	//if this texture ID is in use, unload the current texture
@@ -585,7 +585,7 @@ ITexture* CgGLRenderSystem::BuildTexture(const string& textureName, unsigned int
 	return tex;
 }
 
-ITexture* CgGLRenderSystem::BuildDepthTexture(const string& textureName, unsigned int width, unsigned int height)
+ITexture* CgGLRenderSystem::BuildDepthTexture(const String& textureName, unsigned int width, unsigned int height)
 {
 	
 	if(m_TextureList.find(textureName) != m_TextureList.end())
@@ -607,7 +607,7 @@ ITexture* CgGLRenderSystem::BuildDepthTexture(const string& textureName, unsigne
 	return tex;
 }
 
-ITexture* CgGLRenderSystem::GetTexture(const string& textureName)
+ITexture* CgGLRenderSystem::GetTexture(const String& textureName)
 {
 	TextureList::iterator iter;
 
@@ -887,7 +887,7 @@ void CgGLRenderSystem::SetupMaterial(Material* material, const Matrix4* matModel
 	}
 }
 
-bool CgGLRenderSystem::UnloadTexture(const string& textureName)
+bool CgGLRenderSystem::UnloadTexture(const String& textureName)
 {
 	bool result(true);
 	//if this texture ID mapped, unload it's texture, and remove it from the map
@@ -934,12 +934,12 @@ void CgGLRenderSystem::CheckCgError()
 			//errorStr.append(cgGetLastListing(m_CgContext));
 			AssertFatal(0, "CgGLRenderSystem::CheckCgError() : Error checking cg!");
 		}
-		//AssertFatal(0, errorStr.data());
+		//AssertFatal(0, errorStr.Data());
 		AssertFatal(0, "CgGLRenderSystem::CheckCgError() : Error checking cg!");
 	}
 }
 
-CGprogram CgGLRenderSystem::LoadProgramFromFile(const string& filename, const string entry, CgProgramType type)
+CGprogram CgGLRenderSystem::LoadProgramFromFile(const String& filename, const String entry, CgProgramType type)
 {
 	CGprofile* profile;
 	switch(type)
@@ -954,16 +954,16 @@ CGprogram CgGLRenderSystem::LoadProgramFromFile(const string& filename, const st
 		AssertFatal(0, "CgGLRenderSystem::LoadProgramFromFile() : Invalid program type!");
 	};
 
-	CGprogram program = cgCreateProgramFromFile(m_CgContext, CG_SOURCE, filename.data(), *profile, entry.data(), NULL);
+	CGprogram program = cgCreateProgramFromFile(m_CgContext, CG_SOURCE, filename.Data(), *profile, entry.Data(), NULL);
 	CheckCgError();
 	cgGLLoadProgram(program);
 	CheckCgError();
 	return program;
 }
 //
-//CGprogram CgGLRenderSystem::CreateVertexProgramFromFile(const string& filename, const string entry)
+//CGprogram CgGLRenderSystem::CreateVertexProgramFromFile(const String& filename, const String entry)
 //{
-//	CGprogram program = cgCreateProgramFromFile(m_CgContext, CG_SOURCE, filename.data(), m_CgVertexProfile, entry.data(), NULL);
+//	CGprogram program = cgCreateProgramFromFile(m_CgContext, CG_SOURCE, filename.Data(), m_CgVertexProfile, entry.Data(), NULL);
 //	CheckCgError();
 //	cgGLLoadProgram(program);
 //	CheckCgError();

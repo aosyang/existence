@@ -146,6 +146,8 @@ void GLVertexArray::SetIndexSize(int size)
 
 void GLVertexArray::RenderBuffer()
 {
+	if (!m_FaceNum) return;
+
 	if (m_VertexFormat & VFormat_Position)
 	{
 		glEnableClientState(GL_VERTEX_ARRAY);

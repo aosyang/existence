@@ -13,7 +13,7 @@
 #include "Log.h"
 
 #include <fstream>
-#include <string>
+#include "EString.h"
 
 using namespace std;
 
@@ -28,7 +28,7 @@ System::System()
 	InitRandom();
 }
 
-void System::LoadResources(const string& filename)
+void System::LoadResources(const String& filename)
 {
 	Log.MsgLn("Loading resources");
 	ConfigGroups group;
@@ -39,6 +39,9 @@ void System::LoadResources(const string& filename)
 
 	if (group.find("textures") != group.end())
 		LoadTextures(&group["textures"]);
+
+	if (group.find("materials") != group.end())
+		LoadMaterials(&group["materials"]);
 
 	if (group.find("fonts") != group.end())
 		LoadFonts(&group["fonts"]);
@@ -53,16 +56,16 @@ void System::LoadAudios(ConfigFileKeys* list)
 
 	for (iter=list->begin(); iter!=list->end(); iter++)
 	{
-		char buf[1024];
-		if (Engine::Instance().AudioSystem()->LoadAudioFromFile(iter->key, iter->value))
+		String msg;
+		if (Engine::Instance().AudioSystem()->LoadAudioBufferFromFile(iter->key, iter->value))
 		{
-			sprintf(buf, "Loading audio %s... OK.", iter->value.data());
-			Log.MsgLn(buf);
+			msg.Format("Loading audio %s... OK.", iter->value.Data());
+			Log.MsgLn(msg);
 		}
 		else
 		{
-			sprintf(buf, "Loading audio %s FAILED.", iter->value.data());
-			Log.Error(buf);
+			msg.Format("Loading audio %s FAILED.", iter->value.Data());
+			Log.Error(msg);
 		}
 	}
 }
@@ -75,7 +78,7 @@ void System::LoadTextures(ConfigFileKeys* list)
 	{
 		Image* image = new Image();
 
-		char buf[1024];
+		String msg;
 		if (image->LoadFromFile(iter->value))
 		{
 			renderer->BuildTexture(iter->key,
@@ -84,18 +87,38 @@ void System::LoadTextures(ConfigFileKeys* list)
 														image->GetBPP(),
 														image->GetData());
 
-			sprintf(buf, "Loading texture %s... OK.", iter->value.data());
-			Log.MsgLn(buf);
+			msg.Format("Loading texture %s... OK.", iter->value.Data());
+			Log.MsgLn(msg);
 		}
 		else
 		{
-			sprintf(buf, "Loading texture %s FAILED.", iter->value.data());
-			Log.Error(buf);
+			msg.Format("Loading texture %s FAILED.", iter->value.Data());
+			Log.Error(msg);
 		}
 
 		delete image;
 	}
 
+}
+
+void System::LoadMaterials(ConfigFileKeys* list)
+{
+	ConfigFileKeys::iterator iter;
+
+	for (iter=list->begin(); iter!=list->end(); iter++)
+	{
+		String msg;
+		if (ResourceManager<Material>::Instance().LoadResource(iter->key, iter->value))
+		{
+			msg.Format("Loading material %s... OK.", iter->value.Data());
+			Log.MsgLn(msg);
+		}
+		else
+		{
+			msg.Format("Loading material %s FAILED.", iter->value.Data());
+			Log.Error(msg);
+		}
+	}
 }
 
 void System::LoadFonts(ConfigFileKeys* list)
@@ -104,16 +127,16 @@ void System::LoadFonts(ConfigFileKeys* list)
 
 	for (iter=list->begin(); iter!=list->end(); iter++)
 	{
-		char buf[1024];
+		String msg;
 		if (FontManager::Instance().LoadFont(iter->key, iter->value))
 		{
-			sprintf(buf, "Loading font %s... OK.", iter->value.data());
-			Log.MsgLn(buf);
+			msg.Format("Loading font %s... OK.", iter->value.Data());
+			Log.MsgLn(msg);
 		}
 		else
 		{
-			sprintf(buf, "Loading font %s FAILED.", iter->value.data());
-			Log.Error(buf);
+			msg.Format("Loading font %s FAILED.", iter->value.Data());
+			Log.Error(msg);
 		}
 	}
 }
@@ -124,16 +147,16 @@ void System::LoadMeshes(ConfigFileKeys* list)
 
 	for (iter=list->begin(); iter!=list->end(); iter++)
 	{
-		char buf[1024];
+		String msg;
 		if (ResourceManager<Mesh>::Instance().LoadResource(iter->key, iter->value))
 		{
-			sprintf(buf, "Loading mesh %s... OK.", iter->value.data());
-			Log.MsgLn(buf);
+			msg.Format("Loading mesh %s... OK.", iter->value.Data());
+			Log.MsgLn(msg);
 		}
 		else
 		{
-			sprintf(buf, "Loading mesh %s FAILED.", iter->value.data());
-			Log.Error(buf);
+			msg.Format("Loading mesh %s FAILED.", iter->value.Data());
+			Log.Error(msg);
 		}
 	}
 }
@@ -142,7 +165,7 @@ void System::LoadMeshes(ConfigFileKeys* list)
 // 创建渲染窗体
 // 注：这个方法必须在调用程序内部使用，否则Platform::WndProc会因dll的加载而导致多个副本
 
-bool System::CreateRenderWindow(const string& title, unsigned int width, unsigned int height, unsigned int bits, bool fullscreen)
+bool System::CreateRenderWindow(const String& title, unsigned int width, unsigned int height, unsigned int bits, bool fullscreen)
 {
 	WNDCLASS wc;
 
@@ -182,7 +205,7 @@ bool System::CreateRenderWindow(const string& title, unsigned int width, unsigne
 	wc.hCursor = LoadCursor(NULL, IDC_ARROW);
 	wc.hbrBackground = NULL;
 	wc.lpszMenuName = NULL;
-	wc.lpszClassName = title.data();
+	wc.lpszClassName = title.Data();
 
 	AssertFatal(RegisterClass(&wc), "System::CreateRenderWindow() : Failed to register window class.")
 
@@ -214,8 +237,8 @@ bool System::CreateRenderWindow(const string& title, unsigned int width, unsigne
 	AdjustWindowRectEx (&WindowRect, dwStyle, false, dwExStyle);
 
 	if (!(m_RenderWindowParam.handle = CreateWindowEx(	dwExStyle,
-		title.data(), 
-		title.data(), 
+		title.Data(), 
+		title.Data(), 
 		dwStyle |
 		WS_CLIPSIBLINGS |					
 		WS_CLIPCHILDREN, 
@@ -252,7 +275,7 @@ void System::DestroyRenderWindow()
 		ShowCursor(TRUE);									// Show Mouse Pointer
 	}
 
-	if (!UnregisterClass(m_TitleName.data(), GetModuleHandle(NULL)))				// Are We Able To Unregister Class
+	if (!UnregisterClass(m_TitleName.Data(), GetModuleHandle(NULL)))				// Are We Able To Unregister Class
 	{
 		MessageBox(NULL,"Could Not Unregister Class.","SHUTDOWN ERROR",MB_OK | MB_ICONINFORMATION);
 		//hInstance=NULL;										// Set hInstance To NULL
@@ -261,10 +284,10 @@ void System::DestroyRenderWindow()
 	Log.MsgLn("Render window successfully destroyed.");
 }
 
-void System::SetWindowTitle(const string& title)
+void System::SetWindowTitle(const String& title)
 {
 	//m_TitleName = title;
-	SetWindowText(m_RenderWindowParam.handle, title.data());
+	SetWindowText(m_RenderWindowParam.handle, title.Data());
 }
 
 void System::ResizeWindow(unsigned int width, unsigned int height)

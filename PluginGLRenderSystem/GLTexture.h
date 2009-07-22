@@ -25,8 +25,8 @@ public:
 
 	// do nothing...
 	// they work for GPU textures only
-	void SetVertexProgram(const string& filename, const string& entry) {}
-	void SetFragmentProgram(const string& filename, const string& entry) {}
+	void SetVertexProgram(const String& filename, const String& entry) {}
+	void SetFragmentProgram(const String& filename, const String& entry) {}
 
 	// ----- GLTexture Methods
 

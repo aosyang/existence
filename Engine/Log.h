@@ -12,7 +12,7 @@
 #include <time.h>
 #include <iostream>
 #include <fstream>
-#include <string>
+#include "EString.h"
 
 using namespace std;
 
@@ -32,27 +32,27 @@ public:
 		logfile.close();
 	}
 
-	void CreateLog(const char* filename)
+	void CreateLog(const String& filename)
 	{
 		if (logfile.is_open())
 			logfile.close();
 
-		logfile.open(filename);
+		logfile.open(filename.Data());
 
 		assert(logfile.is_open());
 	}
 
-	void Msg(const char* msg)
+	void Msg(const String& msg)
 	{
-		logfile << msg;
-		cout << msg;
+		logfile << msg.Data();
+		cout << msg.Data();
 	}
 
-	void MsgLn(const char* msg)
+	void MsgLn(const String& msg)
 	{
 		OutputTime();
-		logfile << msg << endl;
-		cout << msg << endl;
+		logfile << msg.Data() << endl;
+		cout << msg.Data() << endl;
 
 		//logfile.flush();
 	}
@@ -63,37 +63,37 @@ public:
 		time_t curtime = time(0); 
 		tm t = *localtime(&curtime);
 
-		char buf[20];
-		sprintf(buf, "%02d:%02d:%02d - ", t.tm_hour, t.tm_min, t.tm_sec);
+		String msg;
+		msg.Format("%02d:%02d:%02d - ", t.tm_hour, t.tm_min, t.tm_sec);
 
-		logfile << buf;
-		cout << buf;
+		logfile << msg.Data();
+		cout << msg.Data();
 	}
 
 	// 警告消息
-	void Warning(const char* msg)
+	void Warning(const String& msg)
 	{
 		OutputTime();
 
 		logfile << "!! Warning !! : ";
 		cout << "!! Warning !! : ";
 
-		logfile << msg << endl;
-		cout << msg << endl;
+		logfile << msg.Data() << endl;
+		cout << msg.Data() << endl;
 
 		//logfile.flush();
 	}
 
 	// 错误消息
-	void Error(const char* msg)
+	void Error(const String& msg)
 	{
 		OutputTime();
 
 		logfile << ">> ERROR << : ";
 		cout << ">> ERROR << : ";
 
-		logfile << msg << endl;
-		cout << msg << endl;
+		logfile << msg.Data() << endl;
+		cout << msg.Data() << endl;
 
 		//logfile.flush();
 	}
@@ -116,6 +116,13 @@ public:
 	LOGREGTYPE(double)
 	LOGREGTYPE(const string&)
 	LOGREGTYPE(const char*)
+
+	Log& operator<<(const String& rhs)
+	{
+		cout << rhs.Data();
+		logfile << rhs.Data();
+		return *this;
+	}
 
 
 private:

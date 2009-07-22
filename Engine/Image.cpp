@@ -20,7 +20,7 @@ Image::~Image()
 	FreeImage_Unload(m_Bitmap);
 }
 
-bool Image::LoadFromFile(const string& filename)
+bool Image::LoadFromFile(const String& filename)
 {
 	// 图像格式
 	FREE_IMAGE_FORMAT fif = FIF_UNKNOWN;
@@ -28,17 +28,17 @@ bool Image::LoadFromFile(const string& filename)
 	BYTE* bits(0);
 
 	// 获取图像格式
-	fif = FreeImage_GetFileType(filename.data(), 0);
+	fif = FreeImage_GetFileType(filename.Data(), 0);
 	// 如果无法获取，尝试从文件扩展名确定格式
 	if(fif == FIF_UNKNOWN) 
-		fif = FreeImage_GetFIFFromFilename(filename.data());
+		fif = FreeImage_GetFIFFromFilename(filename.Data());
 	// 依然无法获取，返回失败
 	if(fif == FIF_UNKNOWN)
 		return false;
 
 	//check that the plugin has reading capabilities and load the file
 	if(FreeImage_FIFSupportsReading(fif))
-		m_Bitmap = FreeImage_Load(fif, filename.data());
+		m_Bitmap = FreeImage_Load(fif, filename.Data());
 	//if the image failed to load, return failure
 	if(!m_Bitmap)
 		return false;

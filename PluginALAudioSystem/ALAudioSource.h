@@ -12,7 +12,6 @@
 
 #include <al/al.h>
 #include <al/alc.h>
-#include <al/alut.h>
 
 // TODO: 目前ALAudioSource是不允许被直接delete的，必须由ALAudioSystem负责卸载
 
@@ -27,15 +26,36 @@ class ALAudioSource : public IAudioSource
 {
 	friend class ALAudioSystem;
 public:
+	ALAudioSource();
+	~ALAudioSource();
 
 	// ----- Overwrite IAudioSource
 
 	void Play();
+	void Pause();
 	void Stop();
+	void Rewind();
 
+	void SetAudioBuffer(IAudioBuffer* buffer);
+
+	void SetPitch(float pitch);
+	float GetPitch();
+
+	void SetGain(float gain);
+	float GetGain();
+
+	void SetLooping(bool loop);
+	bool GetLooping();
+
+	float GetPlaybackTime();
+
+	void SetPosition(const Vector3f& position);
 	void SetTransform(const Matrix4& transform);
+
+	void SetAutoRemove(bool autoRemove);
+
+	bool IsStopped();
 protected:
-	ALAudioSource();
 
 private:
 	Vector3f		m_SourcePosition;			///< 音源坐标
@@ -44,8 +64,7 @@ private:
 	ALuint			m_Buffer;					///< OpenAL Buffer序号
 	ALuint			m_Source;					///< OpenAL音源序号
 
-	bool			m_Loop;						///< 是否循环音效
-
+	bool			m_RemoveOnDone;
 };
 
 

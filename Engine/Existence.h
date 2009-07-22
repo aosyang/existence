@@ -44,10 +44,7 @@ class Timer;
 class System;
 class SceneGraph;
 class BaseSceneObject;
-class BaseUIObject;
-class TextUIControl;
 class SceneRootObject;
-class UIRootObject;
 class MeshObject;
 class DistantViewObject;
 class Billboard;
@@ -63,6 +60,13 @@ class Skeletal;
 class Image;
 class ParticlePool;
 class ParticleEmitter;
+class String;
+
+class UIRootObject;
+class BaseUIObject;
+class TextUIControl;
+class ImageUIControl;
+
 
 #pragma warning ( disable : 4819 )
 
@@ -98,10 +102,7 @@ class ParticleEmitter;
 #include "ISceneObject.h"
 #include "SceneGraph.h"
 #include "BaseSceneObject.h"
-#include "BaseUIObject.h"
-#include "TextUIControl.h"
 #include "SceneRootObject.h"
-#include "UIRootObject.h"
 #include "MeshObject.h"
 #include "DistantViewObject.h"
 #include "Billboard.h"
@@ -116,7 +117,13 @@ class ParticleEmitter;
 #include "Image.h"
 #include "ParticlePool.h"
 #include "ParticleEmitter.h"
+#include "EString.h"
 
 #include "ResourceManager.h"
+
+#include "UIRootObject.h"
+#include "BaseUIObject.h"
+#include "TextUIControl.h"
+#include "ImageUIControl.h"
 
 #endif

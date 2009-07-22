@@ -25,8 +25,8 @@ Camera::Camera()
 
 	m_ViewMatrix.Identity();
 
-	m_YawMatrix.Identity();
-	m_PitchMatrix.Identity();
+	//m_YawMatrix.Identity();
+	//m_PitchMatrix.Identity();
 
 	UpdateFrustum();
 }
@@ -86,7 +86,7 @@ void Camera::PrepareRenderObjects(ChildrenSceneObjectsSet& objects)
 	objects.insert(this);
 }
 //
-//bool Camera::IntersectsRay(const Ray& ray, CollisionInfo& info, int type)
+//bool Camera::IntersectsRay(const Ray& ray, CollisionInfo& info)
 //{
 //	if (type & COLLISION_TYPE_CAMERA)
 //	{
@@ -146,11 +146,13 @@ void Camera::RotateLocal(float headingAmount, float pitchAmount)
 	if (headingAmount == 0.0f && pitchAmount == 0.0f)
 		return;
 
+	Quaternion rot_heading, rot_pitch;
+
 	if (headingAmount != 0.0f)
 	{
 		m_Heading += headingAmount;
 
-		m_YawMatrix = Matrix3::BuildYawRotationMatrix(DEG_TO_RAD(m_Heading));
+		//m_YawMatrix = Matrix3::BuildYawRotationMatrix(DEG_TO_RAD(m_Heading));
 	}
 
 	if (pitchAmount != 0.0f)
@@ -163,10 +165,13 @@ void Camera::RotateLocal(float headingAmount, float pitchAmount)
 			m_Pitch = max(m_Pitch, m_PitchMin);
 		}
 
-		m_PitchMatrix = Matrix3::BuildPitchRotationMatrix(DEG_TO_RAD(m_Pitch));
+		//m_PitchMatrix = Matrix3::BuildPitchRotationMatrix(DEG_TO_RAD(m_Pitch));
 	}
+	rot_heading.CreateFromLocalAxisAngle(Vector3f(0.0f, 1.0f, 0.0f), DEG_TO_RAD(m_Heading));
+	rot_pitch.CreateFromLocalAxisAngle(Vector3f(1.0f, 0.0f, 0.0f), DEG_TO_RAD(m_Pitch));
 
-	m_Transform.SetRotation(m_YawMatrix * m_PitchMatrix);
+	//m_Transform.SetRotation(m_YawMatrix * m_PitchMatrix);
+	SetRotation(rot_heading * rot_pitch);
 	m_MatrixOutOfData = true;
 
 }

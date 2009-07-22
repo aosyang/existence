@@ -10,13 +10,16 @@
 
 #include "IAudioSystem.h"
 #include "ALAudioSource.h"
+#include "ALAudioBuffer.h"
+#include "FileFormatFuncs.h"
 
 #include <al/al.h>
 #include <al/alc.h>
 #include <al/alut.h>
 
 #include <map>
-#include <string>
+#include <list>
+#include "EString.h"
 
 using namespace std;
 
@@ -33,19 +36,24 @@ public:
 	bool Initialize();
 	void Shutdown();
 
-	bool LoadAudioFromFile(const string& sourceName, const string& filename);
+	bool LoadAudioBufferFromFile(const String& bufferName, const String& filename);
 
-	IAudioSource* GetAudioSource(const string& sourceName);
+	IAudioBuffer* GetAudioBuffer(const String& bufferName);
 
-	void SetListenerTransform(const Matrix4& transform);
+	void SetListenerTransform(const Matrix4& transform, const Vector3f& velocity);
 
-	void PlaySource(IAudioSource* source);
-	void PlaySource(const string& sourceName);
-	void StopSource(IAudioSource* source);
+	IAudioSource* CreateSourceInstance(IAudioBuffer* buffer, const Vector3f& position, bool autoRemove);
 
+	void Update();
 private:
-	typedef map<string, ALAudioSource*>	AudioSourceList;
+	typedef map<const String, ALAudioBuffer*>	AudioBufferList;
+	AudioBufferList						m_Buffers;
+
+	typedef list<ALAudioSource*>		AudioSourceList;
 	AudioSourceList						m_Sources;
+
+	typedef IAudioFileFormat* (*CreateFileFormatFunc)(const String& filename);
+	map<const String, CreateFileFormatFunc>			m_FileFormatCreator;
 };
 
 extern "C" __declspec(dllexport) IAudioSystem* CreateAudioSystem();

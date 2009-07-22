@@ -5,7 +5,7 @@
 
 #include <vector>
 #include <map>
-#include <string>
+#include "EString.h"
 
 using namespace std;
 
@@ -52,7 +52,7 @@ public:
 	~Skeletal();
 
 	Bone* ReadBones(ifstream& fin, unsigned int index);
-	bool LoadFromFile(const string& filename);
+	bool LoadFromFile(const String& filename);
 
 	void Update(unsigned int time);
 

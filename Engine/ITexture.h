@@ -9,7 +9,7 @@
 #define _ITEXTURE_H
 
 #include "Matrix4.h"
-#include <string>
+#include "EString.h"
 
 using namespace std;
 
@@ -117,8 +117,8 @@ public:
 	virtual ~ITexture() {}
 
 	// Fixed pipeline has nothing to do with these...
-	virtual void SetVertexProgram(const string& filename, const string& entry) = 0;
-	virtual void SetFragmentProgram(const string& filename, const string& entry) = 0;
+	virtual void SetVertexProgram(const String& filename, const String& entry) = 0;
+	virtual void SetFragmentProgram(const String& filename, const String& entry) = 0;
 
 
 	// TODO: 这些接口无须暴露给用户
@@ -137,6 +137,8 @@ public:
 	virtual unsigned int GetWidth() const = 0;
 	virtual unsigned int GetHeight() const = 0;
 	virtual unsigned int GetBpp() const = 0;
+
+	virtual String GetName() const = 0;
 
 	// for gl only
 	virtual int GetTarget() const = 0;
@@ -157,10 +159,15 @@ public:
 	unsigned int GetHeight() const { return m_Height; }
 	unsigned int GetBpp() const { return m_Bpp; }
 
+	String GetName() const { return *m_Name; }
+	void SetName(const String* name) { m_Name = name; }
+
 protected:
-	unsigned int m_Width;
-	unsigned int m_Height;
-	unsigned int m_Bpp;
+	const String*	m_Name;
+
+	unsigned int	m_Width;
+	unsigned int	m_Height;
+	unsigned int	m_Bpp;
 };
 
 #endif

@@ -8,7 +8,7 @@
 #include "Engine.h"
 
 #include <fstream>
-#include <string>
+#include "EString.h"
 
 using namespace std;
 
@@ -17,7 +17,7 @@ using namespace std;
 #include "NullAudioSystem.h"
 #include "Mesh.h"
 
-void LoadConfigFile(const string& filename, ConfigGroups& group, string groupname)
+void LoadConfigFile(const String& filename, ConfigGroups& group, String groupname)
 {
 
 	// 读取一个配置文件，格式如下
@@ -29,7 +29,7 @@ void LoadConfigFile(const string& filename, ConfigGroups& group, string groupnam
 	// 注：在第一个分组名出现之前的键将被分配在common组中
 
 	ifstream fs;
-	fs.open(filename.data());
+	fs.open(filename.Data());
 
 	if (!fs.is_open())
 		return;
@@ -61,9 +61,9 @@ void LoadConfigFile(const string& filename, ConfigGroups& group, string groupnam
 			if (line[header]=='[' && line[tail]==']')
 			{
 				groupname = line.substr(header + 1, tail - header - 1);
-				header = groupname.find_first_not_of(" \t");
-				tail = groupname.find_last_not_of(" \t");
-				groupname = groupname.substr(header, tail - header + 1);
+				header = groupname.FindFirstNotOf(" \t");
+				tail = groupname.FindLastNotOf(" \t");
+				groupname = groupname.Substr(header, tail - header + 1);
 				continue;
 			}
 		}
@@ -209,22 +209,25 @@ void Engine::ManualUpdate(unsigned long deltaTime)
 {
 	// 累计帧数
 	static unsigned long elapsedTime = 0;
-	static unsigned int frameNumer = 0;
+	static unsigned int frameNumber = 0;
 	elapsedTime += deltaTime;
-	frameNumer++;
+	frameNumber++;
 
 	// 1秒计算一次FPS
 	if (elapsedTime>1000)
 	{
-		m_FPS = frameNumer * 1000 / elapsedTime;
+		m_FPS = frameNumber * 1000 / elapsedTime;
 
 		elapsedTime = 0;
-		frameNumer = 0;
+		frameNumber = 0;
 	}
 
 	Input::Instance().CaptureDevice();
 
 	m_Game->Update(deltaTime);
+
+	// 更新音频系统，删除无用的音源
+	Engine::Instance().AudioSystem()->Update();
 
 	// TODO: SceneGraph updates here
 
@@ -263,14 +266,14 @@ void Engine::LoadPlugins()
 		if (iter->key == "RenderSystem")
 		{
 			HINSTANCE hDLL;
-			hDLL = LoadLibrary(iter->value.data());
+			hDLL = LoadLibrary(iter->value.Data());
 
 			RenderSystemFactoryCreateFunc rendererCreator = (RenderSystemFactoryCreateFunc)GetProcAddress(hDLL, "CreateRenderSystem");
 			if (rendererCreator == NULL)
 			{
-				char buf[512];
-				sprintf(buf, "Failed to load render system from %s, unable to find entrance func CreateRenderSystem", iter->value.data());
-				Log.Error(buf);
+				String msg;
+				msg.Format("Failed to load render system from %s, unable to find entrance func CreateRenderSystem", iter->value.Data());
+				Log.Error(msg);
 				continue;
 			}
 
@@ -281,14 +284,14 @@ void Engine::LoadPlugins()
 		else if (iter->key == "AudioSystem")
 		{
 			HINSTANCE hDLL;
-			hDLL = LoadLibrary(iter->value.data());
+			hDLL = LoadLibrary(iter->value.Data());
 
 			AudioSystemFactoryCreateFunc audioCreator = (AudioSystemFactoryCreateFunc)GetProcAddress(hDLL, "CreateAudioSystem");
 			if (audioCreator == NULL)
 			{
-				char buf[512];
-				sprintf(buf, "Failed to load audio system from %s, unable to find entrance func CreateAudioSystem", iter->value.data());
-				Log.Error(buf);
+				String msg;
+				msg.Format("Failed to load audio system from %s, unable to find entrance func CreateAudioSystem", iter->value.Data());
+				Log.Error(msg);
 
 				continue;
 			}

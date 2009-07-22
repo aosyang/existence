@@ -19,8 +19,8 @@
 
 struct ProgramId
 {
-	string filename;
-	string entry;
+	String filename;
+	String entry;
 
 	bool operator<(const ProgramId& rhs)
 	{
@@ -103,19 +103,19 @@ public:
 	void SetAmbientColor(const Color4f& color);
 	const Color4f GetAmbientColor();
 
-	ITexture* BuildTexture(const string& textureName, unsigned int width, unsigned int height, unsigned int bpp, unsigned char* data);
+	ITexture* BuildTexture(const String& textureName, unsigned int width, unsigned int height, unsigned int bpp, unsigned char* data);
 
 	// 构造阴影映射用的贴图 for test only
-	ITexture* BuildDepthTexture(const string& textureName, unsigned int width, unsigned int height);
+	ITexture* BuildDepthTexture(const String& textureName, unsigned int width, unsigned int height);
 
-	ITexture* GetTexture(const string& textureName);
+	ITexture* GetTexture(const String& textureName);
 
 	int GetMaxLightsNumber();
 
 	void SetupLight(int index, ILight* light);
 
 
-	CGprogram LoadProgramFromFile(const string& filename, const string entry, CgProgramType type);
+	CGprogram LoadProgramFromFile(const String& filename, const String entry, CgProgramType type);
 protected:
 
 	// 创建OpenGL矩阵
@@ -126,7 +126,7 @@ protected:
 	GLint GetFilterType(int type);
 	void SetupMaterial(Material* material, const Matrix4* matModel=NULL);
 
-	bool UnloadTexture(const string& textureName);
+	bool UnloadTexture(const String& textureName);
 	void UnloadAllTextures();
 
 	void CheckCgError();
@@ -155,7 +155,7 @@ protected:
 
 	Frustum*		m_Frustum;
 
-	typedef map<string, ITexture*>	TextureList;
+	typedef map<String, ITexture*>	TextureList;
 	TextureList		m_TextureList;
 };
 

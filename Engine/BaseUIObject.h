@@ -43,6 +43,7 @@ public:
 	// ----- BaseUIObject Methods
 
 	// 控件在屏幕上的前后顺序(小数靠后，大数靠前)
+	// TODO: 改为大数靠后，参考BaseSceneObject
 	void SetZOrder(int z);
 	int GetZOrder() const { return m_ZOrder; }
 
@@ -64,9 +65,6 @@ public:
 	void SetTop(int top) { m_Top = top; }
 	int GetTop() const { return m_Top; }
 
-	void SetTexture(ITexture* texture) { m_Texture = texture; }
-	ITexture* GetTexture() const { return m_Texture; }
-
 protected:
 	int m_ZOrder;						///< UI前后顺序关系
 
@@ -85,8 +83,6 @@ protected:
 
 	VerticalAlignType	m_VAlignType;	///< 垂直对齐方式
 	HorizontalAlignType	m_HAlignType;	///< 水平对齐方式
-
-	ITexture*			m_Texture;		///< 控件使用的纹理
 };
 
 #endif

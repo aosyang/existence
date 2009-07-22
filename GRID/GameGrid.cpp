@@ -549,7 +549,7 @@ void GameGrid::Update(unsigned long deltaTime)
 	m_Scene->UpdateScene(deltaTime);
 
 	unsigned int fps = Engine::Instance().GetFPS();
-	sprintf(textFPS, "FPS: %d\nMode: %s", fps, m_ModeName.data());
+	sprintf(textFPS, "FPS: %d\nMode: %s", fps, m_ModeName.Data());
 
 	m_UIFps->SetText(textFPS);
 
@@ -894,9 +894,9 @@ void GameGrid::FreeMove()
 	m_Scene->SetCamera(m_Camera);
 }
 
-bool GameGrid::SaveScene(const string &filename)
+bool GameGrid::SaveScene(const String &filename)
 {
-	ofstream fout(filename.data());
+	ofstream fout(filename.Data());
 	if (!fout.is_open())
 		return false;
 
@@ -915,9 +915,9 @@ bool GameGrid::SaveScene(const string &filename)
 	return true;
 }
 
-bool GameGrid::LoadScene(const string &filename)
+bool GameGrid::LoadScene(const String &filename)
 {
-	ifstream fin(filename.data());
+	ifstream fin(filename.Data());
 	if (!fin.is_open())
 		return false;
 

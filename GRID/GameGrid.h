@@ -114,8 +114,8 @@ public:
 	void PlayFromCamera();
 	void FreeMove();
 
-	bool SaveScene(const string& filename);
-	bool LoadScene(const string& filename);
+	bool SaveScene(const String& filename);
+	bool LoadScene(const String& filename);
 
 private:
 	SceneGraph*		m_Scene;
@@ -144,7 +144,7 @@ private:
 
 	WorldGrid		m_World[WORLD_SIZE][WORLD_SIZE][WORLD_SIZE];
 	int				m_Mode;
-	string			m_ModeName;
+	String			m_ModeName;
 
 	int				m_Layer;
 

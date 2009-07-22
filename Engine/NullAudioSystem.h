@@ -32,16 +32,15 @@ public:
 
 	void Shutdown() {}
 
-	bool LoadAudioFromFile(const string& sourceName, const string& filename) { return true; }
+	bool LoadAudioBufferFromFile(const String& bufferName, const String& filename) { return true; }
 
-	IAudioSource* GetAudioSource(const string& sourceName) { return NULL; }
+	IAudioBuffer* GetAudioBuffer(const String& bufferName) { return NULL; }
 
-	void SetListenerTransform(const Matrix4& transform) {}
+	void SetListenerTransform(const Matrix4& transform, const Vector3f& velocity) {}
 
-	void PlaySource(IAudioSource* source) {}
+	IAudioSource* CreateSourceInstance(IAudioBuffer* buffer, const Vector3f& position, bool autoRemove) { return NULL; }
 
-	void PlaySource(const string& sourceName) {}
-	void StopSource(IAudioSource* source) {}
+	void Update() {}
 };
 
 #endif

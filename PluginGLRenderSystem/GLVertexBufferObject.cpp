@@ -142,6 +142,8 @@ void GLVertexBufferObject::SetIndexSize(int size)
 
 void GLVertexBufferObject::RenderBuffer()
 {
+	if (!m_FaceNum) return;
+
 	if (m_VertexFormat & VFormat_Position)
 	{
 		vbo_glBindBuffer(GL_ARRAY_BUFFER, m_VBOVertices);

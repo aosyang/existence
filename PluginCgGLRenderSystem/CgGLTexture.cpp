@@ -21,12 +21,12 @@ CgGLTexture::CgGLTexture()
 	m_EyeSpaceMatrix.Identity();
 }
 
-void CgGLTexture::SetVertexProgram(const string& filename, const string& entry)
+void CgGLTexture::SetVertexProgram(const String& filename, const String& entry)
 {
 	m_CgVertexProgram = m_CgGLRenderer->LoadProgramFromFile(filename, entry, CG_VERTEX_PROGRAM);
 }
 
-void CgGLTexture::SetFragmentProgram(const string& filename, const string& entry)
+void CgGLTexture::SetFragmentProgram(const String& filename, const String& entry)
 {
 	m_CgFragmentProgram = m_CgGLRenderer->LoadProgramFromFile(filename, entry, CG_FRAGMENT_PROGRAM);	
 }

@@ -49,10 +49,14 @@ public:
 	// 添加UI控件
 	void AddUIObject(BaseUIObject* object);
 
+	// UI点击操作
+	//void OnMousePressed(MouseButtonID id);
+	//void OnMouseReleased(MouseButtonID id);
+	//void OnMouseMoved(int x, int y);
+
 	void SetCamera(Camera* camera, bool useCameraFrustum = true);
 	Camera* GetCamera() { return m_Camera; }
 	//void NotifyUpdatingProjectionMatrix();
-	void SetFrustum(Frustum* frustum);
 
 	// Update & Render
 	void UpdateScene(unsigned long deltaTime);
@@ -67,6 +71,7 @@ public:
 	void DrawLine(const Vector3f& start, const Vector3f& end, const Color4f& color = Color4f(1.0f, 1.0f, 1.0f));
 
 private:
+	void SetFrustum(Frustum* frustum);
 	void DrawAssistantElements();
 
 private:

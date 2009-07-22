@@ -12,6 +12,7 @@
 #include "Ray.h"
 #include "OBB.h"
 #include "AABB.h"
+#include "Quaternion.h"
 
 #include <set>
 #include <vector>
@@ -78,14 +79,16 @@ public:
 
 	virtual int GetCollisionType() const { return 0; }
 	void CollectRayPickingSceneObject(const Ray& ray, ObjectsCollisionInfos& baseSceneObjects, int type, int collisionGroup);
-	virtual bool IntersectsRay(const Ray& ray, CollisionInfo& info, int type);
+	virtual bool IntersectsRay(const Ray& ray, CollisionInfo& info);
 
 	// 绑定其他对象作为该对象的子对象
 	void AttachChildObject(BaseSceneObject* child, bool keepRotation = false, bool keepWorldTransform = false);
 	void DetachFromParent(bool keepWorldTransform);
 
 	virtual void SetPosition(const Vector3f& pos);
-	virtual void SetRotation(const Matrix3& rot);
+	virtual void SetRotation(const Quaternion& rot);
+
+	void RotateLocal(const Quaternion& quat);
 
 	Matrix4& Transform();
 	const Matrix4& WorldTransform() const;
@@ -115,7 +118,8 @@ protected:
 	ChildrenSceneObjectsSet			m_ChildrenObjects;
 	BaseSceneObject*				m_ParentObject;
 
-	Matrix4							m_Transform;				///< 记录对象本地空间变换
+	Quaternion						m_Rotation;					///< 记录对象局部空间旋转的四元数
+	Matrix4							m_Transform;				///< 记录对象局部空间变换
 	Matrix4							m_WorldTransform;			///< 记录对象世界空间变换，注：通常不需要手动更新，由Update方法负责从父对象更新
 
 	bool							m_KeepRotation;

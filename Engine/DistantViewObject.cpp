@@ -28,7 +28,7 @@ void DistantViewObject::Update(unsigned long deltaTime)
 
 void DistantViewObject::Render()
 {
-	// TODO: 这里关键，将渲染时使用的变换矩阵进行hack
+	// 将渲染时使用的变换矩阵进行hack
 	Matrix4 invViewMatrix = renderer->ViewMatrix().GetInverseMatrix();
 	Matrix4 distviewMatrix = m_WorldTransform;
 	
@@ -68,7 +68,7 @@ void DistantViewObject::PrepareRenderObjects(ChildrenSceneObjectsSet& objects)
 	BaseSceneObject::PrepareRenderObjects(objects);
 }
 
-bool DistantViewObject::IntersectsRay(const Ray& ray, CollisionInfo& info, int type)
+bool DistantViewObject::IntersectsRay(const Ray& ray, CollisionInfo& info)
 {
 	// never get cought by a ray
 	return false;

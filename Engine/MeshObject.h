@@ -31,7 +31,7 @@ public:
 
 	int GetCollisionType() const { return COLLISION_TYPE_MESH; }
 	void PrepareRenderObjects(ChildrenSceneObjectsSet& objects);
-	bool IntersectsRay(const Ray& ray, CollisionInfo& info, int type);
+	bool IntersectsRay(const Ray& ray, CollisionInfo& info);
 
 	// ----- MeshObject Methods
 

@@ -54,7 +54,7 @@ void BspObject::PrepareRenderObjects(ChildrenSceneObjectsSet& objects)
 }
 
 
-bool BspObject::IntersectsRay(const Ray& ray, CollisionInfo& info, int type)
+bool BspObject::IntersectsRay(const Ray& ray, CollisionInfo& info)
 {
 	Vector3f localPoint;
 	Ray localRay = m_WorldTransform.GetInverseMatrix() * ray;

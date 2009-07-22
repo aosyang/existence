@@ -33,9 +33,9 @@ public:
 	void SetEyeSpaceMatrix(const Matrix4& matrix) { m_EyeSpaceMatrix = matrix; }
 	Matrix4& GetEyeSpaceMatrix() { return m_EyeSpaceMatrix; }
 
-	void SetVertexProgram(const string& filename, const string& entry);
+	void SetVertexProgram(const String& filename, const String& entry);
 	CGprogram GetVertexProgram() const { return m_CgVertexProgram; }
-	void SetFragmentProgram(const string& filename, const string& entry);
+	void SetFragmentProgram(const String& filename, const String& entry);
 	CGprogram GetFragmentProgram() const { return m_CgFragmentProgram; }
 
 	// TODO: ͳһGet

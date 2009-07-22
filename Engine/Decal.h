@@ -37,7 +37,7 @@ public:
 	// ----- Overwrite BaseSceneObject
 
 	void PrepareRenderObjects(ChildrenSceneObjectsSet& objects);
-	bool IntersectsRay(const Ray& ray, CollisionInfo& info, int type);
+	bool IntersectsRay(const Ray& ray, CollisionInfo& info);
 
 	// ----- Decal Methods
 

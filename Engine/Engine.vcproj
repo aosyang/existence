@@ -40,7 +40,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\extra\include;..\extra\include\al;..\extra\include\freetype2;..\extra\include\freetype2\freetype2"
+				AdditionalIncludeDirectories="..\extra\include;..\extra\include\al;..\extra\include\freetype2;..\extra\include\freetype2\freetype2;..\extra\include\tinyxml"
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -62,8 +62,10 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
+				AdditionalDependencies="tinyxmld.lib"
 				OutputFile="$(OutDir)\$(ProjectName)_d.lib"
 				AdditionalLibraryDirectories="..\extra\lib\"
+				IgnoreDefaultLibraryNames=""
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -106,7 +108,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="..\extra\include;..\extra\include\al;..\extra\include\freetype2;..\extra\include\freetype2\freetype2"
+				AdditionalIncludeDirectories="..\extra\include;..\extra\include\al;..\extra\include\freetype2;..\extra\include\freetype2\freetype2;..\extra\include\tinyxml"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
@@ -126,7 +128,9 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
+				AdditionalDependencies="tinyxml.lib"
 				AdditionalLibraryDirectories="..\extra\lib\"
+				IgnoreDefaultLibraryNames=""
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -376,6 +380,14 @@
 			Name="Audio"
 			>
 			<File
+				RelativePath=".\IAudioBuffer.h"
+				>
+			</File>
+			<File
+				RelativePath=".\IAudioSource.h"
+				>
+			</File>
+			<File
 				RelativePath=".\IAudioSystem.h"
 				>
 			</File>
@@ -505,6 +517,14 @@
 			</File>
 			<File
 				RelativePath=".\BaseUIObject.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ImageUIControl.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ImageUIControl.h"
 				>
 			</File>
 			<File
@@ -645,6 +665,18 @@
 			</File>
 			<File
 				RelativePath=".\ParticlePool.h"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="String"
+			>
+			<File
+				RelativePath=".\EString.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\EString.h"
 				>
 			</File>
 		</Filter>

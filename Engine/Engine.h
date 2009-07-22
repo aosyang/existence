@@ -19,7 +19,7 @@
 
 #include <map>
 #include <vector>
-#include <string>
+#include "EString.h"
 
 using namespace std;
 
@@ -29,15 +29,15 @@ using namespace std;
 
 struct ConfigFileLine
 {
-	string key;
-	string value;
+	String key;
+	String value;
 };
 
 typedef vector<ConfigFileLine> ConfigFileKeys;
-typedef map<const string, ConfigFileKeys> ConfigGroups;
+typedef map<const String, ConfigFileKeys> ConfigGroups;
 
 // ∂¡»Î≈‰÷√Œƒº˛
-void LoadConfigFile(const string& filename, ConfigGroups& group, string groupname = "common");
+void LoadConfigFile(const String& filename, ConfigGroups& group, String groupname = "common");
 
 class EngineMessageNotifier : public PlatformMessageNotifier
 {

@@ -46,7 +46,7 @@ void GameCollisionTest::StartGame()
 
 	Material* matDecal = ResourceManager<Material>::Instance().Create("MatDecal");
 	matDecal->SetAlphaTest(true);
-	matDecal->SetAlphaReference(0.01f);
+	matDecal->SetAlphaRef(0.01f);
 	matDecal->SetTexture(renderer->GetTexture("smoke"));
 
 	m_UIFps = new TextUIControl();

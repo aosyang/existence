@@ -17,9 +17,9 @@
 #include "ILight.h"
 #include "IRenderTarget.h"
 #include "IVertexBuffer.h"
+#include "EString.h"
 
 #include <map>
-#include <string>
 
 using namespace std;
 
@@ -74,7 +74,7 @@ public:
 	virtual void RenderSphere(const Vector3f& point, float radius, const Color4f& color = Color4f(1.0f, 1.0f, 1.0f), unsigned int segment = 18) = 0;
 	virtual void RenderLine(const Vector3f& begin, const Vector3f& end, const Color4f& color = Color4f(1.0f, 1.0f, 1.0f)) = 0;
 
-	virtual void RenderScreenQuad(float left, float top, float right, float bottom, ITexture* texture) = 0;
+	virtual void RenderScreenQuad(float left, float top, float right, float bottom, ITexture* texture, const Color4f& color = Color4f(1.0f, 1.0f, 1.0f)) = 0;
 	virtual void RenderScreenQuad(int x1, int y1, int x2, int y2, ITexture* texture, const Color4f& color = Color4f(1.0f, 1.0f, 1.0f)) = 0;
 
 	// TODO: Implement these...
@@ -88,11 +88,11 @@ public:
 	// Textures
 
 	// TODO: 添加纹理属性作为参数，如Mipmap等
-	virtual ITexture* BuildTexture(const string& textureName, unsigned int width, unsigned int height, unsigned int bpp, unsigned char* data) = 0;
-	virtual ITexture* BuildCubeTexture(const string& textureName, unsigned int width, unsigned int height, unsigned int bpp, unsigned char* data[6]) = 0;
-	virtual ITexture* BuildDepthTexture(const string& textureName, unsigned int width, unsigned int height) = 0;
+	virtual ITexture* BuildTexture(const String& textureName, unsigned int width, unsigned int height, unsigned int bpp, unsigned char* data) = 0;
+	virtual ITexture* BuildCubeTexture(const String& textureName, unsigned int width, unsigned int height, unsigned int bpp, unsigned char* data[6]) = 0;
+	virtual ITexture* BuildDepthTexture(const String& textureName, unsigned int width, unsigned int height) = 0;
 
-	virtual ITexture* GetTexture(const string& textureName) = 0;
+	virtual ITexture* GetTexture(const String& textureName) = 0;
 
 	// Lighting
 

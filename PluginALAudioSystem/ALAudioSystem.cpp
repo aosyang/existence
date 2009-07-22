@@ -9,7 +9,8 @@
 
 ALAudioSystem::ALAudioSystem()
 {
-
+	m_FileFormatCreator["wav"] = &CreateWAVFileFormat;
+	m_FileFormatCreator["ogg"] = &CreateOGGFileFormat;
 }
 
 ALAudioSystem::~ALAudioSystem()
@@ -30,91 +31,64 @@ void ALAudioSystem::Shutdown()
 {
 	// 释放所有音频
 
-	AudioSourceList::iterator iter = m_Sources.begin();
+	AudioBufferList::iterator iter = m_Buffers.begin();
 
-	while (iter != m_Sources.end())
+	while (iter != m_Buffers.end())
 	{
-		//al_source
-		
-		// TODO: 同一个Buffer创建的Source会导致这里重复删除
-		alDeleteBuffers(1, &iter->second->m_Buffer);
-		alDeleteSources(1, &iter->second->m_Source);
-
 		delete iter->second;
-		m_Sources.erase(iter);
+		m_Buffers.erase(iter);
 
-		iter = m_Sources.begin();
+		iter = m_Buffers.begin();
 	}
+
+	AudioSourceList::iterator source_iter;
+	for (source_iter=m_Sources.begin(); source_iter!=m_Sources.end(); source_iter++)
+	{
+		delete (*source_iter);
+	}
+
+	m_Sources.clear();
 }
 
-bool ALAudioSystem::LoadAudioFromFile(const string& sourceName, const string& filename)
+bool ALAudioSystem::LoadAudioBufferFromFile(const String& bufferName, const String& filename)
 {
 	// 已经存在则不允许再次载入
-	if (m_Sources.find(filename.data()) != m_Sources.end())
+	if (m_Buffers.find(filename.Data()) != m_Buffers.end())
 		return false;
 
-	ALenum format;
-	ALsizei size;
-	ALvoid* data;
-	ALsizei freq;
-	ALboolean loop;
-	unsigned int buffer;
-	unsigned int source;
+	size_t pos = filename.FindLastOf(".");
+	String ext = filename.Substr(pos + 1);
 
-	// 将wav读入音频buffer
-	alGenBuffers(1, &buffer);
-
-	if(alGetError() != AL_NO_ERROR)
+	if (m_FileFormatCreator.find(ext)==m_FileFormatCreator.end())
 		return false;
 
-	alutLoadWAVFile((ALbyte*)filename.data(), &format, &data, &size, &freq, &loop);
-	alBufferData(buffer, format, data, size, freq);
-	alutUnloadWAV(format, data, size, freq);
+	IAudioFileFormat* audioFile = (*m_FileFormatCreator[ext])(filename);
 
-	// 将buffer与音源绑定
-	alGenSources(1, &source);
+	ALAudioBuffer* al_buffer = new ALAudioBuffer();
 
-	if(alGetError() != AL_NO_ERROR)
-		return false;
+	al_buffer->CreateFromData(audioFile->GetFormat(), audioFile->GetData(), audioFile->GetSize(), audioFile->GetFrequency());
+	delete audioFile;
 
-	// 设置音源属性
-	alSourcei (source, AL_BUFFER,   buffer   );
-	alSourcef (source, AL_PITCH,    1.0      );
-	alSourcef (source, AL_GAIN,     1.0      );
-	//alSourcefv(source, AL_POSITION, SourcePos);
-	//alSourcefv(source, AL_VELOCITY, SourceVel);
-	alSourcei (source, AL_LOOPING,  loop     );
-
-	// Do another error check and return.
-
-	if(alGetError() != AL_NO_ERROR)
-		return false;
-
-	ALAudioSource* al_source = new ALAudioSource();
-	al_source->m_Buffer = buffer;
-	al_source->m_Source = source;
-	al_source->m_Loop = (loop == AL_TRUE) ? true : false;
-
-	m_Sources[sourceName.data()] = al_source;
+	m_Buffers[bufferName] = al_buffer;
 
 	return true;
 }
 
-IAudioSource* ALAudioSystem::GetAudioSource(const string& sourceName)
+IAudioBuffer* ALAudioSystem::GetAudioBuffer(const String& bufferName)
 {
-	if (m_Sources.find(sourceName) == m_Sources.end())
+	if (m_Buffers.find(bufferName) == m_Buffers.end())
 		return NULL;
 
-	return m_Sources[sourceName];
+	return m_Buffers[bufferName];
 }
 
-void ALAudioSystem::SetListenerTransform(const Matrix4& transform)
+void ALAudioSystem::SetListenerTransform(const Matrix4& transform, const Vector3f& velocity)
 {
 	// 取得矩阵的前方向和上方向，设置听者的位置
 	alListenerfv(AL_POSITION,    transform.GetPosition().GetArray());
 
 	// TODO: Set listener's velocity here.
-	//alListenerfv(AL_VELOCITY,    ListenerVel);
+	alListenerfv(AL_VELOCITY, velocity.GetArray());
 
 	// 从变换矩阵获得前方向与上方向，指定听者的方向
 	float orientation[6];
@@ -123,24 +97,38 @@ void ALAudioSystem::SetListenerTransform(const Matrix4& transform)
 	alListenerfv(AL_ORIENTATION, orientation);
 }
 
-void ALAudioSystem::PlaySource(IAudioSource* source)
+IAudioSource* ALAudioSystem::CreateSourceInstance(IAudioBuffer* buffer, const Vector3f& position, bool autoRemove)
 {
-	if (!source)
-		return;
+	ALAudioSource* al_source = new ALAudioSource();
+	al_source->SetAudioBuffer(buffer);
+	al_source->SetPosition(position);
+	al_source->SetPitch(1.0f);
+	al_source->SetGain(1.0f);
+	al_source->SetAutoRemove(autoRemove);
 
-	source->Play();
-};
+	m_Sources.push_back(al_source);
 
-void ALAudioSystem::PlaySource(const string& sourceName)
-{
-	IAudioSource* source = GetAudioSource(sourceName);
-	if (source)
-		PlaySource(source);
+	return al_source;
 }
 
-void ALAudioSystem::StopSource(IAudioSource* source)
+void ALAudioSystem::Update()
 {
-	source->Stop();
+	AudioSourceList::iterator iter;
+	for (iter=m_Sources.begin(); iter!=m_Sources.end();)
+	{
+		if ((*iter)->m_RemoveOnDone && (*iter)->IsStopped())
+		{
+			AudioSourceList::iterator next = iter;
+			next++;
+			delete (*iter);
+			m_Sources.erase(iter);
+			iter = next;
+
+			continue;
+		}
+
+		iter++;
+	}
 }
 
 IAudioSystem* CreateAudioSystem()

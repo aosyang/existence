@@ -80,7 +80,7 @@ void MeshObject::PrepareRenderObjects(ChildrenSceneObjectsSet& objects)
 	}
 }
 
-bool MeshObject::IntersectsRay(const Ray& ray, CollisionInfo& info, int type)
+bool MeshObject::IntersectsRay(const Ray& ray, CollisionInfo& info)
 {
 	Vector3f p, n;
 	float d;

@@ -49,6 +49,8 @@ public:
 	Matrix3 operator* (const Matrix3& rkMatrix) const;
 	Vector3f operator* (const Vector3f& rkPoint) const;
 
+	Matrix3 operator*=(const Matrix3& matrix);
+
 	void Identity();
 	Matrix3 GetInverseMatrix() const;
 

@@ -21,7 +21,7 @@
 #include "OBB.h"
 
 #include <vector>
-#include <string>
+#include "EString.h"
 #include <fstream>
 
 using namespace std;
@@ -70,7 +70,7 @@ public:
 	/// 
 	/// 读取一个模型，保存顶点信息
 	//-----------------------------------------------------------------------------------
-	static Mesh* LoadMeshFromFile(const string& filename);
+	static Mesh* LoadMeshFromFile(const String& filename);
 
 	//-----------------------------------------------------------------------------------
 	/// \brief
@@ -117,6 +117,7 @@ private:
 	Mesh();
 	~Mesh();
 
+	const String*			m_Name;
 	float					m_BoundingRadius;
 	vector<MeshElement*>	m_MeshElements;
 	vector<Material*>		m_Materials;

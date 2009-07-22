@@ -42,7 +42,7 @@ void Decal::PrepareRenderObjects(ChildrenSceneObjectsSet& objects)
 	}
 }
 
-bool Decal::IntersectsRay(const Ray& ray, CollisionInfo& info, int type)
+bool Decal::IntersectsRay(const Ray& ray, CollisionInfo& info)
 {
 	// Do not collide with decal,  for now...
 	return false;

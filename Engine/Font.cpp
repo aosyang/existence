@@ -38,7 +38,7 @@ void FontManager::UnloadAllFonts()
 	}
 }
 
-bool FontManager::LoadFont(const string& font_name, const string& filename)
+bool FontManager::LoadFont(const String& font_name, const String& filename)
 {
 	if (m_FontMap.find(font_name) != m_FontMap.end())
 	{
@@ -48,7 +48,7 @@ bool FontManager::LoadFont(const string& font_name, const string& filename)
 
 	Font* font = new Font();
 
-	if (FT_New_Face(m_Library, filename.data(), 0, &font->m_Face))
+	if (FT_New_Face(m_Library, filename.Data(), 0, &font->m_Face))
 	{
 		//cout << "FT_New_Face failed (there is probably a problem with your font file)" << endl;
 		delete font;
@@ -59,7 +59,7 @@ bool FontManager::LoadFont(const string& font_name, const string& filename)
 	return true;
 }
 
-bool FontManager::GetCharacter(const string& font_name, const wchar_t wch, unsigned int char_height, CharacterInfo* info)
+bool FontManager::GetCharacter(const String& font_name, const wchar_t wch, unsigned int char_height, CharacterInfo* info)
 {
 	if (m_FontMap.find(font_name) == m_FontMap.end())
 		return false;
@@ -73,7 +73,7 @@ bool FontManager::GetCharacter(const string& font_name, const wchar_t wch, unsig
 	// TODO: 将所有集中字体缓存在几张纹理中
 
 	char name[256];
-	sprintf(name, "#Font_%s_%d_d", font_name.data(), wch, char_height);
+	sprintf(name, "#Font_%s_%d_d", font_name.Data(), wch, char_height);
 
 	if (m_CharacterMap.find(name) == m_CharacterMap.end())
 
@@ -104,34 +104,39 @@ bool FontManager::GetCharacter(const string& font_name, const wchar_t wch, unsig
 
 		FT_Bitmap& bitmap = bitmap_glyph->bitmap;
 
-
-		int width = bitmap.width;
-		int height = bitmap.rows;
-
-		unsigned char* buf = new unsigned char[width * height * 4];
-		for(int j=0; j  < height ; j++)
+		if (bitmap.width && bitmap.rows)
 		{
-			for(int i=0; i < width; i++)
+
+			int width = bitmap.width;
+			int height = bitmap.rows;
+
+			unsigned char* buf = new unsigned char[width * height * 4];
+			for(int j=0; j  < height ; j++)
 			{
-				int index = 4 * i + (height - j - 1) * width * 4;
-				unsigned char alpha_val =  (i>=bitmap.width || j>=bitmap.rows) ? 0 : bitmap.buffer[i + bitmap.width*j];
+				for(int i=0; i < width; i++)
+				{
+					int index = 4 * i + (height - j - 1) * width * 4;
+					unsigned char alpha_val =  (i>=bitmap.width || j>=bitmap.rows) ? 0 : bitmap.buffer[i + bitmap.width*j];
 
-				// 白色字体，使用Alpha通道描绘字形
-				buf[index] = 0xff;
-				buf[index + 1] = 0xff;
-				buf[index + 2] = 0xff;
-				buf[index + 3] = alpha_val;
+					// 白色字体，使用Alpha通道描绘字形
+					buf[index] = 0xff;
+					buf[index + 1] = 0xff;
+					buf[index + 2] = 0xff;
+					buf[index + 3] = alpha_val;
+				}
 			}
+
+			// 宽高必须是2的n次幂
+			newInfo.texture = renderer->BuildTexture(name, width, height, 32, buf);
+
+			// 使用nearest过滤效果不佳
+			//newInfo.texture->SetMagFilterType(FILTER_TYPE_NEAREST);
+			//newInfo.texture->SetMinFilterType(FILTER_TYPE_NEAREST);
+
+			delete [] buf;
 		}
-
-		// 宽高必须是2的n次幂
-		newInfo.texture = renderer->BuildTexture(name, width, height, 32, buf);
-
-		// 使用nearest过滤效果不佳
-		//newInfo.texture->SetMagFilterType(FILTER_TYPE_NEAREST);
-		//newInfo.texture->SetMinFilterType(FILTER_TYPE_NEAREST);
-
-		delete [] buf;
+		else 
+			newInfo.texture = NULL;
 
 		newInfo.wchar = wch;
 		newInfo.char_height = char_height;

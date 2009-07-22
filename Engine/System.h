@@ -16,9 +16,9 @@ class System : public Singleton<System>
 public:
 	System();
 
-	void LoadResources(const string& filename);
+	void LoadResources(const String& filename);
 
-	bool CreateRenderWindow(const string& title,
+	bool CreateRenderWindow(const String& title,
 							unsigned int width,
 							unsigned int height,
 							unsigned int bits,
@@ -28,7 +28,7 @@ public:
 
 	// 设定窗体标题
 	//  注：过于频繁的调用会影响fps，不要在update中每帧都调用
-	void SetWindowTitle(const string& title);
+	void SetWindowTitle(const String& title);
 	void ResizeWindow(unsigned int width, unsigned int height);
 
 	void ToggleMouseCursor(bool toggle);
@@ -54,6 +54,7 @@ public:
 private:
 	void LoadAudios(ConfigFileKeys* list);
 	void LoadTextures(ConfigFileKeys* list);
+	void LoadMaterials(ConfigFileKeys* list);
 	void LoadFonts(ConfigFileKeys* list);
 	void LoadMeshes(ConfigFileKeys* list);
 
@@ -61,7 +62,7 @@ private:
 	RenderWindowParam	m_RenderWindowParam;
 
 	bool				m_FullScreen;
-	string				m_TitleName;
+	String				m_TitleName;
 };
 
 #endif

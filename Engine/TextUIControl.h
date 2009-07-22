@@ -14,7 +14,7 @@
 #include "Font.h"
 #include "Color4f.h"
 
-#include <string>
+#include "EString.h"
 #include <vector>
 
 using namespace std;
@@ -33,22 +33,46 @@ public:
 	// ----- TextUIControl Methods
 
 	// 指定文本使用的字体
-	void SetFont(const string& font_name);
+	void SetFont(const String& font_name);
 
 	// 指定要显示的文本
-	void SetText(const string& text);
+	void SetText(const String& text);
+
+	unsigned int GetTextLength() const { return m_TextLength; }
+	
+	void SetRenderTextCount(unsigned int count) { m_RenderTextCount = count; }
+	unsigned int GetRenderTextCount() const { return m_RenderTextCount; }
 
 	// 指定文本颜色
 	void SetTextColor(const Color4f& color) { m_TextColor = color; }
+	Color4f GetTextColor() const { return m_TextColor; }
+
+	// 字体大小
+	void SetFontSize(unsigned int size) { m_FontSize = size; }
+	unsigned int GetFontSize() const { return m_FontSize; }
+
+	// 字间距
+	void SetWordSpacing(int spacing) { m_WordSpacing = spacing; }
+	int GetWordSpacing() const { return m_WordSpacing; }
+
+	// 行间距
+	void SetLineSpacing(int spacing) { m_LineSpacing = spacing; }
+	int GetLineSpacing() const { return m_LineSpacing; }
 
 private:
 	void RefreshCharacters();
 
 private:
-	string			m_Font;				///< 字体
+	String			m_Font;				///< 字体
 	Color4f			m_TextColor;		///< 文本颜色
 	wchar_t*		m_WText;			///< 文本
-	unsigned int	m_TextSize;			///< 文本长度
+	unsigned int	m_TextLength;		///< 文本长度
+	unsigned int	m_RenderTextCount;	///< 实际渲染的字数
+
+	unsigned int	m_FontSize;			///< 字体大小
+
+	int				m_WordSpacing;		///< 字间距
+	int				m_LineSpacing;		///< 行间距
 
 	bool			m_Dirty;			///< 是否需要更新字符信息
 

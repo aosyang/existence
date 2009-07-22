@@ -70,9 +70,9 @@ Bone* Skeletal::ReadBones(ifstream& fin, unsigned int index)
 	return bone;
 }
 
-bool Skeletal::LoadFromFile(const string& filename)
+bool Skeletal::LoadFromFile(const String& filename)
 {
-	ifstream fin(filename.data());
+	ifstream fin(filename.Data());
 
 	if (!fin.is_open())
 		return false;

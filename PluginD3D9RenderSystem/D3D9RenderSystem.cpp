@@ -257,7 +257,7 @@ const Color4f D3D9Renderer::GetAmbientColor()
 	return D3DCOLOR_TO_COLOR4F(ambientColor);
 }
 
-ITexture* D3D9Renderer::BuildTexture(const string& textureName, unsigned int width, unsigned int height, unsigned int bpp, unsigned char* data)
+ITexture* D3D9Renderer::BuildTexture(const String& textureName, unsigned int width, unsigned int height, unsigned int bpp, unsigned char* data)
 {
 	if(m_TextureList.find(textureName) != m_TextureList.end())
 	{
@@ -307,7 +307,7 @@ ITexture* D3D9Renderer::BuildTexture(const string& textureName, unsigned int wid
 	return d3dtex;
 }
 
-ITexture* D3D9Renderer::GetTexture(const string& textureName)
+ITexture* D3D9Renderer::GetTexture(const String& textureName)
 {
 	TextureList::iterator iter;
 
@@ -411,7 +411,7 @@ void D3D9Renderer::SetupMaterial(Material* material)
 	}
 }
 
-bool D3D9Renderer::UnloadTexture(const string& textureName)
+bool D3D9Renderer::UnloadTexture(const String& textureName)
 {
 	bool result(true);
 	//if this texture ID mapped, unload it's texture, and remove it from the map

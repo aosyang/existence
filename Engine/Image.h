@@ -9,7 +9,7 @@
 #ifndef _IMAGE_H
 #define _IMAGE_H
 
-#include <string>
+#include "EString.h"
 
 using namespace std;
 
@@ -21,7 +21,7 @@ public:
 	Image();
 	~Image();
 
-	bool LoadFromFile(const string& filename);
+	bool LoadFromFile(const String& filename);
 
 	inline unsigned int GetWidth() { return m_Width; }
 	inline unsigned int GetHeight() { return m_Height; }

@@ -29,8 +29,16 @@ public:
 
 	// ----- Overwrite BaseSceneObject
 
-	bool IntersectsRay(const Ray& ray, CollisionInfo& info, int type);
+	bool IntersectsRay(const Ray& ray, CollisionInfo& info);
 
+	// ----- AudioListener Methods
+
+	inline void SetVelocityFactor(float factor) { m_VelocityFactor = factor; }
+	inline float GetVelocityFactor() const { return m_VelocityFactor; }
+
+protected:
+	Vector3f		m_OldPosition;
+	float			m_VelocityFactor;		///< 速度因子，影响多普勒效应，设置成0.0f为关闭
 };
 
 #endif

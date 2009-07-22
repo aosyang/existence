@@ -61,7 +61,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="Engine_d.lib alut.lib OpenAL32.lib"
+				AdditionalDependencies="Engine_d.lib alut.lib OpenAL32.lib libogg_static_d.lib libvorbis_static_d.lib libvorbisfile_static_d.lib"
 				OutputFile="$(OutDir)\$(ProjectName)_d.dll"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="..\bin\libs;..\extra\lib\"
@@ -138,7 +138,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="Engine.lib alut.lib OpenAL32.lib"
+				AdditionalDependencies="Engine.lib alut.lib OpenAL32.lib libogg_static.lib libvorbis_static.lib libvorbisfile_static.lib"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="..\bin\libs;..\extra\lib\"
 				GenerateDebugInformation="true"
@@ -182,6 +182,10 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath=".\ALAudioBuffer.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\ALAudioSource.cpp"
 				>
 			</File>
@@ -196,11 +200,19 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
+				RelativePath=".\ALAudioBuffer.h"
+				>
+			</File>
+			<File
 				RelativePath=".\ALAudioSource.h"
 				>
 			</File>
 			<File
 				RelativePath=".\ALAudioSystem.h"
+				>
+			</File>
+			<File
+				RelativePath=".\FileFormatFuncs.h"
 				>
 			</File>
 		</Filter>

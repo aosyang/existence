@@ -43,14 +43,14 @@ public:
 
 	int GetCollisionType() const { return COLLISION_TYPE_CAMERA; }
 	void PrepareRenderObjects(ChildrenSceneObjectsSet& objects);
-	//bool IntersectsRay(const Ray& ray, CollisionInfo& info, int type);
+	//bool IntersectsRay(const Ray& ray, CollisionInfo& info);
 	void SetPosition(const Vector3f& pos)
 	{
 		BaseSceneObject::SetPosition(pos);
 		m_MatrixOutOfData = true;
 	}
 
-	void SetRotation(const Matrix3& rot)
+	void SetRotation(const Quaternion& rot)
 	{
 		BaseSceneObject::SetRotation(rot);
 		m_MatrixOutOfData = true;
@@ -107,8 +107,8 @@ protected:
 	Matrix4		m_ViewMatrix;				///< 视矩阵
 	//Matrix4		m_Transform;				///< 摄像机变换矩阵
 
-	Matrix3		m_YawMatrix;				///< 水平方向矩阵
-	Matrix3		m_PitchMatrix;				///< 俯仰方向矩阵
+	//Matrix3		m_YawMatrix;				///< 水平方向矩阵
+	//Matrix3		m_PitchMatrix;				///< 俯仰方向矩阵
 
 	//float		m_MoveSpeed;
 	//float		m_RotateSpeed;

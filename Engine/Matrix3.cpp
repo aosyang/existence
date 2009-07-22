@@ -37,6 +37,13 @@ Vector3f Matrix3::operator* (const Vector3f& rkPoint) const
 	return kProd;
 }
 
+Matrix3 Matrix3::operator*=(const Matrix3& matrix)
+{
+	*this = this->operator*(matrix);
+
+	return *this;
+}
+
 void Matrix3::Identity()
 {
 	m[0][0] = m[1][1] = m[2][2] = 1.0f;
