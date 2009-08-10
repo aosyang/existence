@@ -198,6 +198,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\GLRenderTargetFBO.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\GLTexture.cpp"
 				>
 			</File>
@@ -229,6 +233,10 @@
 			</File>
 			<File
 				RelativePath=".\GLRenderSystem.h"
+				>
+			</File>
+			<File
+				RelativePath=".\GLRenderTargetFBO.h"
 				>
 			</File>
 			<File

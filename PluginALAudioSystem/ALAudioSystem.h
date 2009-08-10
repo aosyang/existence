@@ -18,7 +18,7 @@
 #include <al/alut.h>
 
 #include <map>
-#include <list>
+#include <set>
 #include "EString.h"
 
 using namespace std;
@@ -44,13 +44,15 @@ public:
 
 	IAudioSource* CreateSourceInstance(IAudioBuffer* buffer, const Vector3f& position, bool autoRemove);
 
+	void RemoveSource(IAudioSource* source);
+
 	void Update();
 private:
-	typedef map<const String, ALAudioBuffer*>	AudioBufferList;
-	AudioBufferList						m_Buffers;
+	typedef map<const String, ALAudioBuffer*>	ALAudioBufferList;
+	ALAudioBufferList							m_Buffers;
 
-	typedef list<ALAudioSource*>		AudioSourceList;
-	AudioSourceList						m_Sources;
+	typedef set<ALAudioSource*>				ALAudioSourceList;
+	ALAudioSourceList						m_Sources;
 
 	typedef IAudioFileFormat* (*CreateFileFormatFunc)(const String& filename);
 	map<const String, CreateFileFormatFunc>			m_FileFormatCreator;

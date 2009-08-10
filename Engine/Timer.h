@@ -10,7 +10,9 @@
 
 // 这个类从Ogre复制而来
 
-#include <windows.h>
+#include "Platform.h"
+
+#if defined __PLATFORM_WIN32
 #include <time.h>
 #include <algorithm>
 
@@ -21,6 +23,12 @@
 #ifdef min
 #  undef min
 #endif
+
+#elif defined __PLATFORM_LINUX
+#include <sys/time.h>
+#include <time.h>
+
+#endif	// #if defined __PLATFORM_WIN32
 
 class Timer
 {
@@ -33,6 +41,7 @@ public:
 	unsigned long GetMilliseconds();
 
 protected:
+#if defined __PLATFORM_WIN32
 	clock_t mZeroClock;
 
 	DWORD mStartTick;
@@ -41,6 +50,11 @@ protected:
 	LARGE_INTEGER mFrequency;
 
 	DWORD mTimerMask;
+
+#elif defined __PLATFORM_LINUX
+	struct timeval start;
+	clock_t zeroClock;
+#endif	// #if defined __PLATFORM_WIN32
 
 };
 

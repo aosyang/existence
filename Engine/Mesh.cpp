@@ -12,8 +12,8 @@
 
 using namespace std;
 
-unsigned int ResourceManager<Mesh>::m_sIndex = 0;
-ResourceManager<Mesh>::LoadFunc ResourceManager<Mesh>::m_sLoadFunc = &Mesh::LoadMeshFromFile;
+template <> unsigned int ResourceManager<Mesh>::m_sIndex = 0;
+template <> ResourceManager<Mesh>::LoadFunc ResourceManager<Mesh>::m_sLoadFunc = &Mesh::LoadMeshFromFile;
 
 Mesh::Mesh()
 :
@@ -84,6 +84,8 @@ Mesh* Mesh::LoadMeshFromFile(const String& filename)
 	}
 
 	fin.close();
+
+	mesh->m_Filename = filename;
 
 	return mesh;
 

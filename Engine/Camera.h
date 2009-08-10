@@ -86,7 +86,9 @@ public:
 		m_MatrixOutOfData = true;
 	}
 
-	const Matrix4 GetProjMatrix();
+	void SetViewOffsetMatrix(const Matrix4& viewOffset);
+
+	const Matrix4& GetProjMatrix();
 	const Matrix4& GetViewMatrix();
 
 	void UpdateFrustum();
@@ -105,6 +107,7 @@ protected:
 	float		m_FarClippingDistance;		///< 远裁剪距离
 
 	Matrix4		m_ViewMatrix;				///< 视矩阵
+	Matrix4		m_ViewOffset;				///< 视矩阵偏移，影响视矩阵而不影响摄像机原始位置，用于产生镜头振动等效果
 	//Matrix4		m_Transform;				///< 摄像机变换矩阵
 
 	//Matrix3		m_YawMatrix;				///< 水平方向矩阵

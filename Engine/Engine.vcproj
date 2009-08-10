@@ -171,6 +171,10 @@
 				RelativePath=".\Camera.h"
 				>
 			</File>
+			<File
+				RelativePath=".\CameraShake.h"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Font"
@@ -440,6 +444,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\AudioSourceObject.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\AudioSourceObject.h"
+				>
+			</File>
+			<File
 				RelativePath=".\BaseSceneObject.cpp"
 				>
 			</File>
@@ -677,6 +689,26 @@
 			</File>
 			<File
 				RelativePath=".\EString.h"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="SceneManagement"
+			>
+			<File
+				RelativePath=".\QuadTree.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\QuadTree.h"
+				>
+			</File>
+			<File
+				RelativePath=".\QuadTreeNode.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\QuadTreeNode.h"
 				>
 			</File>
 		</Filter>

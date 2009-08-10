@@ -10,15 +10,15 @@
 #include "Engine.h"
 
 Billboard::Billboard()
-: m_Material(NULL),
+: BaseLightableObject(),
+  m_Material(NULL),
   m_Radius(10.0f),
   m_ZRotataion(0.0f),
   m_ZOffset(0.0f),
   m_Scale(1.0f),
   m_Scale_x(1.0f),
   m_Scale_y(1.0f),
-  m_NeedUpdateVertexData(false),
-  BaseLightableObject()
+  m_NeedUpdateVertexData(false)
 {
 	m_RenderOrder = 110;
 
@@ -79,7 +79,7 @@ void Billboard::Render()
 
 }
 
-void Billboard::PrepareRenderObjects(ChildrenSceneObjectsSet& objects)
+void Billboard::PrepareRenderObjects(SceneObjectList& objects)
 {
 	// TODO: Frustum checking
 	BaseSceneObject::PrepareRenderObjects(objects);

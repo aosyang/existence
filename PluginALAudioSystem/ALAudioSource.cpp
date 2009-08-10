@@ -102,6 +102,11 @@ bool ALAudioSource::GetLooping()
 	return (bool)loop;
 }
 
+void ALAudioSource::SetPlaybackTime(float time)
+{
+	alSourcef(m_Source, AL_SEC_OFFSET, time);
+}
+
 // 获取当前播放时间
 float ALAudioSource::GetPlaybackTime()
 {
@@ -121,9 +126,17 @@ void ALAudioSource::SetTransform(const Matrix4& transform)
 	alSourcefv(m_Source, AL_POSITION, transform.GetPosition().GetArray());
 }
 
-void ALAudioSource::SetAutoRemove(bool autoRemove)
+void ALAudioSource::SetVelocity(const Vector3f& vel)
 {
-	m_RemoveOnDone = autoRemove;
+	alSourcefv(m_Source, AL_VELOCITY, vel.GetArray());
+}
+
+const Vector3f ALAudioSource::GetVelocity()
+{
+	Vector3f vel;
+	alGetSourcefv(m_Source, AL_VELOCITY, &vel.x);
+
+	return vel;
 }
 
 bool ALAudioSource::IsStopped()

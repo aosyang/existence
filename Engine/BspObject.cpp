@@ -40,7 +40,7 @@ void BspObject::DebugRender()
 }
 
 
-void BspObject::PrepareRenderObjects(ChildrenSceneObjectsSet& objects)
+void BspObject::PrepareRenderObjects(SceneObjectList& objects)
 {
 	// TODO: 如果在可见范围，就添加到渲染队列
 	Frustum* frustum = renderer->GetFrustum();

@@ -10,6 +10,7 @@
 
 #include "Matrix3.h"
 #include "Vector3f.h"
+#include "Quaternion.h"
 #include "Ray.h"
 
 
@@ -84,6 +85,8 @@ public:
 	const Vector3f GetUpVector() const;
 	// 获取前方向向量
 	const Vector3f GetForwardVector() const;
+
+	void SetRotation(const Quaternion& rot);
 
 	void SetRotation(const Matrix3& rot);
 	Matrix3 GetRotationMatrix() const;

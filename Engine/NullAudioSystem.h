@@ -40,6 +40,7 @@ public:
 
 	IAudioSource* CreateSourceInstance(IAudioBuffer* buffer, const Vector3f& position, bool autoRemove) { return NULL; }
 
+	void RemoveSource(IAudioSource* source) {}
 	void Update() {}
 };
 

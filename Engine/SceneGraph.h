@@ -74,6 +74,9 @@ private:
 	void SetFrustum(Frustum* frustum);
 	void DrawAssistantElements();
 
+	void DrawScene();
+	void DrawUI();
+
 private:
 	//typedef vector<ISceneObject*> SceneObjects;
 	//SceneObjects	m_SceneObjects;

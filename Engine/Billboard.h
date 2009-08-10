@@ -26,7 +26,7 @@ public:
 
 	// ----- Overwrite BaseSceneObject
 
-	void PrepareRenderObjects(ChildrenSceneObjectsSet& objects);
+	void PrepareRenderObjects(SceneObjectList& objects);
 
 	//int GetCollisionType() const { return COLLISION_TYPE_BILLBOARD; }
 	// ----- Billboard Methods

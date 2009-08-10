@@ -30,6 +30,7 @@ class BspTree;
 class MeshElement;
 class Mesh;
 
+//template class ResourceManager<Mesh>;
 ResourceManager<Mesh>;
 
 enum EMDL_LUMP
@@ -118,6 +119,7 @@ private:
 	~Mesh();
 
 	const String*			m_Name;
+	String					m_Filename;			// for test only
 	float					m_BoundingRadius;
 	vector<MeshElement*>	m_MeshElements;
 	vector<Material*>		m_Materials;

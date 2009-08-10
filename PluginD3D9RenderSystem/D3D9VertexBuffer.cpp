@@ -22,8 +22,10 @@ D3D9VertexBuffer::~D3D9VertexBuffer()
 	Clear();
 }
 
-bool D3D9VertexBuffer::CreateBuffer(const float* vertexArray,
+bool D3D9VertexBuffer::CreateBuffer(int vertexFormat,
+									const float* vertexArray,
 									const float* normalArray,
+									const float* colorArray,
 									const float* textureCoordArray,
 									unsigned int vertexNum,
 									unsigned int* faceArray,
@@ -54,22 +56,26 @@ bool D3D9VertexBuffer::CreateBuffer(const float* vertexArray,
 	// 将数组形式原始数据保存到缓冲中
 	D3DVertex* vert = new D3DVertex[vertexNum];
 
-	int v = 0, n = 0, t = 0;
-	for (unsigned int i=0; i<vertexNum; i++)
-	{
-		vert[i].x = vertexArray[v++];
-		vert[i].y = vertexArray[v++];
-		vert[i].z = vertexArray[v++];
+	//if (vertexArray && normalArray && textureCoordArray)
+	//{
 
-		vert[i].nx = -normalArray[n++];
-		vert[i].ny = -normalArray[n++];
-		vert[i].nz = -normalArray[n++];
+		int v = 0, n = 0, t = 0;
+		for (unsigned int i=0; i<vertexNum; i++)
+		{
+			vert[i].x = vertexArray[v++];
+			vert[i].y = vertexArray[v++];
+			vert[i].z = vertexArray[v++];
 
-		//vert[i].color = 0xFFFFFFFF;
-		vert[i].u = textureCoordArray[t++];
-		vert[i].v = textureCoordArray[t++];
-	}
+			vert[i].nx = -normalArray[n++];
+			vert[i].ny = -normalArray[n++];
+			vert[i].nz = -normalArray[n++];
 
+			//vert[i].color = 0xFFFFFFFF;
+			vert[i].u = textureCoordArray[t++];
+			vert[i].v = textureCoordArray[t++];
+		}
+
+	//}
 	Lock();
 	SetVertexData(vert, vertexNum);
 	SetIndexData(faceArray, faceNum);
@@ -86,10 +92,16 @@ bool D3D9VertexBuffer::CreateBuffer(const float* vertexArray,
 void D3D9VertexBuffer::Clear()
 {
 	if (m_D3DVertexBuffer)
+	{
 		m_D3DVertexBuffer->Release();
+		m_D3DVertexBuffer = NULL;
+	}
 
 	if (m_D3DIndexBuffer)
+	{
 		m_D3DIndexBuffer->Release();
+		m_D3DIndexBuffer = NULL;
+	}
 
 	m_Vertices = NULL;
 	m_Indices = NULL;
@@ -123,6 +135,18 @@ void D3D9VertexBuffer::SetVertexData(void* vertexData, unsigned int vertexNum)
 void D3D9VertexBuffer::SetIndexData(void* indexData, unsigned int indexNum)
 {
 	memcpy(m_Indices, indexData, sizeof(unsigned int) * indexNum * 3);
+}
+
+void D3D9VertexBuffer::ModifyVertexData(VertexFormat dataFormat, int offset,  int size, void* data)
+{
+}
+
+void D3D9VertexBuffer::ModifyIndexData(int offset, int size, void* data)
+{
+}
+
+void D3D9VertexBuffer::SetIndexSize(int size)
+{
 }
 
 void D3D9VertexBuffer::RenderBuffer()

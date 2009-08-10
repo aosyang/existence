@@ -60,7 +60,8 @@ public:
 	void ToggleLight(bool enable, unsigned int index);
 
 	void BeginRender();
-	void EndRender(bool swapBuffer);
+	void EndRender();
+	void SwapBuffer();
 
 	void RenderVertexBuffer(IVertexBuffer* vbuffer, Material* material, const Matrix4& transform);
 
@@ -68,7 +69,7 @@ public:
 	void RenderSphere(const Vector3f& point, float radius, const Color4f& color, unsigned int segment);
 	void RenderLine(const Vector3f& begin, const Vector3f& end, const Color4f& color);
 
-	void RenderScreenQuad(float left, float top, float right, float bottom, ITexture* texture);
+	void RenderScreenQuad(float left, float top, float right, float bottom, ITexture* texture, const Color4f& color);
 
 	// ÆÁÄ»×ø±ê
 	void RenderScreenQuad(int x1, int y1, int x2, int y2, ITexture* texture, const Color4f& color);
@@ -77,6 +78,7 @@ public:
 	const Color4f GetAmbientColor();
 
 	ITexture* BuildTexture(const String& textureName, unsigned int width, unsigned int height, unsigned int bpp, unsigned char* data);
+	ITexture* BuildCubeTexture(const String& textureName, unsigned int width, unsigned int height, unsigned int bpp, unsigned char* data[6]);
 	ITexture* BuildDepthTexture(const String& textureName, unsigned int width, unsigned int height) { return NULL; }
 
 	ITexture* GetTexture(const String& textureName);
@@ -87,6 +89,9 @@ public:
 
 	IVertexBuffer* BuildVertexBuffer();
 
+	// Render target
+	IRenderTarget* CreateRenderTarget();
+	void SetRenderTarget(IRenderTarget* rt);
 protected:
 	void BuildD3DMatrix(const Matrix4& mat, D3DMATRIX& d3dMat);
 

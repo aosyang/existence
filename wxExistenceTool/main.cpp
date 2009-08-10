@@ -174,8 +174,7 @@ FrameEngine::FrameEngine(const wxString& title)
 
 	//mRenderer->Initialize(static_cast<HWND>(hWnd));
 	System::Instance().SetRenderWindowHandle(static_cast<RenderWindowHandle>(hWnd));
-	renderer->Initialize(System::Instance().GetRenderWindowParameters());
-	Input::Instance().Initialize();
+	Engine::Instance().Initialize();
 
 	System::Instance().LoadResources("resources.cfg");
 

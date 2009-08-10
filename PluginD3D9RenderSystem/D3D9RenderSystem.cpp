@@ -198,11 +198,14 @@ void D3D9Renderer::BeginRender()
 	m_D3DDevice->SetTransform(D3DTS_VIEW, &viewMat);
 }
 
-void D3D9Renderer::EndRender(bool swapBuffer)
+void D3D9Renderer::EndRender()
 {
 	m_D3DDevice->EndScene();
-	if (swapBuffer)
-		m_D3DDevice->Present(NULL, NULL, NULL, NULL);
+}
+
+void D3D9Renderer::SwapBuffer()
+{
+	m_D3DDevice->Present(NULL, NULL, NULL, NULL);
 }
 
 void D3D9Renderer::RenderVertexBuffer(IVertexBuffer* vbuffer, Material* material, const Matrix4& transform)
@@ -234,7 +237,7 @@ void D3D9Renderer::RenderLine(const Vector3f& begin, const Vector3f& end, const 
 
 }
 
-void D3D9Renderer::RenderScreenQuad(float left, float top, float right, float bottom, ITexture* texture)
+void D3D9Renderer::RenderScreenQuad(float left, float top, float right, float bottom, ITexture* texture, const Color4f& color)
 {
 
 }
@@ -307,6 +310,12 @@ ITexture* D3D9Renderer::BuildTexture(const String& textureName, unsigned int wid
 	return d3dtex;
 }
 
+ITexture* D3D9Renderer::BuildCubeTexture(const String& textureName, unsigned int width, unsigned int height, unsigned int bpp, unsigned char* data[6])
+{
+	return NULL;
+}
+
+
 ITexture* D3D9Renderer::GetTexture(const String& textureName)
 {
 	TextureList::iterator iter;
@@ -369,6 +378,16 @@ IVertexBuffer* D3D9Renderer::BuildVertexBuffer()
 	return new D3D9VertexBuffer;
 }
 
+IRenderTarget* D3D9Renderer::CreateRenderTarget()
+{
+	return NULL;
+}
+
+void D3D9Renderer::SetRenderTarget(IRenderTarget* rt)
+{
+
+}
+
 
 void D3D9Renderer::BuildD3DMatrix(const Matrix4& mat, D3DMATRIX& d3dMat)
 {
@@ -407,7 +426,7 @@ void D3D9Renderer::SetupMaterial(Material* material)
 
 		ToggleDepthTest(material->GetDepthTest());
 
-		m_D3DDevice->SetTexture(0, static_cast<D3D9Texture*>(material->GetTextureRenderState(0)->texture)->GetD3DTexture());
+		//m_D3DDevice->SetTexture(0, static_cast<D3D9Texture*>(material->GetTextureRenderState(0)->texture)->GetD3DTexture());
 	}
 }
 

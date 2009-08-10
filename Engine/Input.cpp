@@ -103,6 +103,8 @@ Input::Input()
 		m_JoyStickAxis[i] = 0;
 }
 
+// 输入系统初始化
+//     初始化行为依赖RenderWindowHandle
 void Input::Initialize()
 {
 	Log.MsgLn("Initializing input system");

@@ -16,9 +16,11 @@
 
 using namespace std;
 
-// ÆÁ±Î¾¯¸æ
+// ÆÁ±Î¾¯¸æ(for win32 only)
+#if defined __PLATFORM_WIN32
 #pragma warning(push)
 #pragma warning(disable:4996)
+#endif	//#if defined __PLATFORM_WIN32
 
 #include "Singleton.h"
 
@@ -131,7 +133,9 @@ private:
 	ofstream  logfile;
 };
 
+#if defined __PLATFORM_WIN32
 #pragma warning(pop)
+#endif	//#if defined __PLATFORM_WIN32
 
 #define Log Log::Instance()
 

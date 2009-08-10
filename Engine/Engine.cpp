@@ -118,9 +118,6 @@ void EngineMessageNotifier::OnMessageActiveWindow(bool active)
 
 void EngineMessageNotifier::OnMessageResizeWindow(unsigned int width, unsigned int height)
 {
-	// TODO: ResizeWindow方法太多，需要集中处理
-	System::Instance().ResizeWindow(width, height);
-	Input::Instance().ResizeWindow();
 	Engine::Instance().ResizeWindow(width, height);
 }
 
@@ -135,28 +132,45 @@ Engine::Engine()
 {
 	Log.CreateLog("engine.log");
 
-	Initialize();
-}
-
-void Engine::Initialize()
-{
 	Log.MsgLn("Initializing engine");
+
+	// 窗体消息通知
 	m_MessageNotifier = new EngineMessageNotifier;
 	Platform::SetMessageNotifier(m_MessageNotifier);
 
-	LoadPlugins();
+	LoadModules();
+}
 
-	AssertFatal(m_Renderer, "Engine::Initialize() : Failed to create render system from plugin.");
+// 初始化各个系统，必须在渲染窗体创建成功后调用
+// 参数：
+//      bool input 是否初始化输入系统
+//      使用第三方界面工具时，输入系统会发生冲突，遇到这样情况将这个参数设为false
+void Engine::Initialize(bool input)
+{
+	// 如果窗体句柄为空，报错
+	AssertFatal(System::Instance().GetRenderWindowParameters()->handle, "Engine::Initialize(): Render window handle is never expected to be null.");
 
-	// Use a null audio system if we don't find one from plugins
-	if (!m_AudioSystem)
-		m_AudioSystem = new NullAudioSystem();
-	//AssertFatal(m_AudioSystem, "Engine::Initialize() : Failed to create audio system from plugin.");
+	Log.MsgLn("Initializing RenderSystem");
+	renderer->Initialize(System::Instance().GetRenderWindowParameters());
 
-	Log.MsgLn("Initializing audio system");
+	Log.MsgLn("Initializing AudioSystem");
 	m_AudioSystem->Initialize();
 
+	Log.MsgLn("Initializing FontManager");
 	FontManager::Instance().Initialize();
+
+	if (input)
+	{
+		Log.MsgLn("Initializing InputSystem");
+		Input::Instance().Initialize();
+	}
+
+	// 创建默认的空白纹理
+	// 需要在渲染器初始化以后调用
+	Material* matWhite = ResourceManager<Material>::Instance().Create("#white");
+	matWhite->SetLighting(false);
+	unsigned int white_data = 0xFFFFFFFF;
+	matWhite->SetTexture(renderer->BuildTexture("#white", 1, 1, 32, (unsigned char*)&white_data));
 }
 
 void Engine::Shutdown()
@@ -198,7 +212,9 @@ void Engine::Run()
 		ManualUpdate(deltaTime);
 
 		// 如果没有实际渲染就不要占用CPU周期
+#ifdef __PLATFORM_WIN32
 		Sleep(1);
+#endif	// #ifdef __PLATFORM_WIN32
 	}
 
 	m_Game->Shutdown();
@@ -245,11 +261,27 @@ void Engine::ManualUpdate(unsigned long deltaTime)
 }
 void Engine::ResizeWindow(unsigned int width, unsigned int height)
 {
+	System::Instance().ResizeWindow(width, height);
+	Input::Instance().ResizeWindow();
 	m_Game->OnResizeWindow(width, height);
 	renderer->ResizeRenderWindow(width, height);
 }
 
-void Engine::LoadPlugins()
+#if defined __PLATFORM_WIN32
+typedef HINSTANCE Module_t;
+#define LoadModule(filename) LoadLibrary(filename)
+#define GetFunction(module, name) GetProcAddress(module, name)
+#define UnloadModule(module) FreeLibrary(module)
+#elif defined __PLATFORM_LINUX
+#include <dlfcn.h>
+typedef void* Module_t;
+#define LoadModule(filename) dlopen(filename, RTLD_LAZY)
+#define GetFunction(module, name) dlsym(module, name)
+#define UnloadModule(module) dlclose(module)
+#endif	// #if defined __PLATFORM_WIN32
+
+// 从插件中读入音频及视频渲染系统
+void Engine::LoadModules()
 {
 	Log.MsgLn("Loading plugins");
 	ConfigGroups group;
@@ -265,10 +297,10 @@ void Engine::LoadPlugins()
 	{
 		if (iter->key == "RenderSystem")
 		{
-			HINSTANCE hDLL;
-			hDLL = LoadLibrary(iter->value.Data());
+			Module_t hDLL;
+			hDLL = LoadModule(iter->value.Data());
 
-			RenderSystemFactoryCreateFunc rendererCreator = (RenderSystemFactoryCreateFunc)GetProcAddress(hDLL, "CreateRenderSystem");
+			RenderSystemFactoryCreateFunc rendererCreator = (RenderSystemFactoryCreateFunc)GetFunction(hDLL, "CreateRenderSystem");
 			if (rendererCreator == NULL)
 			{
 				String msg;
@@ -279,14 +311,14 @@ void Engine::LoadPlugins()
 
 			m_Renderer = (*rendererCreator)();
 
-			//FreeLibrary(hDLL);
+			//UnloadModule(hDLL);
 		}
 		else if (iter->key == "AudioSystem")
 		{
-			HINSTANCE hDLL;
-			hDLL = LoadLibrary(iter->value.Data());
+			Module_t hDLL;
+			hDLL = LoadModule(iter->value.Data());
 
-			AudioSystemFactoryCreateFunc audioCreator = (AudioSystemFactoryCreateFunc)GetProcAddress(hDLL, "CreateAudioSystem");
+			AudioSystemFactoryCreateFunc audioCreator = (AudioSystemFactoryCreateFunc)GetFunction(hDLL, "CreateAudioSystem");
 			if (audioCreator == NULL)
 			{
 				String msg;
@@ -299,4 +331,11 @@ void Engine::LoadPlugins()
 			m_AudioSystem = (*audioCreator)();
 		}
 	}
+
+	AssertFatal(m_Renderer, "Engine::LoadModules() : Failed to create render system from plugin.");
+
+	// Use a null audio system if we don't find one from plugins
+	if (!m_AudioSystem)
+		m_AudioSystem = new NullAudioSystem();
+
 }

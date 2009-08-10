@@ -12,13 +12,17 @@
 
 #include "GL/glew.h"
 
+class GLRenderer;
+
 int up_to_pow_of_two(int n);
 
 class GLTexture : public BaseTexture
 {
+	friend class GLRenderer;
 public:
-	GLTexture();
 	~GLTexture();
+
+	// ----- ITexture Methods
 
 	void Create(unsigned int width, unsigned int height, unsigned int bpp, unsigned char* data);
 	void ModifyRectData(int xoffset, int yoffset, int width, int heigh, void* data);
@@ -28,17 +32,19 @@ public:
 	void SetVertexProgram(const String& filename, const String& entry) {}
 	void SetFragmentProgram(const String& filename, const String& entry) {}
 
+	void BindTexture();
+
+	int GetTarget() const { return GL_TEXTURE_2D; }
+
 	// ----- GLTexture Methods
 
 	inline unsigned int GetGLTextureID() const { return m_GLTextureID; }
 	inline unsigned int* GetGLTextureIDPtr() { return &m_GLTextureID; }
 
-	void BindTexture();
-
-	int GetTarget() const { return GL_TEXTURE_2D; }
-
 	static bool		s_ForcePowOfTwo;			///< 将纹理缩放为2的n次幂，以解决硬件不支持非pow_of_2的情况
 private:
+	GLTexture();
+
 	//int				m_WrapType;
 	//
 	//int				m_MinFilterType;

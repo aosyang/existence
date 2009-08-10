@@ -64,7 +64,8 @@ public:
 	void ToggleBlend(bool enable);
 
 	void BeginRender();
-	void EndRender(bool swapBuffer);
+	void EndRender();
+	void SwapBuffer();
 
 	void RenderVertexBuffer(IVertexBuffer* vbuffer, Material* material, const Matrix4& transform);
 
@@ -95,7 +96,8 @@ public:
 	IVertexBuffer* BuildVertexBuffer();
 
 	// Render target
-
+	IRenderTarget* CreateRenderTarget();
+	void SetRenderTarget(IRenderTarget* rt);
 protected:
 
 	// ¥¥Ω®OpenGLæÿ’Û
@@ -107,6 +109,7 @@ protected:
 	GLint GetBlendFactor(int factor);
 	GLint GetEnvMode(int mode);
 	void SetupMaterial(Material* material);
+	void SetupMaterialWhite();
 
 	bool UnloadTexture(const String& textureName);
 	void UnloadAllTextures();

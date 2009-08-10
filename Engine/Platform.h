@@ -23,6 +23,7 @@ typedef HWND RenderWindowHandle;
 
 #ifdef __PLATFORM_LINUX
 // TODO: 添加Linux平台的RenderWindowHandle
+typedef void* RenderWindowHandle;
 #endif
 
 struct RenderWindowParam

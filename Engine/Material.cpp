@@ -10,8 +10,8 @@
 
 #include "tinyxml.h"
 
-unsigned int ResourceManager<Material>::m_sIndex = 0;
-ResourceManager<Material>::LoadFunc ResourceManager<Material>::m_sLoadFunc = &Material::LoadMaterial;
+template <> unsigned int ResourceManager<Material>::m_sIndex = 0;
+template <> ResourceManager<Material>::LoadFunc ResourceManager<Material>::m_sLoadFunc = &Material::LoadMaterial;
 MaterialLoadFuncMap	Material::s_FuncMap;
 RenderStateLoadFuncMap Material::s_RSFuncMap;
 
@@ -140,11 +140,11 @@ void Material::SaveToFile(const String& filename, bool outputDefault)
 
 	// 属性写入xml文件，如果与默认值相等就不写入
 #define SAVE_MATERIAL_ATTRIB(attr, def_val) \
-	if ((Get##attr##()!=def_val) || outputDefault) { \
-		TiXmlElement name##attr##(#attr); \
-		TiXmlText val##attr##(String(Get##attr##()).Data()); \
-		name##attr##.InsertEndChild(val##attr##); \
-		elem_mat.InsertEndChild(name##attr##); \
+	if ((Get##attr()!=def_val) || outputDefault) { \
+		TiXmlElement name##attr(#attr); \
+		TiXmlText val##attr(String(Get##attr()).Data()); \
+		name##attr.InsertEndChild(val##attr); \
+		elem_mat.InsertEndChild(name##attr); \
 	}
 
 	//TiXmlElement lighting("Lighting");
@@ -171,10 +171,10 @@ void Material::SaveToFile(const String& filename, bool outputDefault)
 		texRenderState_t* rs = &m_TextureRenderState[i];
 
 #define SAVE_RENDER_STATE_ATTRIB(attr, member) \
-		TiXmlElement name##attr##(#attr); \
-		TiXmlText val##attr##(String(rs->member).Data()); \
-		name##attr##.InsertEndChild(val##attr##); \
-		elem_rs.InsertEndChild(name##attr##);
+		TiXmlElement name##attr(#attr); \
+		TiXmlText val##attr(String(rs->member).Data()); \
+		name##attr.InsertEndChild(val##attr); \
+		elem_rs.InsertEndChild(name##attr);
 
 		SAVE_RENDER_STATE_ATTRIB(Texture, texture->GetName());
 		SAVE_RENDER_STATE_ATTRIB(WrapType, wrapType);

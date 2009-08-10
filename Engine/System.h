@@ -40,11 +40,17 @@ public:
 	{
 		m_RenderWindowParam.handle = handle;
 
+#if defined __PLATFORM_WIN32
 		RECT rect;
 		GetWindowRect(handle, &rect);
 
 		m_RenderWindowParam.height = rect.bottom - rect.top;
 		m_RenderWindowParam.width = rect.right - rect.left;
+#elif defined __PLATFORM_LINUX
+		// TODO: Linux方法再说
+#endif	// #if defined __PLATFORM_WIN32
+
+		// TODO: 桌面颜色深度需要取得
 		m_RenderWindowParam.color_depth_bit = 32;
 	}
 
@@ -66,3 +72,4 @@ private:
 };
 
 #endif
+

@@ -26,7 +26,6 @@ public:
 
 	// ----- Overwrite BaseSceneObject
 
-	void PrepareRenderObjects(ChildrenSceneObjectsSet& objects);
 	bool IntersectsRay(const Ray& ray, CollisionInfo& info);
 
 	// ----- DistantViewObject Methods

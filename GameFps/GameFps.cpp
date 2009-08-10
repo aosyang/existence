@@ -5,6 +5,7 @@ bool toggleWireframe = false;
 bool toggleGravity = true;
 bool flareVisible = false;
 unsigned long timeToHide = 0;
+CameraShakeEffect	g_CameraShake;
 
 GameFps::GameFps()
  : m_Scene(NULL),
@@ -88,13 +89,15 @@ void GameFps::StartGame()
 	m_ViewGun->SetMesh(ResourceManager<Mesh>::Instance().GetByName("mp5"));
 	LightingManager::Instance().AddLightableObject(m_ViewGun);
 
-	Material* matFlare = ResourceManager<Material>::Instance().GetByName("flare");
+	Material* matFlare = ResourceManager<Material>::Instance().Create("flare");
 	if (matFlare)
 	{
+		matFlare->SetTexture(renderer->GetTexture("flare"));
 		matFlare->GetTextureRenderState()->srcBlendFactor = BLEND_FACTOR_ONE;
 		matFlare->GetTextureRenderState()->dstBlendFactor = BLEND_FACTOR_ONE;
 		matFlare->SetDepthWriting(false);
 	}
+	//matFlare->SaveToFile("flare.emt");
 
 	Image cubeMap[6];
 	cubeMap[0].LoadFromFile("../../../data/sky/snowlake_bk.tga");
@@ -108,24 +111,32 @@ void GameFps::StartGame()
 		data[i] = cubeMap[i].GetData();
 	renderer->BuildCubeTexture("cubeMap", cubeMap[0].GetWidth(), cubeMap[0].GetHeight(), cubeMap[0].GetBPP(), data);
 
-	Material* matShell = ResourceManager<Material>::Instance().GetByName("goldshell");
+	Material* matShell = ResourceManager<Material>::Instance().Create("goldshell");
 	if (matShell)
 	{
+		matShell->SetTexture(renderer->GetTexture("goldshell"));
 		matShell->SetTextureLayerEnabled(1, true);
 		matShell->GetTextureRenderState(1)->texture = renderer->GetTexture("env_sphere");
 		matShell->GetTextureRenderState(1)->envMode = ENV_MODE_ADD;
 		matShell->GetTextureRenderState(1)->genMode = GEN_MODE_SPHERE;
 
-		matShell->SaveToFile("Shell.emt", true);
+		//matShell->SaveToFile("goldshell.emt", true);
 	}
 
-	//Material* matCubeSky = ResourceManager<Material>::Instance().Create("cube_sky");
-	//matCubeSky->GetTextureRenderState(0)->texture = renderer->GetTexture("cubeMap");
-	//matCubeSky->GetTextureRenderState(0)->envMode = ENV_MODE_MODULATE;
-	//matCubeSky->GetTextureRenderState(0)->genMode = GEN_MODE_CUBE_MAP;
+	Material* matCubeSky = ResourceManager<Material>::Instance().Create("cube_sky");
+	matCubeSky->GetTextureRenderState(0)->texture = renderer->GetTexture("cubeMap");
+	matCubeSky->GetTextureRenderState(0)->envMode = ENV_MODE_MODULATE;
+	matCubeSky->GetTextureRenderState(0)->genMode = GEN_MODE_CUBE_MAP;
 
-	for (int i=0; i<6; i++)
-		ResourceManager<Mesh>::Instance().GetByName("skybox")->GetMaterial(i)->GetTextureRenderState(0)->envMode = ENV_MODE_REPLACE;
+	//matCubeSky->SaveToFile("cube_sky.emt");
+
+	//Mesh* mesh = ResourceManager<Mesh>::Instance().Create("skybox");
+	//// 修改天空盒材质为replace
+	//for (int i=0; i<6; i++)
+	//{
+	//	Material* mat = mesh->GetMaterial(i);
+	//	mat->GetTextureRenderState(0)->envMode = ENV_MODE_REPLACE;
+	//}
 
 	m_Sky = new DistantViewObject();
 	m_Sky->SetMesh(ResourceManager<Mesh>::Instance().GetByName("skybox"));
@@ -136,11 +147,13 @@ void GameFps::StartGame()
 	String matName[] = { "lowerrec", "buttstock", "handle", "barrel", "clip", "forearm", "rearsight" };
 	for (int i=0; i<7; i++)
 	{
-		Material* gunMat = ResourceManager<Material>::Instance().GetByName(matName[i]);
+		Material* gunMat = ResourceManager<Material>::Instance().Create(matName[i]);
+		gunMat->SetTexture(renderer->GetTexture(matName[i]));
 		gunMat->SetTextureLayerEnabled(1, true);
 		gunMat->GetTextureRenderState(1)->texture = renderer->GetTexture("cubeMap");
 		gunMat->GetTextureRenderState(1)->envMode = ENV_MODE_MODULATE;
 		gunMat->GetTextureRenderState(1)->genMode = GEN_MODE_CUBE_MAP;
+		//gunMat->SaveToFile(String(matName[i]) + ".emt");
 	}
 
 	Material* matSphere = ResourceManager<Material>::Instance().Create("metal_sphere");
@@ -149,6 +162,7 @@ void GameFps::StartGame()
 	matSphere->GetTextureRenderState(1)->texture = renderer->GetTexture("cubeMap");
 	matSphere->GetTextureRenderState(1)->envMode = ENV_MODE_MODULATE;
 	matSphere->GetTextureRenderState(1)->genMode = GEN_MODE_CUBE_MAP;
+	//matSphere->SaveToFile("metal_sphere.emt");
 
 	MeshObject* sphere = new MeshObject();
 	sphere->SetMesh(ResourceManager<Mesh>::Instance().GetByName("sphere"));
@@ -186,6 +200,7 @@ void GameFps::StartGame()
 	//matDecal->SetDepthTest(false);
 	matDecal->SetAlphaRef(0.01f);
 	matDecal->SetTexture(renderer->GetTexture("bullethole"));
+	//matDecal->SaveToFile("MatDecal.emt");
 
 	m_PlayerShadow = new Decal();
 	m_PlayerShadow->SetSize(10.0f);
@@ -200,20 +215,21 @@ void GameFps::StartGame()
 	m_UIFps = new TextUIControl();
 	//m_UIFps->SetFont("DefaultFont");
 	m_Scene->AddUIObject(m_UIFps);
+	m_UIFps->SetWidth(640);
 
 
-	ParticlePool* pool = new ParticlePool;
-	m_Scene->AddObject(pool);
+	//ParticlePool* pool = new ParticlePool;
+	//m_Scene->AddObject(pool);
 
-	for (int i=0; i<50; i++)
-	{
-		Particle p;
-		p.m_Active = true;
-		
-		p.m_Position = Vector3f(MathRandom(-10.0f, 10.0f), MathRandom(-10.0f, 10.0f), MathRandom(-10.0f, 10.0f));
+	//for (int i=0; i<50; i++)
+	//{
+	//	Particle p;
+	//	p.m_Active = true;
+	//	
+	//	p.m_Position = Vector3f(Math::Random(-10.0f, 10.0f), Math::Random(-10.0f, 10.0f), Math::Random(-10.0f, 10.0f));
 
-		pool->AddParticle(p);
-	}
+	//	pool->AddParticle(p);
+	//}
 }
 
 void GameFps::Shutdown()
@@ -248,6 +264,10 @@ void GameFps::OnKeyPressed(unsigned int key)
 		break;
 	case KC_P:
 		Engine::Instance().ToggleDebugRender(!Engine::Instance().GetDebugRender());
+		break;
+	case KC_SPACE:
+		g_CameraShake.Create(0.5f, 30.0f, 2000);
+		break;
 	}
 }
 
@@ -307,7 +327,7 @@ void GameFps::Update(unsigned long deltaTime)
 		Vector3f fw = CrossProduct(Vector3f(0.0f, 1.0f, 0.0f), rg);
 		Vector3f transVec = fw * forward + rg * right;
 
-		m_Camera->Transform().TranslateWorld(transVec);
+		m_Camera->TranslateLocal(transVec);
 	}
 	else
 		m_Camera->MoveLocal(forward, right, 0.0f);
@@ -333,6 +353,11 @@ void GameFps::Update(unsigned long deltaTime)
 
 
 	Vector3f campos_old = m_Camera->WorldTransform().GetPosition();
+
+	// 摄像机震动更新
+	g_CameraShake.Update(deltaTime);
+	Matrix4 camoffset = g_CameraShake.GetOffsetMatrix();
+	m_Camera->SetViewOffsetMatrix(g_CameraShake.GetOffsetMatrix());
 
 	// ******************************************* 更新 *******************************************
 	m_Scene->UpdateScene(deltaTime);
@@ -363,11 +388,11 @@ void GameFps::Update(unsigned long deltaTime)
 			m_Shells[i].vel += triNormal * (-2 * dot);
 
 			// 随机化反弹方向
-			m_Shells[i].vel += Vector3f(MathRandom(-0.1f, 0.1f), MathRandom(-0.1f, 0.1f), MathRandom(-0.1f, 0.1f)) * m_Shells[i].vel.SquaredLength() * 1.0f;
+			m_Shells[i].vel += Vector3f(Math::Random(-0.1f, 0.1f), Math::Random(-0.1f, 0.1f), Math::Random(-0.1f, 0.1f)) * m_Shells[i].vel.SquaredLength() * 1.0f;
 
 			// 反弹衰减
 			//m_Shells[i].vel *= 0.5f;
-			m_Shells[i].vel *= MathRandom(.3f, 0.5f);
+			m_Shells[i].vel *= Math::Random(.3f, 0.5f);
 
 			shellPos += m_Shells[i].vel * 0.001f;
 
@@ -377,7 +402,7 @@ void GameFps::Update(unsigned long deltaTime)
 			if (m_Shells[i].vel.SquaredLength()<0.0001f) m_Shells[i].needUpdate = false;
 
 			// 反弹后重新给一个旋转速度，但要根据当前速度衰减
-			m_Shells[i].yawSpeed = MathRandom(-0.5f, 0.5f) * sqrt(m_Shells[i].vel.SquaredLength());
+			m_Shells[i].yawSpeed = Math::Random(-0.5f, 0.5f) * sqrt(m_Shells[i].vel.SquaredLength());
 
 			//// 旋转速度
 			//if (m_Shells[i].vel.SquaredLength()<0.01f)
@@ -394,7 +419,9 @@ void GameFps::Update(unsigned long deltaTime)
 		m_Shells[i].obj->SetPosition(shellPos);
 
 		m_Shells[i].yawStart += m_Shells[i].yawSpeed * 0.05f * deltaTime;
-		m_Shells[i].obj->SetRotation(Matrix3::BuildYawRotationMatrix(m_Shells[i].yawStart));
+		Quaternion rot;
+		rot.CreateFromLocalAxisAngle(Vector3f(0.0f, 1.0f, 0.0f), m_Shells[i].yawStart);
+		m_Shells[i].obj->SetRotation(rot);
 
 	}
 
@@ -449,9 +476,11 @@ void GameFps::Update(unsigned long deltaTime)
 	}
 
 	// TODO: 使用SoundObject，防止找不到音频引发的问题
-	IAudioSource* sound = Engine::Instance().AudioSystem()->GetAudioSource("fire1");
-	if (sound)
-		sound->SetTransform(m_Camera->WorldTransform());
+	//IAudioBuffer* fire = Engine::Instance().AudioSystem()->GetAudioBuffer("fire1");
+	//if (fire)
+	//{
+	//	Engine::Instance().AudioSystem()->CreateSourceInstance(fire, m_Camera->WorldTransform().GetPosition());
+	//}
 
 	if (toggleWireframe)
 	{
@@ -518,11 +547,13 @@ void GameFps::FireWeapon(unsigned long deltaTime)
 	if (timeToFire<100) return;
 	
 	timeToFire = 0;
-	Engine::Instance().AudioSystem()->PlaySource("fire1");
+	IAudioBuffer* fire = Engine::Instance().AudioSystem()->GetAudioBuffer("fire1");
+	if (fire)
+	{
+		Engine::Instance().AudioSystem()->CreateSourceInstance(fire, m_Camera->WorldTransform().GetPosition());
+	}
 
-	
-
-	Ray los = m_Camera->GetCameratRay(MathRandom(0.48f, 0.52f), MathRandom(0.48f, 0.52f));
+	Ray los = m_Camera->GetCameratRay(Math::Random(0.48f, 0.52f), Math::Random(0.48f, 0.52f));
 	Vector3f hit_pos;
 	BspTriangle* tri;
 	bool los_col = m_BspScene->Intersects(los, &hit_pos, &tri);
@@ -581,13 +612,15 @@ void GameFps::EjectShell(const Vector3f& pos, const Vector3f& dir)
 	m_Shells[shellIndex].obj->SetPosition(pos);
 
 	// 弹壳空中旋转速度
-	m_Shells[shellIndex].yawStart = MathRandom(0.0f, 2*kPi);
-	m_Shells[shellIndex].yawSpeed = MathRandom(-0.5f, 0.5f);
-	m_Shells[shellIndex].obj->SetRotation(Matrix3::BuildYawRotationMatrix(m_Shells[shellIndex].yawStart));
+	m_Shells[shellIndex].yawStart = Math::Random(0.0f, 2*Math::kPi);
+	m_Shells[shellIndex].yawSpeed = Math::Random(-0.5f, 0.5f);
+	Quaternion rot;
+	rot.CreateFromLocalAxisAngle(Vector3f(0.0f, 1.0f, 0.0f), m_Shells[shellIndex].yawStart);
+	m_Shells[shellIndex].obj->SetRotation(rot);
 
 	// 初速度，给定随机范围
-	//m_Shells[shellIndex].vel = (left + Vector3f(MathRandom(-0.1f, 0.1f), MathRandom(-0.1f, 0.1f), MathRandom(-0.1f, 0.1f))) * 0.05f;
-	m_Shells[shellIndex].vel = (dir + Vector3f(MathRandom(-0.5f, 0.5f), MathRandom(-0.5f, 0.5f), MathRandom(-0.5f, 0.5f))) * MathRandom(0.05f, 0.1f);
+	//m_Shells[shellIndex].vel = (left + Vector3f(Math::Random(-0.1f, 0.1f), Math::Random(-0.1f, 0.1f), Math::Random(-0.1f, 0.1f))) * 0.05f;
+	m_Shells[shellIndex].vel = (dir + Vector3f(Math::Random(-0.5f, 0.5f), Math::Random(-0.5f, 0.5f), Math::Random(-0.5f, 0.5f))) * Math::Random(0.05f, 0.1f);
 	m_Shells[shellIndex].needUpdate = true;
 	shellIndex++;
 

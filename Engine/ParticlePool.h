@@ -15,8 +15,11 @@
 #include "Material.h"
 #include "ParticleEmitter.h"
 #include <list>
+#include <vector>
 
 using namespace std;
+
+class ParticleEmitter;
 
 bool ParticleComparer(Particle lhs, Particle rhs);
 
@@ -53,7 +56,7 @@ private:
 
 	list<unsigned int>	m_FreeOffset;
 
-	list<Particle>		m_Particles;
+	vector<Particle>		m_Particles;
 
 	bool	m_SortByZOrder;
 	bool	m_VanishOnEmpty;		///< 粒子生命结束，销毁粒子池

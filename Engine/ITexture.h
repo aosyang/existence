@@ -13,6 +13,8 @@
 
 using namespace std;
 
+// 纹理环绕模式
+// 超出纹理边缘以后的采样方式
 enum TextureWrapType
 {
 	WRAP_TYPE_CLAMP,
@@ -20,6 +22,8 @@ enum TextureWrapType
 	WRAP_TYPE_CLAMP_TO_EDGE,
 };
 
+// 纹理过滤模式
+// 纹理插值过滤的方法
 enum TextureFilterType
 {
 	FILTER_TYPE_NEAREST,
@@ -30,6 +34,7 @@ enum TextureFilterType
 	FILTER_TYPE_LINEAR_MIPMAP_LINEAR,
 };
 
+// 纹理混合因子
 enum TextureBlendFactor
 {
 	BLEND_FACTOR_ZERO,
@@ -45,6 +50,7 @@ enum TextureBlendFactor
 	BLEND_FACTOR_SRC_ALPHA_SATURATE,
 };
 
+// 纹理生成模式
 enum TextureGenMode
 {
 	GEN_MODE_TEXCOORD,
@@ -94,6 +100,7 @@ typedef struct texRenderState
 		texture = tex;
 	}
 
+	// 初始化RenderState的初值
 	void InitValues()
 	{
 		texture = NULL;
@@ -133,7 +140,6 @@ public:
 	virtual void BindTexture() = 0;
 
 	// TODO: 添加纹理相关的方法，如获取纹理尺寸等
-	virtual void SetSize(unsigned int width, unsigned int height) = 0;
 	virtual unsigned int GetWidth() const = 0;
 	virtual unsigned int GetHeight() const = 0;
 	virtual unsigned int GetBpp() const = 0;
@@ -151,10 +157,6 @@ class BaseTexture : public ITexture
 public:
 	~BaseTexture() {}
 
-	void SetSize(unsigned int width, unsigned int height)
-	{
-		m_Width = width; m_Height = height;
-	}
 	unsigned int GetWidth() const { return m_Width; }
 	unsigned int GetHeight() const { return m_Height; }
 	unsigned int GetBpp() const { return m_Bpp; }

@@ -8,6 +8,7 @@
 
 #include "SceneRootObject.h"
 #include "Engine.h"
+#include <algorithm>
 
 void SceneRootObject::Update(unsigned long deltaTime)
 {
@@ -41,7 +42,7 @@ void SceneRootObject::Render()
 	// Sorting all the items...
 	stable_sort(m_RenderObjects.begin(), m_RenderObjects.end(), BaseSceneObjectComparer);
 
-	ChildrenSceneObjectsSet::iterator iter;
+	SceneObjectList::iterator iter;
 	for (iter = m_RenderObjects.begin();
 		iter != m_RenderObjects.end();
 		iter++)
@@ -55,7 +56,7 @@ void SceneRootObject::CollectRenderObjects()
 	// 清除渲染对象列表
 	m_RenderObjects.clear();
 
-	// 遍历每一个对象，加入到渲染列表中
+	// 递归遍历每一个对象，加入到渲染列表中
 	ChildrenSceneObjectsSet::iterator iter;
 	for (iter = m_ChildrenObjects.begin();
 		iter != m_ChildrenObjects.end();

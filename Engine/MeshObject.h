@@ -30,7 +30,7 @@ public:
 	// ----- Overwrite BaseSceneObject
 
 	int GetCollisionType() const { return COLLISION_TYPE_MESH; }
-	void PrepareRenderObjects(ChildrenSceneObjectsSet& objects);
+	void PrepareRenderObjects(SceneObjectList& objects);
 	bool IntersectsRay(const Ray& ray, CollisionInfo& info);
 
 	// ----- MeshObject Methods

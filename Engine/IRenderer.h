@@ -9,7 +9,6 @@
 #define _IRENDERER_H
 
 #include "ITexture.h"
-#include "Platform.h"			// TODO: Remove Platform::WndProc from platform.h
 #include "Material.h"
 #include "Matrix4.h"
 #include "Color4f.h"
@@ -66,7 +65,8 @@ public:
 	virtual void ToggleLighting(bool enable) = 0;
 
 	virtual void BeginRender() = 0;
-	virtual void EndRender(bool swapBuffer = false) = 0;
+	virtual void EndRender() = 0;
+	virtual void SwapBuffer() = 0;
 
 	virtual void RenderVertexBuffer(IVertexBuffer* vbuffer, Material* material, const Matrix4& transform) = 0;
 
@@ -105,8 +105,10 @@ public:
 	virtual IVertexBuffer* BuildVertexBuffer() = 0;
 
 	// Render Target
-	//virtual void SetRenderTarget(IRenderTarget* rt) = 0;
-	//virtual IRenderTarget* CreateRenderTarget(unsigned int width, unsigned int height) = 0;
+
+	// 创建渲染目标
+	virtual IRenderTarget* CreateRenderTarget() = 0;
+	virtual void SetRenderTarget(IRenderTarget* rt) = 0;
 };
 
 typedef IRenderer*(*RenderSystemFactoryCreateFunc)();

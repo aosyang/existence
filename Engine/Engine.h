@@ -56,7 +56,7 @@ class Engine : public Singleton<Engine>
 {
 	friend class Singleton<Engine>;
 public:
-	void Initialize();
+	void Initialize(bool input=true);
 	void Shutdown();
 
 	void Run();
@@ -99,7 +99,7 @@ public:
 	inline IGame* GetGame() { return m_Game; }
 
 private:
-	void LoadPlugins();
+	void LoadModules();
 
 private:
 	Engine();

@@ -24,6 +24,7 @@ class SceneGraph;
 
 //typedef vector<BaseSceneObject*>	VecBaseSceneObjects;
 typedef set<BaseSceneObject*>		ChildrenSceneObjectsSet;
+typedef vector<BaseSceneObject*>	SceneObjectList;
 
 enum CollisionType
 {
@@ -70,7 +71,7 @@ public:
 
 	// ----- BaseSceneObject Methods
 
-	virtual void PrepareRenderObjects(ChildrenSceneObjectsSet& objects);
+	virtual void PrepareRenderObjects(SceneObjectList& objects);
 
 	// collisions
 
@@ -89,9 +90,10 @@ public:
 	virtual void SetRotation(const Quaternion& rot);
 
 	void RotateLocal(const Quaternion& quat);
+	void TranslateLocal(const Vector3f& trans);
 
-	Matrix4& Transform();
-	const Matrix4& WorldTransform() const;
+	inline const Matrix4& Transform() const { return m_Transform; }
+	inline const Matrix4& WorldTransform() const { return m_WorldTransform; }
 
 	void SetDebugRender(bool render) { m_DebugRender = render; }
 	bool GetDebugRender() const { return m_DebugRender; }

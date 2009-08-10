@@ -130,30 +130,10 @@ void SceneGraph::RenderScene()
 
 	//ShadowManager::Instance().RenderLightViewScene(m_RootObject);
 
-	// äÖÈ¾³¡¾°
-	m_RootObject->CollectRenderObjects();
-	renderer->SetProjectionMode(PROJECTION_MODE_PERSPECTIVE);
-	//renderer->ToggleLighting(true);
-	renderer->ClearBuffer();
-	//renderer->ToggleDepthTest(true);
-	renderer->BeginRender();
-	m_RootObject->Render();
-	//renderer->ClearBuffer(false);
-	DrawAssistantElements();
-	renderer->EndRender();
+	DrawScene();
+	DrawUI();
 
-	// äÖÈ¾ÆÁÄ»½çÃæ
-	renderer->SetProjectionMode(PROJECTION_MODE_ORTHO);
-	renderer->ToggleLighting(false);
-	renderer->ViewMatrix().Identity();
-	renderer->ClearBuffer(false);
-	renderer->ToggleDepthTest(false);
-	renderer->BeginRender();
-	m_UIRootObject->Render();
-
-	renderer->EndRender(true);
-
-	m_LineElements.clear();
+	renderer->SwapBuffer();
 }
 
 void SceneGraph::CollectRayPickingSceneObject(const Ray& ray, ObjectsCollisionInfos& baseSceneObjects, int type, int collisionGroup)
@@ -192,5 +172,38 @@ void SceneGraph::DrawAssistantElements()
 	{
 		renderer->RenderLine(iter->v1, iter->v2, iter->color);
 	}
+}
+
+void SceneGraph::DrawScene()
+{
+	// äÖÈ¾³¡¾°
+	m_RootObject->CollectRenderObjects();
+	renderer->SetProjectionMode(PROJECTION_MODE_PERSPECTIVE);
+	//renderer->ToggleLighting(true);
+	renderer->ClearBuffer();
+	//renderer->ToggleDepthTest(true);
+	renderer->BeginRender();
+	m_RootObject->Render();
+	//renderer->ClearBuffer(false);
+	DrawAssistantElements();
+	renderer->EndRender();
+
+	m_LineElements.clear();
+
+}
+
+void SceneGraph::DrawUI()
+{
+	// äÖÈ¾ÆÁÄ»½çÃæ
+	renderer->SetProjectionMode(PROJECTION_MODE_ORTHO);
+	renderer->ToggleLighting(false);
+	renderer->ViewMatrix().Identity();
+	renderer->ClearBuffer(false);
+	renderer->ToggleDepthTest(false);
+	renderer->BeginRender();
+	m_UIRootObject->Render();
+
+	renderer->EndRender();
+
 }
 

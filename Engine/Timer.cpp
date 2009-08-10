@@ -17,6 +17,8 @@ Timer::~Timer()
 
 void Timer::Reset()
 {
+#if defined __PLATFORM_WIN32
+
     // Get the current process core mask
 	DWORD procMask;
 	DWORD sysMask;
@@ -58,10 +60,17 @@ void Timer::Reset()
 
 	mLastTime = 0;
 	mZeroClock = clock();
+	
+#elif defined __PLATFORM_LINUX
+
+	zeroClock = clock();
+	gettimeofday(&start, NULL);
+#endif	// #if defined __PLATFORM_WIN32
 }
 
 unsigned long Timer::GetMilliseconds()
 {
+#if defined __PLATFORM_WIN32
     LARGE_INTEGER curTime;
 
 	HANDLE thread = GetCurrentThread();
@@ -99,5 +108,12 @@ unsigned long Timer::GetMilliseconds()
     mLastTime = newTime;
 
     return newTicks;
+    
+#elif defined __PLATFORM_LINUX
+	struct timeval now;
+	gettimeofday(&now, NULL);
+	return (now.tv_sec-start.tv_sec)*1000+(now.tv_usec-start.tv_usec)/1000;
+
+#endif	// #if defined __PLATFORM_WIN32
 }
 

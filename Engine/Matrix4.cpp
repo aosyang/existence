@@ -142,7 +142,13 @@ const Vector3f Matrix4::GetForwardVector() const
 	return Vector3f(-m[0][2], -m[1][2], -m[2][2]);
 }
 
+// 以四元数指定方向(相对于原始位置的旋转)
+void Matrix4::SetRotation(const Quaternion& rot)
+{
+	SetRotation(rot.GetRotationMatrix());
+}
 
+// 以3x3矩阵指定方向
 void Matrix4::SetRotation(const Matrix3& rot)
 {
 	m[0][0] = rot.m[0][0]; m[0][1] = rot.m[0][1]; m[0][2] = rot.m[0][2];

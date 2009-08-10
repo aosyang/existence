@@ -62,12 +62,6 @@ void DistantViewObject::DebugRender()
 	// nothing to do
 }
 
-void DistantViewObject::PrepareRenderObjects(ChildrenSceneObjectsSet& objects)
-{
-	// always render
-	BaseSceneObject::PrepareRenderObjects(objects);
-}
-
 bool DistantViewObject::IntersectsRay(const Ray& ray, CollisionInfo& info)
 {
 	// never get cought by a ray

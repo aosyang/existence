@@ -90,9 +90,9 @@ Matrix3 Matrix3::GetInverseMatrix() const
 void Matrix3::setup(const EulerAngle &orientation)
 {
 	float sh,ch, sp,cp, sb,cb;
-	sinCos(&sh, &ch, orientation.heading);
-	sinCos(&sp, &cp, orientation.pitch);
-	sinCos(&sb, &cb, orientation.bank);
+	Math::sinCos(&sh, &ch, orientation.heading);
+	Math::sinCos(&sp, &cp, orientation.pitch);
+	Math::sinCos(&sb, &cb, orientation.bank);
 
 	m[0][0] = ch * cb + sh * sp *sb;
 	m[0][1] = - ch * sb + sh * sp * cb;

@@ -36,6 +36,7 @@ class ShadowManager;
 
 class Color4f;
 class Camera;
+class CameraShakeEffect;
 class Material;
 class TextureManager;
 class Mesh;
@@ -53,6 +54,7 @@ class Font;
 class FontManager;
 class NullAudioSystem;
 class AudioListener;
+class AudioSourceObject;
 class BspTree;
 class BspObject;
 class Log;
@@ -87,6 +89,7 @@ class ImageUIControl;
 #include "Color4f.h"
 #include "IAudioSystem.h"
 #include "Camera.h"
+#include "CameraShake.h"
 #include "ILight.h"
 #include "Light.h"
 #include "LightingManager.h"
@@ -110,6 +113,7 @@ class ImageUIControl;
 #include "Font.h"
 #include "NullAudioSystem.h"
 #include "AudioListener.h"
+#include "AudioSourceObject.h"
 #include "BspTree.h"
 #include "BspObject.h"
 #include "Log.h"

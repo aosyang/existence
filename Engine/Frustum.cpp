@@ -17,11 +17,11 @@ Frustum::Frustum()
 {
 }
 
-Matrix4 Frustum::BuildPrespectiveProjMatrix(float fovy, float aspect, float near, float far)
+Matrix4 Frustum::BuildPrespectiveProjMatrix(float fovy, float aspect, float _near, float _far)
 {
-	float range = near * tan(DEG_TO_RAD(fovy / 2));
+	float range = _near * tan(DEG_TO_RAD(fovy / 2));
 
-	m_ProjMatrix = BuildProjectionMatrix(-range * aspect, range * aspect, -range, range, near, far);
+	m_ProjMatrix = BuildProjectionMatrix(-range * aspect, range * aspect, -range, range, _near, _far);
 	return m_ProjMatrix;
 }
 

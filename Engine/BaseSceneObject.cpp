@@ -89,21 +89,35 @@ void BaseSceneObject::Render()
 	//m_DebugRender = false;
 }
 
+// 渲染调试信息
 void BaseSceneObject::DebugRender()
 {
 	// render obb, for test only
-	renderer->RenderAABB(m_OBB.localMin, m_OBB.localMax, Color4f(0.0f, 1.0f, 0.0f), m_WorldTransform);
+
+	// 渲染OBB
+	renderer->RenderAABB(m_OBB.localMin, m_OBB.localMax, Color4f(0.0f, 1.0f, 0.0f)/*, m_WorldTransform*/);
+
+	// 渲染AABB
 	renderer->RenderAABB(m_AABB.worldMin, m_AABB.worldMax, Color4f(1.0f, 1.0f, 0.0f));
 }
 
-void BaseSceneObject::PrepareRenderObjects(ChildrenSceneObjectsSet& objects)
+void BaseSceneObject::PrepareRenderObjects(SceneObjectList& objects)
 {
 	// Base method, just add object to the list...
 	// this should be overrided in derived classes
 
 	if (!m_Visible) return;
 
-	objects.insert(this);
+	objects.push_back(this);
+
+	// 递归添加子对象
+	ChildrenSceneObjectsSet::iterator iter;
+	for (iter = m_ChildrenObjects.begin();
+		iter != m_ChildrenObjects.end();
+		iter++)
+	{
+		(*iter)->PrepareRenderObjects(objects);
+	}
 }
 
 void BaseSceneObject::CollectRayPickingSceneObject(const Ray& ray, ObjectsCollisionInfos& baseSceneObjects, int type, int collisionGroup)
@@ -208,6 +222,16 @@ void BaseSceneObject::SetRotation(const Quaternion& rot)
 	m_Transform.SetRotation(rot.GetRotationMatrix());
 }
 
+//-----------------------------------------------------------------------------------
+/// \brief
+/// 为场景物体指定父对象
+/// 
+/// \param parent
+/// 新的父对象
+/// 
+/// \param keepRotation
+/// 子对象是否采用自身的旋转矩阵
+//-----------------------------------------------------------------------------------
 void BaseSceneObject::SetParentObject(BaseSceneObject* parent, bool keepRotation)
 {
 	m_ParentObject = parent;
@@ -220,15 +244,9 @@ void BaseSceneObject::RotateLocal(const Quaternion& quat)
 	m_Transform.SetRotation(m_Rotation.GetRotationMatrix());
 }
 
-
-Matrix4& BaseSceneObject::Transform()
+void BaseSceneObject::TranslateLocal(const Vector3f& trans)
 {
-	return m_Transform;
-}
-
-const Matrix4& BaseSceneObject::WorldTransform() const
-{
-	return m_WorldTransform;
+	m_Transform.TranslateWorld(trans);
 }
 
 void BaseSceneObject::SetVisibleRecursively(bool visible)

@@ -50,7 +50,6 @@ public:
 	void SetParticleInitStateFunc(const ParticleInitStateFunc func) { m_ParticleInitState = func; }
 	void SetParticleBehaviorFunc(const ParticleUpdateFunc func) { m_ParticleBehaviorFunc = func; }
 private:
-	bool					m_PoolCreated;
 	ParticleEmitterShape	m_EmitterShape;
 	ParticlePool*			m_ParticlePool;
 

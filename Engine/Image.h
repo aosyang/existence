@@ -13,7 +13,7 @@
 
 using namespace std;
 
-#include "FreeImage/FreeImage.h"
+#include "FreeImage/freeimage.h"
 
 class Image
 {

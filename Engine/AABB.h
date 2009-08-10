@@ -15,6 +15,12 @@ public:
 		Reset();
 	}
 
+	AABB(const Vector3f& _vMin, const Vector3f& _vMax)
+	{
+		worldMax = _vMax;
+		worldMin = _vMin;
+	}
+
 	void SetPoint(const Vector3f& p)
 	{
 		worldMin = worldMax = p;

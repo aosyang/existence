@@ -31,7 +31,7 @@ void ALAudioSystem::Shutdown()
 {
 	// ÊÍ·ÅËùÓÐÒôÆµ
 
-	AudioBufferList::iterator iter = m_Buffers.begin();
+	ALAudioBufferList::iterator iter = m_Buffers.begin();
 
 	while (iter != m_Buffers.end())
 	{
@@ -41,7 +41,7 @@ void ALAudioSystem::Shutdown()
 		iter = m_Buffers.begin();
 	}
 
-	AudioSourceList::iterator source_iter;
+	ALAudioSourceList::iterator source_iter;
 	for (source_iter=m_Sources.begin(); source_iter!=m_Sources.end(); source_iter++)
 	{
 		delete (*source_iter);
@@ -104,21 +104,31 @@ IAudioSource* ALAudioSystem::CreateSourceInstance(IAudioBuffer* buffer, const Ve
 	al_source->SetPosition(position);
 	al_source->SetPitch(1.0f);
 	al_source->SetGain(1.0f);
-	al_source->SetAutoRemove(autoRemove);
+	al_source->m_RemoveOnDone = autoRemove;
 
-	m_Sources.push_back(al_source);
+	m_Sources.insert(al_source);
 
 	return al_source;
 }
 
+void ALAudioSystem::RemoveSource(IAudioSource* source)
+{
+	ALAudioSourceList::iterator iter = m_Sources.find(static_cast<ALAudioSource*>(source));
+	if (iter != m_Sources.end())
+	{
+		m_Sources.erase(iter);
+		delete source;
+	}
+}
+
 void ALAudioSystem::Update()
 {
-	AudioSourceList::iterator iter;
+	ALAudioSourceList::iterator iter;
 	for (iter=m_Sources.begin(); iter!=m_Sources.end();)
 	{
 		if ((*iter)->m_RemoveOnDone && (*iter)->IsStopped())
 		{
-			AudioSourceList::iterator next = iter;
+			ALAudioSourceList::iterator next = iter;
 			next++;
 			delete (*iter);
 			m_Sources.erase(iter);

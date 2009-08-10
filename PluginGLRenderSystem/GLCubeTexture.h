@@ -15,8 +15,8 @@ enum CubeMapSide
 
 class GLCubeTexture : public BaseTexture
 {
+	friend class GLRenderer;
 public:
-	GLCubeTexture();
 	~GLCubeTexture();
 
 	void Create(unsigned int width, unsigned int height, unsigned int bpp, unsigned char* data, int cubePos);
@@ -30,6 +30,8 @@ public:
 	int GetTarget() const { return GL_TEXTURE_CUBE_MAP; }
 
 private:
+	GLCubeTexture();
+
 	unsigned int	m_GLTextureID;
 	GLint			m_InternalFormat[6];
 	GLint			m_Format[6];

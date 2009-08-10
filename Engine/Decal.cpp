@@ -10,8 +10,8 @@
 #include "Engine.h"
 
 Decal::Decal()
-: m_Material(NULL),
-  BaseLightableObject()
+: BaseLightableObject(),
+  m_Material(NULL)
 {
 	m_VertexBuffer = renderer->BuildVertexBuffer();
 	SetSize(1.0f);
@@ -29,7 +29,7 @@ void Decal::Render()
 	BaseSceneObject::Render();
 }
 
-void Decal::PrepareRenderObjects(ChildrenSceneObjectsSet& objects)
+void Decal::PrepareRenderObjects(SceneObjectList& objects)
 {
 	// Frustum checking
 	Frustum* frustum = renderer->GetFrustum();

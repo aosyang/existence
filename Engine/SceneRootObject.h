@@ -14,6 +14,7 @@
 #include "Ray.h"
 
 #include <set>
+#include <vector>
 
 using namespace std;
 
@@ -42,7 +43,7 @@ public:
 private:
 
 	ChildrenSceneObjectsSet	m_ChildrenObjects;
-	ChildrenSceneObjectsSet m_RenderObjects;
+	SceneObjectList  m_RenderObjects;
 };
 
 #endif

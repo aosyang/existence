@@ -7,6 +7,12 @@
 //-----------------------------------------------------------------------------------
 #include "Engine.h"
 
+#ifdef __PLATFORM_LINUX
+#include <X11/Xlib.h>
+#include <X11/extensions/xf86vmode.h>
+#include <X11/keysym.h>
+#endif	// #ifdef __PLATFORM_LINUX
+
 #include "System.h"
 #include "Image.h"
 #include "Mesh.h"
@@ -25,7 +31,7 @@ System::System()
 	m_RenderWindowParam.height = 0;
 	m_RenderWindowParam.color_depth_bit = 0;
 
-	InitRandom();
+	Math::InitRandom();
 }
 
 void System::LoadResources(const String& filename)
@@ -167,6 +173,7 @@ void System::LoadMeshes(ConfigFileKeys* list)
 
 bool System::CreateRenderWindow(const String& title, unsigned int width, unsigned int height, unsigned int bits, bool fullscreen)
 {
+#if defined __PLATFORM_WIN32
 	WNDCLASS wc;
 
 	DWORD	dwExStyle;
@@ -258,6 +265,115 @@ bool System::CreateRenderWindow(const String& title, unsigned int width, unsigne
 	ShowWindow(m_RenderWindowParam.handle,SW_SHOW);						// Show The Window
 	SetForegroundWindow(m_RenderWindowParam.handle);						// Slightly Higher Priority
 	SetFocus(m_RenderWindowParam.handle);									// Sets Keyboard Focus To The Window
+	
+#elif defined __PLATFORM_LINUX
+
+    XVisualInfo *vi;
+    Colormap cmap;
+    int dpyWidth, dpyHeight;
+    int i;
+    int glxMajorVersion, glxMinorVersion;
+    int vidModeMajorVersion, vidModeMinorVersion;
+    XF86VidModeModeInfo **modes;
+    int modeNum;
+    int bestMode;
+    Atom wmDelete;
+    Window winDummy;
+    unsigned int borderDummy;
+    
+    GLWin.fs = fullscreenflag;
+    /* set best mode to current */
+    bestMode = 0;
+    /* get a connection */
+    GLWin.dpy = XOpenDisplay(0);
+    GLWin.screen = DefaultScreen(GLWin.dpy);
+    XF86VidModeQueryVersion(GLWin.dpy, &vidModeMajorVersion,
+        &vidModeMinorVersion);
+    printf("XF86VidModeExtension-Version %d.%d\n", vidModeMajorVersion,
+        vidModeMinorVersion);
+    XF86VidModeGetAllModeLines(GLWin.dpy, GLWin.screen, &modeNum, &modes);
+    /* save desktop-resolution before switching modes */
+    GLWin.deskMode = *modes[0];
+    /* look for mode with requested resolution */
+    for (i = 0; i < modeNum; i++)
+    {
+        if ((modes[i]->hdisplay == width) && (modes[i]->vdisplay == height))
+        {
+            bestMode = i;
+        }
+    }
+    /* get an appropriate visual */
+    vi = glXChooseVisual(GLWin.dpy, GLWin.screen, attrListDbl);
+    if (vi == NULL)
+    {
+        vi = glXChooseVisual(GLWin.dpy, GLWin.screen, attrListSgl);
+        GLWin.doubleBuffered = False;
+        printf("Only Singlebuffered Visual!\n");
+    }
+    else
+    {
+        GLWin.doubleBuffered = True;
+        printf("Got Doublebuffered Visual!\n");
+    }
+    glXQueryVersion(GLWin.dpy, &glxMajorVersion, &glxMinorVersion);
+    printf("glX-Version %d.%d\n", glxMajorVersion, glxMinorVersion);
+    /* create a GLX context */
+    GLWin.ctx = glXCreateContext(GLWin.dpy, vi, 0, GL_TRUE);
+    /* create a color map */
+    cmap = XCreateColormap(GLWin.dpy, RootWindow(GLWin.dpy, vi->screen),
+        vi->visual, AllocNone);
+    GLWin.attr.colormap = cmap;
+    GLWin.attr.border_pixel = 0;
+
+    if (GLWin.fs)
+    {
+        XF86VidModeSwitchToMode(GLWin.dpy, GLWin.screen, modes[bestMode]);
+        XF86VidModeSetViewPort(GLWin.dpy, GLWin.screen, 0, 0);
+        dpyWidth = modes[bestMode]->hdisplay;
+        dpyHeight = modes[bestMode]->vdisplay;
+        printf("Resolution %dx%d\n", dpyWidth, dpyHeight);
+        XFree(modes);
+    
+        /* create a fullscreen window */
+        GLWin.attr.override_redirect = True;
+        GLWin.attr.event_mask = ExposureMask | KeyPressMask | ButtonPressMask |
+            StructureNotifyMask;
+        GLWin.win = XCreateWindow(GLWin.dpy, RootWindow(GLWin.dpy, vi->screen),
+            0, 0, dpyWidth, dpyHeight, 0, vi->depth, InputOutput, vi->visual,
+            CWBorderPixel | CWColormap | CWEventMask | CWOverrideRedirect,
+            &GLWin.attr);
+        XWarpPointer(GLWin.dpy, None, GLWin.win, 0, 0, 0, 0, 0, 0);
+		XMapRaised(GLWin.dpy, GLWin.win);
+        XGrabKeyboard(GLWin.dpy, GLWin.win, True, GrabModeAsync,
+            GrabModeAsync, CurrentTime);
+        XGrabPointer(GLWin.dpy, GLWin.win, True, ButtonPressMask,
+            GrabModeAsync, GrabModeAsync, GLWin.win, None, CurrentTime);
+    }
+    else
+    {
+        /* create a window in window mode*/
+        GLWin.attr.event_mask = ExposureMask | KeyPressMask | ButtonPressMask |
+            StructureNotifyMask;
+        GLWin.win = XCreateWindow(GLWin.dpy, RootWindow(GLWin.dpy, vi->screen),
+            0, 0, width, height, 0, vi->depth, InputOutput, vi->visual,
+            CWBorderPixel | CWColormap | CWEventMask, &GLWin.attr);
+        /* only set window title and handle wm_delete_events if in windowed mode */
+        wmDelete = XInternAtom(GLWin.dpy, "WM_DELETE_WINDOW", True);
+        XSetWMProtocols(GLWin.dpy, GLWin.win, &wmDelete, 1);
+        XSetStandardProperties(GLWin.dpy, GLWin.win, title,
+            title, None, NULL, 0, NULL);
+        XMapRaised(GLWin.dpy, GLWin.win);
+    }       
+    /* connect the glx-context to the window */
+    glXMakeCurrent(GLWin.dpy, GLWin.win, GLWin.ctx);
+    XGetGeometry(GLWin.dpy, GLWin.win, &winDummy, &GLWin.x, &GLWin.y,
+        &GLWin.width, &GLWin.height, &borderDummy, &GLWin.depth);
+    printf("Depth %d\n", GLWin.depth);
+    if (glXIsDirect(GLWin.dpy, GLWin.ctx)) 
+        printf("Congrats, you have Direct Rendering!\n");
+    else
+        printf("Sorry, no Direct Rendering possible!\n");
+#endif	// #if defined __PLATFORM_WIN32
 
 	return true;
 }
@@ -298,16 +414,23 @@ void System::ResizeWindow(unsigned int width, unsigned int height)
 
 void System::ToggleMouseCursor(bool toggle)
 {
+#if defined __PLATFORM_WIN32
 	ShowCursor(toggle);
+#elif defined __PLATFORM_LINUX
+#endif	// #if defined __PLATFORM_WIN32
 }
 
 void System::SetMouseCursorPos(int x, int y)
 {
+#if defined __PLATFORM_WIN32
 	SetCursorPos(x, y);
+#elif defined __PLATFORM_LINUX
+#endif	// #if defined __PLATFORM_WIN32
 }
 
 void System::CenterMouseCursor()
 {
+#if defined __PLATFORM_WIN32
 	if (renderer->GetActive())
 	{
 		
@@ -318,4 +441,6 @@ void System::CenterMouseCursor()
 			(rect.right - rect.left) / 2 + rect.left,
 			(rect.bottom - rect.top) / 2 + rect.top);
 	}
+#elif defined __PLATFORM_LINUX
+#endif	// #if defined __PLATFORM_WIN32
 }

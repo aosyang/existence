@@ -35,13 +35,13 @@ bool ParticleComparer(Particle lhs, Particle rhs)
 }
 
 ParticlePool::ParticlePool()
-: m_Material(NULL),
+: BaseSceneObject(),
+  m_Material(NULL),
   m_PoolCapability(100),
   m_ActiveParticleCount(0),
   m_SortByZOrder(true),
   m_VanishOnEmpty(true),
-  m_UseBoxBounding(false),
-  BaseSceneObject()
+  m_UseBoxBounding(false)
 {
 	for (int i=0; i<m_PoolCapability; i++)
 		m_FreeOffset.push_back(i);
@@ -66,12 +66,17 @@ void ParticlePool::Update(unsigned long deltaTime)
 	int activeCount = 0;
 
 	// 更新所有粒子
-	list<Particle>::iterator iter;
+	vector<Particle>::iterator iter;
 	for (iter=m_Particles.begin(); iter!=m_Particles.end(); iter++)
 	{
 		if (iter->m_Active)
 		{
 			iter->Update(deltaTime);
+
+			float bound = Math::Max(iter->m_Scale * iter->m_ScreenScaleX, iter->m_Scale * iter->m_ScreenScaleY);
+			Vector3f size = Vector3f(bound, bound, bound) * 0.5f;
+			AABB aabb(iter->m_Position - size, iter->m_Position + size);
+			m_AABB.Expand(aabb);
 			activeCount++;
 		}
 	}
@@ -103,7 +108,7 @@ void ParticlePool::Render()
 void ParticlePool::BuildVertexData()
 {
 	// 每帧构造新的顶点缓冲，用于渲染
-	list<Particle>::iterator iter = m_Particles.begin();
+	vector<Particle>::iterator iter = m_Particles.begin();
 	for (int i=0; i<m_ActiveParticleCount; i++, iter++)
 	{
 		// 更新顶点颜色
@@ -167,7 +172,7 @@ void ParticlePool::AddParticle(const Particle& particle)
 
 	bool done = false;
 
-	list<Particle>::iterator iter;
+	vector<Particle>::iterator iter;
 	for (iter=m_Particles.begin(); iter!=m_Particles.end(); iter++)
 	{
 		if (!iter->m_Active)

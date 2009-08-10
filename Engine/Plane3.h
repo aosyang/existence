@@ -61,6 +61,8 @@ public:
 		n = -n;
 	}
 
+	float& operator[](size_t e) { return (e<3) ? n[e] : d; }
+
 	// 求点在平面的方向
 	PointLoc TestPoint(const Vector3f& point) const;
 
@@ -69,7 +71,7 @@ public:
 
 	PointListLoc TestPoly(const BspTriangle& triangle);
 
-	const Vector3f Plane3::Split(const Vector3f& a, const Vector3f& b) const;
+	const Vector3f Split(const Vector3f& a, const Vector3f& b) const;
 
 	//bool Clip(const BspTriangle& in, BspTriangle* out) const;
 

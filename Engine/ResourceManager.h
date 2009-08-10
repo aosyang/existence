@@ -8,52 +8,56 @@
 #ifndef _RESOURCEMANAGER_H
 #define _RESOURCEMANAGER_H
 
+#include "Platform.h"
 #include "Singleton.h"
 
 #include <map>
 #include "EString.h"
 
+#if defined __PLATFORM_WIN32
 #pragma warning(disable: 4996)
+#endif	//#if defined __PLATFORM_WIN32
 
 using namespace std;
 
 template <class T>
-class ResourceManager : public Singleton<ResourceManager<T>>
+class ResourceManager : public Singleton< ResourceManager<T> >		// use "> >" instead of ">>", gcc told me so...
 {
-	friend class Singleton<ResourceManager<T>>;
+	friend class Singleton< ResourceManager<T> >;
 public:
 	// 创建对象实例
 	T* Create(const String& name = "")
 	{
-		char buf[32] = { '\0' };
+		String res_name;
 
 		T* res = new T;
 
+		// 如果没有指定名称，自动生成一个
 		if (name == "")
 		{
-			sprintf(buf, "%d", m_sIndex);
+			res_name.Format("#UNNAMED%d", m_sIndex);
 			m_sIndex++;
 
-			while (m_ResourceMap.find(buf)!=m_ResourceMap.end())
+			while (m_ResourceMap.find(res_name)!=m_ResourceMap.end())
 			{
-				sprintf(buf, "%d", m_sIndex);
+				res_name.Format("#UNNAMED%d", m_sIndex);
 				m_sIndex++;
 			}
-			m_ResourceMap[buf] = res;
-			res->m_Name = &(m_ResourceMap.find(buf)->first);
 		}
 		else
 		{
-			sprintf(buf, "%s", name.Data());
+			res_name.Format("%s", name.Data());
 			unsigned int n = 1;
-			while (m_ResourceMap.find(buf)!=m_ResourceMap.end())
+
+			while (m_ResourceMap.find(res_name)!=m_ResourceMap.end())
 			{
-				sprintf(buf, "%s_%d", name.Data(), n);
+				// 与已有资源名称重复，重命名
+				res_name.Format("%s_%d", name.Data(), n);
 				n++;
 			}
-			m_ResourceMap[buf] = res;
-			res->m_Name = &(m_ResourceMap.find(buf)->first);
 		}
+		m_ResourceMap[res_name] = res;
+		res->m_Name = &(m_ResourceMap.find(res_name)->first);
 
 		return res;
 	}
@@ -82,7 +86,7 @@ public:
 
 	T* GetByName(const String& name)
 	{
-		ResourceMap::iterator iter;
+		typename ResourceMap::iterator iter;
 		if ((iter = m_ResourceMap.find(name))!=m_ResourceMap.end())
 			return iter->second;
 
@@ -92,7 +96,7 @@ public:
 	// 卸载所有对象
 	void UnloadAllResources()
 	{
-		ResourceManager<T>::ResourceMap::iterator iter = m_ResourceMap.begin();
+		typename ResourceManager<T>::ResourceMap::iterator iter = m_ResourceMap.begin();
 		for (;iter!=m_ResourceMap.end(); iter++)
 		{
 			SAFE_DELETE(iter->second);

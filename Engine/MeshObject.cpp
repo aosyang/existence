@@ -67,7 +67,7 @@ void MeshObject::DebugRender()
 	//renderer->RenderLine(mesh_point, mesh_point + mesh_normal, Color4f(0.0f, 1.0f, 0.0f));
 }
 
-void MeshObject::PrepareRenderObjects(ChildrenSceneObjectsSet& objects)
+void MeshObject::PrepareRenderObjects(SceneObjectList& objects)
 {
 	// TODO: 如果在可见范围，就添加到渲染队列
 	Frustum* frustum = renderer->GetFrustum();

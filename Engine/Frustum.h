@@ -11,6 +11,7 @@
 
 #include "Matrix4.h"
 #include "Vector3f.h"
+#include "Plane3.h"
 
 class Frustum
 {
@@ -39,7 +40,7 @@ public:
 
 	float	m_Left, m_Right, m_Bottom, m_Top;
 private:
-	float m_FrustumPlanes[6][4];
+	Plane3			m_FrustumPlanes[6];			///< 视截体平面，参数分别代表系数a, b, c, d
 
 	Matrix4			m_ProjMatrix;
 };

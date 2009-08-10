@@ -309,10 +309,10 @@ void Quaternion::Normalize()
 	z *= oneOverNorm;
 	w *= oneOverNorm;
 
-	x = MathClamp(-1.0f, 1.0f, x);
-	y = MathClamp(-1.0f, 1.0f, y);
-	z = MathClamp(-1.0f, 1.0f, z);
-	w = MathClamp(-1.0f, 1.0f, w);
+	x = Math::Clamp(-1.0f, 1.0f, x);
+	y = Math::Clamp(-1.0f, 1.0f, y);
+	z = Math::Clamp(-1.0f, 1.0f, z);
+	w = Math::Clamp(-1.0f, 1.0f, w);
 }
 
 void Quaternion::CreateFromLocalAxisAngle(const Vector3f axis, float angle_rad)

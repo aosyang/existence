@@ -18,8 +18,8 @@ void DefaultParticleState(Particle* particle, ParticleEmitter* emitter)
 
 ParticleEmitter::ParticleEmitter()
 : BaseSceneObject(),
-  m_PoolCreated(false),
   m_EmitterShape(EMITTER_SHAPE_POINT),
+  m_ParticlePool(NULL),
   m_Material(NULL),
   m_BoxMin(0.0f, 0.0f, 0.0f),
   m_BoxMax(0.0f, 0.0f, 0.0f),
@@ -33,18 +33,18 @@ ParticleEmitter::ParticleEmitter()
 ParticleEmitter::~ParticleEmitter()
 {
 	// 粒子池留着自生自灭，有可能销毁发射器时仍有粒子处于活动状态
-	m_ParticlePool->m_Emitter = NULL;
+	if (m_ParticlePool)
+		m_ParticlePool->m_Emitter = NULL;
 }
 
 void ParticleEmitter::Update(unsigned long deltaTime)
 {
-	if (!m_PoolCreated)
+	if (!m_ParticlePool)
 	{
 		// 不要让粒子池在发射器还存在时就自行销毁
 		m_ParticlePool = new ParticlePool();
 		m_ParticlePool->m_Emitter = this;
 		m_Scene->AddObject(m_ParticlePool);
-		m_PoolCreated = true;
 		m_ParticlePool->SetMaterial(m_Material);
 	}
 
@@ -63,9 +63,9 @@ void ParticleEmitter::Update(unsigned long deltaTime)
 			switch (m_EmitterShape)
 			{
 			case EMITTER_SHAPE_BOX:
-				particle.m_Position = Vector3f(MathRandom(m_BoxMin.x, m_BoxMax.x),
-											   MathRandom(m_BoxMin.y, m_BoxMax.y),
-											   MathRandom(m_BoxMin.z, m_BoxMax.z));
+				particle.m_Position = Vector3f(Math::Random(m_BoxMin.x, m_BoxMax.x),
+											   Math::Random(m_BoxMin.y, m_BoxMax.y),
+											   Math::Random(m_BoxMin.z, m_BoxMax.z));
 				particle.m_Position = m_WorldTransform * particle.m_Position;
 				break;
 
@@ -87,6 +87,6 @@ void ParticleEmitter::Update(unsigned long deltaTime)
 void ParticleEmitter::SetMaterial(Material* material)
 {
 	m_Material = material;
-	if (m_PoolCreated)
+	if (m_ParticlePool)
 		m_ParticlePool->SetMaterial(material);
 }

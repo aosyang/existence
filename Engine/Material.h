@@ -17,6 +17,7 @@ using namespace std;
 
 class Material;
 
+//template class ResourceManager<Material>;
 ResourceManager<Material>;
 
 typedef void(*SetMaterialAttribFunc)(Material*, const String&);
@@ -30,6 +31,8 @@ class Material
 {
 	friend class ResourceManager<Material>;
 public:
+
+	inline const String GetName() const { return *m_Name; }
 
 	// 材质颜色(仅在不受光照影响情况下有效)
 	inline void SetColor(const Color4f& color) { m_Color = color; }

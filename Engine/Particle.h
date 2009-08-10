@@ -11,7 +11,7 @@
 
 #include "Vector3f.h"
 #include "Color4f.h"
-#include <memory>
+#include <memory.h>
 
 class ParticlePool;
 struct Particle;

@@ -14,7 +14,7 @@ particleGame::~particleGame()
 
 
 Material*		m_MatSmoke;
-
+CameraShakeEffect	g_CameraShake;
 // 粒子初始状态设置
 void ParticleState(Particle* particle, ParticleEmitter* emitter)
 {
@@ -25,11 +25,11 @@ void ParticleState(Particle* particle, ParticleEmitter* emitter)
 
 	particle->m_Color = Color4f(1.0f, 1.0f, 1.0f, 1.0f);
 	//particle->m_Color = Color4f(0.0f, 0.0f, 0.0f, 1.0f);
-	//particle->m_Color = Color4f(MathRandom(0.0f, 1.0f), MathRandom(0.0f, 1.0f), MathRandom(0.0f, 1.0f), 1.0f);
-	particle->m_Scale = MathRandom(10.0f, 15.f);
+	//particle->m_Color = Color4f(Math::Random(0.0f, 1.0f), Math::Random(0.0f, 1.0f), Math::Random(0.0f, 1.0f), 1.0f);
+	particle->m_Scale = Math::Random(10.0f, 15.f);
 	particle->m_ScaleInc = 20.0f;
-	particle->m_ZRotation = MathRandom(-kPi, kPi);
-	particle->m_ZRotationInc = MathRandom(-0.5f, 0.5f);
+	particle->m_ZRotation = Math::Random(-Math::kPi, Math::kPi);
+	particle->m_ZRotationInc = Math::Random(-0.5f, 0.5f);
 }
 
 // 单一粒子更新行为
@@ -44,7 +44,7 @@ bool ParticleUpdate(Particle* particle, unsigned long deltaTime)
 	particle->m_ZRotation += particle->m_ZRotationInc * (float)deltaTime * 0.001f;
 	particle->m_Scale += particle->m_ScaleInc * (float)deltaTime * 0.001f;
 
-	float alpha = (float)particle->m_LifeTime / 5000 * kPi;
+	float alpha = (float)particle->m_LifeTime / 5000 * Math::kPi;
 	particle->m_Color.a = sinf(alpha)/* * 0.1f*/;
 
 	return particle->m_Active;
@@ -99,12 +99,12 @@ void particleGame::StartGame()
 		p.m_Active = true;
 		//p.m_Color = Color4f(0.0f, 0.0f, 0.0f, 0.5f);
 		p.m_Color = Color4f(1.0f, 1.0f, 1.0f, 0.5f);
-		p.m_Scale = MathRandom(50.0f, 100.0f);
-		p.m_ZRotation = MathRandom(-kPi, kPi);
-		p.m_ZRotationInc = MathRandom(-0.1f, 0.1f);
-		//p.m_ScreenScaleX = MathRandom(0.5f, 1.5f);
-		//p.m_ScreenScaleY = MathRandom(0.5f, 1.5f);
-		p.m_Position = Vector3f(MathRandom(-50.0f, 50.0f), MathRandom(0.0f, 10.0f), MathRandom(-50.0f, 50.0f));
+		p.m_Scale = Math::Random(50.0f, 100.0f);
+		p.m_ZRotation = Math::Random(-Math::kPi, Math::kPi);
+		p.m_ZRotationInc = Math::Random(-0.1f, 0.1f);
+		//p.m_ScreenScaleX = Math::Random(0.5f, 1.5f);
+		//p.m_ScreenScaleY = Math::Random(0.5f, 1.5f);
+		p.m_Position = Vector3f(Math::Random(-50.0f, 50.0f), Math::Random(0.0f, 10.0f), Math::Random(-50.0f, 50.0f));
 
 		pool->AddParticle(p);
 	}
@@ -142,10 +142,20 @@ void particleGame::StartGame()
 	//m_Camera->AttachChildObject(emitter, true);
 	emitter->AttachChildObject(bb);
 
-	IAudioBuffer* buffer = Engine::Instance().AudioSystem()->GetAudioBuffer("down");
-	IAudioSource* source = Engine::Instance().AudioSystem()->CreateSourceInstance(buffer, Vector3f(0.0f, 0.0f, 0.0f));
-	source->SetLooping(true);
-	source->Play();
+	//Engine::Instance().ToggleDebugRender(true);
+
+	//IAudioBuffer* buffer = Engine::Instance().AudioSystem()->GetAudioBuffer("down");
+	//IAudioSource* source = Engine::Instance().AudioSystem()->CreateSourceInstance(buffer, Vector3f(0.0f, 0.0f, 0.0f));
+	//source->SetLooping(true);
+	//source->Play();
+
+	//AudioSourceObject* sound = new AudioSourceObject();
+	//sound->CreateAudioSource("down");
+	//sound->SetLooping(true);
+	//sound->Play();
+	//sound->SetVelocityFactor(1.0f);
+	//m_Scene->AddObject(sound);
+	//emitter->AttachChildObject(sound);
 
 	//Sleep(2000);
 	//IAudioSource* source2 = Engine::Instance().AudioSystem()->CreateSourceInstance(buffer, Vector3f(5.0f, 0.0f, 0.0f));
@@ -170,7 +180,12 @@ void particleGame::Shutdown()
 
 void particleGame::OnKeyPressed(unsigned int key)
 {
-
+	switch (key)
+	{
+	case KC_SPACE:
+		g_CameraShake.Create(1.f, 20.0f, 2000);
+		break;
+	}
 }
 
 bool particleGame::OnNotifyQuitting()
@@ -193,7 +208,7 @@ void particleGame::Update(unsigned long deltaTime)
 {
 	//deltaTime *= 0.1f;
 	float boost;
-	char buf[1024] = "\0";
+	String text;
 
 	if (Input::Instance().GetKeyDown(KC_LSHIFT))
 		boost = 4.0f;
@@ -265,15 +280,24 @@ void particleGame::Update(unsigned long deltaTime)
 	static float rot = 0.0f;
 	rot += float(deltaTime) / 1000.0f;
 
+	g_CameraShake.Update(deltaTime);
+	Matrix4 camoffset = g_CameraShake.GetOffsetMatrix();
+	m_Camera->SetViewOffsetMatrix(g_CameraShake.GetOffsetMatrix());
+
 	emitter->SetPosition(Vector3f(sinf(rot) * 100.0f, 50.0f, cosf(rot) * 100.0f));
 	bb->SetScale(sinf(rot * 20.0f) * 1.0f + 10.0f);
 
 	m_Scene->UpdateScene(deltaTime);
 
 	unsigned int fps = Engine::Instance().GetFPS();
-	sprintf(buf, "FPS: %d", fps);
+	text.Format("FPS: %d", fps);
+	//text.Format("%f %f %f %f\n%f %f %f %f\n%f %f %f %f\n%f %f %f %f",
+	//	camoffset.mArray[0], camoffset.mArray[1], camoffset.mArray[2], camoffset.mArray[3],
+	//	camoffset.mArray[4], camoffset.mArray[5], camoffset.mArray[6], camoffset.mArray[7],
+	//	camoffset.mArray[8], camoffset.mArray[9], camoffset.mArray[10], camoffset.mArray[11],
+	//	camoffset.mArray[12], camoffset.mArray[13], camoffset.mArray[14], camoffset.mArray[15]);
 	//System::Instance().SetWindowTitle(buf);
-	m_UIFps->SetText(buf);
+	m_UIFps->SetText(text);
 }
 
 void particleGame::RenderScene()
@@ -289,13 +313,13 @@ void Emitparticle(const Vector3f& pos, SceneGraph* scene, particlePool& pool)
 	particle.bb->SetPosition(pos);
 	particle.bb->SetMaterial(m_MatSmoke);
 	particle.bb->SetColor(Color4f(1.0f, 0.5f, 0.5f, 1.0f));
-	particle.rot = MathRandom(-kPi, kPi);
+	particle.rot = Math::Random(-Math::kPi, Math::kPi);
 	particle.bb->SetZRotation(particle.rot);
 	//particle.bb->SetScreenSpaceScale(1.2f, 0.8f);
 	particle.life = 30000;
-	particle.scale = MathRandom(0.5f, 1.5f);
-	particle.scale_inc = MathRandom(0.05f, .1f);
-	particle.rot_inc = MathRandom(-0.005f, 0.005f);
+	particle.scale = Math::Random(0.5f, 1.5f);
+	particle.scale_inc = Math::Random(0.05f, .1f);
+	particle.rot_inc = Math::Random(-0.005f, 0.005f);
 	float x = (float)rand() / 0xFF * 0.3f;
 	float y = (float)rand() / 0xFF * 0.3f + 0.7f;
 	float z = (float)rand() / 0xFF * 0.3f;

@@ -47,12 +47,16 @@ public:
 	void SetLooping(bool loop);
 	bool GetLooping();
 
+	void SetPlaybackTime(float time);
 	float GetPlaybackTime();
 
 	void SetPosition(const Vector3f& position);
 	void SetTransform(const Matrix4& transform);
 
-	void SetAutoRemove(bool autoRemove);
+	void SetVelocity(const Vector3f& vel);
+	const Vector3f GetVelocity();
+
+	bool GetAutoRemove() const { return m_RemoveOnDone; }
 
 	bool IsStopped();
 protected:

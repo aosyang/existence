@@ -33,8 +33,10 @@ public:
 	D3D9VertexBuffer();
 	~D3D9VertexBuffer();
 
-	bool CreateBuffer(const float* vertexArray,
+	bool CreateBuffer(int vertexFormat,
+					  const float* vertexArray,
 					  const float* normalArray,
+					  const float* colorArray,
 					  const float* textureCoordArray,
 					  unsigned int vertexNum,
 					  unsigned int* faceArray,
@@ -46,6 +48,10 @@ public:
 	void Unlock();
 	void SetVertexData(void* vertexData, unsigned int vertexNum);
 	void SetIndexData(void* indexData, unsigned int indexNum);
+
+	void ModifyVertexData(VertexFormat dataFormat, int offset,  int size, void* data);
+	void ModifyIndexData(int offset, int size, void* data);
+	void SetIndexSize(int size);
 
 	void RenderBuffer();
 

@@ -14,10 +14,11 @@
 #include "Matrix3.h"
 
 const EulerAngle kEulerAngleIdentity(0.0f, 0.0f, 0.0f);
+using namespace Math;
 
 void EulerAngle::canonize()
 {
-	pitch = wrapPi(pitch);
+	pitch = WrapPi(pitch);
 
 	if (pitch < -kPiOver2)		//make pitch between -Pi/2 and Pi/2
 	{
@@ -39,10 +40,10 @@ void EulerAngle::canonize()
 	}
 	else 
 	{
-		bank = wrapPi(bank);
+		bank = WrapPi(bank);
 	}
 
-	heading = wrapPi(heading);
+	heading = WrapPi(heading);
 }
 
 void EulerAngle::fromObjectToInertialQuaternion(const Quaternion &q)

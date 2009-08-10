@@ -24,6 +24,7 @@ Camera::Camera()
 	m_Aspect = (float)param->width / param->height;
 
 	m_ViewMatrix.Identity();
+	m_ViewOffset.Identity();
 
 	//m_YawMatrix.Identity();
 	//m_PitchMatrix.Identity();
@@ -225,8 +226,14 @@ Ray Camera::GetCameratRay(float x, float y)
 	return Ray(nearPointWorld, farPointWorld);
 }
 
+// 指定视点偏移矩阵，用于产生摄像机振动效果
+void Camera::SetViewOffsetMatrix(const Matrix4& viewOffset)
+{
+	m_ViewOffset = viewOffset;
+	m_MatrixOutOfData = true;
+}
 
-const Matrix4 Camera::GetProjMatrix()
+const Matrix4& Camera::GetProjMatrix()
 {
 	return m_Frustum.ProjectionMatrix();
 }
@@ -240,10 +247,12 @@ void Camera::UpdateViewMatrix()
 {
 	// View Matrix必须从世界空间“退回”摄像机移动所造成的修改
 
+	Matrix4 viewTransform = m_WorldTransform * m_ViewOffset;
+
 	// 获取旋转矩阵的转置矩阵(3x3)
-	m_ViewMatrix.m[0][0] = m_WorldTransform.m[0][0]; m_ViewMatrix.m[1][0] = m_WorldTransform.m[0][1]; m_ViewMatrix.m[2][0] = m_WorldTransform.m[0][2]; 
-	m_ViewMatrix.m[0][1] = m_WorldTransform.m[1][0]; m_ViewMatrix.m[1][1] = m_WorldTransform.m[1][1]; m_ViewMatrix.m[2][1] = m_WorldTransform.m[1][2]; 
-	m_ViewMatrix.m[0][2] = m_WorldTransform.m[2][0]; m_ViewMatrix.m[1][2] = m_WorldTransform.m[2][1]; m_ViewMatrix.m[2][2] = m_WorldTransform.m[2][2]; 
+	m_ViewMatrix.m[0][0] = viewTransform.m[0][0]; m_ViewMatrix.m[1][0] = viewTransform.m[0][1]; m_ViewMatrix.m[2][0] = viewTransform.m[0][2]; 
+	m_ViewMatrix.m[0][1] = viewTransform.m[1][0]; m_ViewMatrix.m[1][1] = viewTransform.m[1][1]; m_ViewMatrix.m[2][1] = viewTransform.m[1][2]; 
+	m_ViewMatrix.m[0][2] = viewTransform.m[2][0]; m_ViewMatrix.m[1][2] = viewTransform.m[2][1]; m_ViewMatrix.m[2][2] = viewTransform.m[2][2]; 
 
 	// 填充4x4视矩阵的其余位置
 	m_ViewMatrix.m[3][0] = 0.0f;
@@ -252,13 +261,13 @@ void Camera::UpdateViewMatrix()
 	m_ViewMatrix.m[3][3] = 1.0f;
 
 	// 计算位移
-	float x = m_WorldTransform.m[0][3];
-	float y = m_WorldTransform.m[1][3];
-	float z = m_WorldTransform.m[2][3];
+	float x = viewTransform.m[0][3];
+	float y = viewTransform.m[1][3];
+	float z = viewTransform.m[2][3];
 
-	float vx = m_WorldTransform.m[0][0] * x + m_WorldTransform.m[1][0] * y + m_WorldTransform.m[2][0] * z;
-	float vy = m_WorldTransform.m[0][1] * x + m_WorldTransform.m[1][1] * y + m_WorldTransform.m[2][1] * z;
-	float vz = m_WorldTransform.m[0][2] * x + m_WorldTransform.m[1][2] * y + m_WorldTransform.m[2][2] * z;
+	float vx = viewTransform.m[0][0] * x + viewTransform.m[1][0] * y + viewTransform.m[2][0] * z;
+	float vy = viewTransform.m[0][1] * x + viewTransform.m[1][1] * y + viewTransform.m[2][1] * z;
+	float vz = viewTransform.m[0][2] * x + viewTransform.m[1][2] * y + viewTransform.m[2][2] * z;
 
 	m_ViewMatrix.m[0][3] = -vx;
 	m_ViewMatrix.m[1][3] = -vy;

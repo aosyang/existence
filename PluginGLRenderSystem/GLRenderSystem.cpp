@@ -14,6 +14,7 @@
 #include "MathUtil.h"
 #include "GLVertexArray.h"
 #include "GLVertexBufferObject.h"
+#include "GLRenderTargetFBO.h"
 
 #include "GL/glu.h"
 
@@ -366,10 +367,13 @@ void GLRenderer::BeginRender()
 	//glLightfv(GL_LIGHT0, GL_POSITION, lightDir);
 }
 
-void GLRenderer::EndRender(bool swapBuffer)
+void GLRenderer::EndRender()
 {
-	if (swapBuffer)
-		SwapBuffers(m_hDC);
+}
+
+void GLRenderer::SwapBuffer()
+{
+	SwapBuffers(m_hDC);
 }
 
 void GLRenderer::RenderVertexBuffer(IVertexBuffer* vbuffer, Material* material, const Matrix4& transform)
@@ -395,9 +399,7 @@ void GLRenderer::RenderVertexBuffer(IVertexBuffer* vbuffer, Material* material, 
 
 void GLRenderer::RenderAABB(const Vector3f& vMin, const Vector3f& vMax, const Color4f& color, const Matrix4& transform)
 {
-	// TODO: 集中渲染Debug信息，不需要在这个方法内部关闭光照和纹理
-	ToggleLighting(false);
-	ToggleTexture(false);
+	SetupMaterialWhite();
 
 	glColor4fv(color.GetArray());
 
@@ -440,58 +442,45 @@ void GLRenderer::RenderAABB(const Vector3f& vMin, const Vector3f& vMax, const Co
 	glEnd();
 
 	glPopMatrix();
-
-	ToggleLighting(true);
-	ToggleTexture(true);
 }
 
 void GLRenderer::RenderSphere(const Vector3f& point, float radius, const Color4f& color, unsigned int segment)
 {
-	// 同上
-	ToggleLighting(false);
-	ToggleTexture(false);
+	SetupMaterialWhite();
 
 	glColor4fv(color.GetArray());
 
 	glBegin(GL_LINE_LOOP);
 	for (unsigned int i=0; i<segment; i++)
 	{
-		glVertex3f(point.x, point.y + radius * cos(float(i)/segment * k2Pi), point.z + radius * sin(float(i)/segment * k2Pi));
+		glVertex3f(point.x, point.y + radius * cos(float(i)/segment * Math::k2Pi), point.z + radius * sin(float(i)/segment * Math::k2Pi));
 	}
 	glEnd();
 
 	glBegin(GL_LINE_LOOP);
 	for (unsigned int i=0; i<segment; i++)
 	{
-		glVertex3f(point.x + radius * sin(float(i)/segment * k2Pi), point.y + radius * cos(float(i)/segment * k2Pi), point.z);
+		glVertex3f(point.x + radius * sin(float(i)/segment * Math::k2Pi), point.y + radius * cos(float(i)/segment * Math::k2Pi), point.z);
 	}
 	glEnd();
 
 	glBegin(GL_LINE_LOOP);
 	for (unsigned int i=0; i<segment; i++)
 	{
-		glVertex3f(point.x + radius * sin(float(i)/segment * k2Pi), point.y, point.z + radius * cos(float(i)/segment * k2Pi));
+		glVertex3f(point.x + radius * sin(float(i)/segment * Math::k2Pi), point.y, point.z + radius * cos(float(i)/segment * Math::k2Pi));
 	}
 	glEnd();
-
-	ToggleLighting(true);
-	ToggleTexture(true);
 }
 
 void GLRenderer::RenderLine(const Vector3f& begin, const Vector3f& end, const Color4f& color)
 {
-	ToggleLighting(false);
-	ToggleTexture(false);
-
+	SetupMaterialWhite();
 	glColor4fv(color.GetArray());
 
 	glBegin(GL_LINES);
 	glVertex3fv(begin.GetArray());
 	glVertex3fv(end.GetArray());
 	glEnd();
-
-	ToggleLighting(true);
-	ToggleTexture(true);
 }
 
 void GLRenderer::RenderScreenQuad(float left, float top, float right, float bottom, ITexture* texture, const Color4f& color)
@@ -743,6 +732,26 @@ IVertexBuffer* GLRenderer::BuildVertexBuffer()
 	return (*m_VertexBufferFactoryFunc)();
 }
 
+// 创建一个新的渲染目标
+IRenderTarget* GLRenderer::CreateRenderTarget()
+{
+	if (GLEW_EXT_framebuffer_object)
+		return new GLRenderTargetFBO();
+	return NULL;
+}
+
+// 指定渲染目标
+void GLRenderer::SetRenderTarget(IRenderTarget* rt)
+{
+	if (GLEW_EXT_framebuffer_object)
+	{
+		if (rt)
+			rt->BindRenderTarget();
+		else
+			// 取消RT绑定，渲染到后台缓冲
+			glBindFramebufferEXT(GL_FRAMEBUFFER, 0);
+	}
+}
 
 //-----------------------------------------------------------------------------------
 /// \brief
@@ -803,6 +812,7 @@ void GLRenderer::BindTextureRenderState(const texRenderState_t& texState)
 	glTexParameteri(texState.texture->GetTarget(), GL_TEXTURE_WRAP_S, wrapMode);
 	glTexParameteri(texState.texture->GetTarget(), GL_TEXTURE_WRAP_T, wrapMode);
 
+	// TODO: 纹理过滤模式(是否使用mipmap)应当由纹理类决定
 	GLint minFilterType = GetFilterType(texState.minFilterType);
 	GLint magFilterType = GetFilterType(texState.magFilterType);
 
@@ -1096,6 +1106,23 @@ void GLRenderer::SetupMaterial(Material* material)
 		BindTextureRenderState(texRenderState(null_texture));
 	}
 }
+
+void GLRenderer::SetupMaterialWhite()
+{
+		for (int i=1; i<8; i++)
+		{
+			ToggleTexture(false, i);
+		}
+		ToggleTexture(true);
+
+		ToggleLighting(false);
+		ToggleDepthWriting(true);
+		ToggleDepthTest(true);
+
+		ITexture* null_texture = GetTexture("#white");
+		BindTextureRenderState(texRenderState(null_texture));
+}
+
 
 bool GLRenderer::UnloadTexture(const String& textureName)
 {

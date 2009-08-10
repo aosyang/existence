@@ -17,8 +17,7 @@ int WINAPI WinMain(HINSTANCE	hInstance,
 	Engine::Instance().SetGame(game);
 
 	System::Instance().CreateRenderWindow("Grid-based Real-time Interactive Deployment", 640, 480, 32, false);
-	renderer->Initialize(System::Instance().GetRenderWindowParameters());
-	Input::Instance().Initialize();
+	Engine::Instance().Initialize();
 
 	System::Instance().LoadResources("resources.cfg");
 

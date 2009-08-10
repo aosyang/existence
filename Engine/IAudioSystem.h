@@ -39,6 +39,8 @@ public:
 
 	virtual IAudioSource* CreateSourceInstance(IAudioBuffer* buffer, const Vector3f& position, bool autoRemove=true) = 0;
 
+	virtual void RemoveSource(IAudioSource* source) = 0;
+
 	virtual void Update() = 0;
 };
 

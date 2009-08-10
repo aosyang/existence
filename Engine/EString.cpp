@@ -1,5 +1,6 @@
 #include "EString.h"
 #include <stdarg.h>
+#include <stdlib.h>
 
 String::String()
 {}
