@@ -529,7 +529,7 @@ void GameGrid::AddBox(const Point3& pos)
 		obj->SetPosition(p);
 		obj->SetMaterial(m_BoxMaterial, 0);
 
-		m_Scene->AddObject(obj, false);
+		m_Scene->AddObject(obj);
 		LightingManager::Instance().AddLightableObject(obj);
 
 		grid->obj = obj;

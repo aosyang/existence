@@ -101,6 +101,28 @@ void MeshObject::SetMesh(Mesh* mesh)
 	m_OBB.Expand(m_Mesh->m_OBB);
 }
 
+//-----------------------------------------------------------------------------------
+/// \brief
+/// 射线与模型相交判定
+/// 
+/// \param ray
+/// 世界空间中的射线
+/// 
+/// \param point
+/// 返回交点位置(世界空间)
+/// 
+/// \param normal
+/// 返回交点法线方向
+/// 
+/// \param d
+/// 返回交点距射线出发点的距离
+/// 
+/// \param infiniteLength
+/// 射线是否无限延伸
+/// 
+/// \returns
+/// 返回true表明有交点，否则返回false
+//-----------------------------------------------------------------------------------
 bool MeshObject::RayPicking(const Ray& ray, Vector3f& point, Vector3f& normal, float& d, bool infiniteLength)
 {
 	bool result = false;
@@ -116,7 +138,7 @@ bool MeshObject::RayPicking(const Ray& ray, Vector3f& point, Vector3f& normal, f
 
 	if (result)
 	{
-		point = p;
+		point = m_WorldTransform * p;
 		d = dist;
 	}
 
