@@ -64,7 +64,7 @@ void Camera::DebugRender()
 	//Matrix4 matViewInv = m_ViewMatrix.GetInverseMatrix();
 	Matrix4 matViewProjInv = (m_Frustum.ProjectionMatrix() * m_ViewMatrix).GetInverseMatrix();
 
-	renderer->RenderAABB(vMin, vMax, Color4f(1.0f, 1.0f, 1.0f), /*m_WorldTransform * */matViewProjInv);
+	renderer->RenderBox(vMin, vMax, Color4f(1.0f, 1.0f, 1.0f), /*m_WorldTransform * */matViewProjInv);
 
 	//Vector3f p1 = matViewInv * matProjInv * Vector3f(-1.0f, -1.0f, 1.0f);
 	//Vector3f p2 = matViewInv * matProjInv * Vector3f(-1.0f, 1.0f, 1.0f);
@@ -76,16 +76,16 @@ void Camera::DebugRender()
 	//renderer->RenderLine(p3, p4);
 	//renderer->RenderLine(p4, p1);
 
-	//renderer->RenderAABB(nearPointWorld, farPointWorld, matViewProjInv);
+	//renderer->RenderBox(nearPointWorld, farPointWorld, matViewProjInv);
 
 	renderer->RenderLine(nearPointWorld, farPointWorld);
 }
-
-void Camera::PrepareRenderObjects(ChildrenSceneObjectsSet& objects)
-{
-	// Do nothing here, cameras don't even need rendering...
-	objects.insert(this);
-}
+//
+//void Camera::PrepareRenderObjects(SceneObjectList& objects, const RenderView& view)
+//{
+//	// Do nothing here, cameras don't even need rendering...
+//	objects.insert(this);
+//}
 //
 //bool Camera::IntersectsRay(const Ray& ray, CollisionInfo& info)
 //{

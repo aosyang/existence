@@ -10,9 +10,7 @@
 
 #include "ISceneObject.h"
 #include "BaseSceneObject.h"
-#include "BaseUIObject.h"
 #include "SceneRootObject.h"
-#include "UIRootObject.h"
 #include "Platform.h"
 #include "Camera.h"
 #include "Ray.h"
@@ -26,6 +24,12 @@ struct ElementLine
 {
 	Vector3f v1, v2;
 	Color4f color;
+};
+
+struct RemoveListElement
+{
+	BaseSceneObject* obj;
+	bool	deleteObj;
 };
 
 //-----------------------------------------------------------------------------------
@@ -46,20 +50,14 @@ public:
 	// 删除对象
 	void RemoveObject(BaseSceneObject* object, bool deleteObj=true);
 
-	// 添加UI控件
-	void AddUIObject(BaseUIObject* object);
-
-	// UI点击操作
-	//void OnMousePressed(MouseButtonID id);
-	//void OnMouseReleased(MouseButtonID id);
-	//void OnMouseMoved(int x, int y);
-
-	void SetCamera(Camera* camera, bool useCameraFrustum = true);
-	Camera* GetCamera() { return m_Camera; }
+	//void SetCamera(Camera* camera, bool useCameraFrustum = true);
+	//Camera* GetCamera() { return m_Camera; }
 	//void NotifyUpdatingProjectionMatrix();
 
 	// Update & Render
 	void UpdateScene(unsigned long deltaTime);
+
+	void SetupRenderView(const RenderView& view);
 	void RenderScene();
 
 	void CollectRayPickingSceneObject(const Ray& ray, ObjectsCollisionInfos& baseSceneObjects, int type, int collisionGroup = COLLISION_GROUP_ALL);
@@ -67,30 +65,28 @@ public:
 	void SetAmbientColor(const Color4f color);
 	const Color4f GetAmbientColor() const { return m_Ambient; }
 
-	// 渲染线框
-	void DrawLine(const Vector3f& start, const Vector3f& end, const Color4f& color = Color4f(1.0f, 1.0f, 1.0f));
-
 private:
-	void SetFrustum(Frustum* frustum);
-	void DrawAssistantElements();
 
-	void DrawScene();
-	void DrawUI();
+	void RemoveObjectInternal(BaseSceneObject* object, bool deleteObj);
+
+	// 执行真正的删除工作，在每帧更新后进行
+	void ProcessRemove();
 
 private:
 	//typedef vector<ISceneObject*> SceneObjects;
 	//SceneObjects	m_SceneObjects;
 
-	SceneRootObject*	m_RootObject;		///< 场景对象根对象
-	UIRootObject*		m_UIRootObject;		///< UI根对象
-	vector<ElementLine> m_LineElements;
+	SceneRootObject*			m_RootObject;		///< 场景对象根对象
 
-	set<BaseSceneObject*>	m_AutoDeleteList;
-	//vector<BaseSceneObject*>	m_RemoveList;
+	set<BaseSceneObject*>		m_AutoDeleteList;
+	vector<RemoveListElement>	m_RemoveList;		///< 删除列表，记录了这一帧更新后需要删除的对象
 
-	Camera*				m_Camera;
+	bool						m_ProcessingUpdate;	///< 当前是否正在更新场景的状态标识
 
-	Color4f				m_Ambient;
+	RenderView					m_RenderView;
+	//Camera*						m_Camera;
+
+	Color4f						m_Ambient;
 };
 
 #endif

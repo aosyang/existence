@@ -41,3 +41,17 @@ void UIRootObject::AttachChildObject(BaseUIObject *object)
 
 	m_ChildrenObjects.insert(object);
 }
+
+void UIRootObject::RemoveAllChildObjects()
+{
+	ChildrenUIObjectsSet::iterator iter;
+	for (iter = m_ChildrenObjects.begin();
+		iter != m_ChildrenObjects.end();
+		iter++)
+	{
+		delete *iter;
+	}
+
+	m_ChildrenObjects.clear();
+}
+

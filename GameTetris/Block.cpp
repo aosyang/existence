@@ -41,7 +41,7 @@ void Block::SetPosition(int x, int y)
 
 void Block::SetColorType(unsigned int type)
 {
-	m_Shape.SetMaterial(s_BlockMaterial[type]);
+	m_Shape.SetMaterial(s_BlockMaterial[type], 0);
 	//m_Shape.SetColor(color);
 }
 
@@ -50,7 +50,7 @@ void Block::InitializeData()
 	if (s_DataInitialized)
 		return;
 
-	s_BlockMesh = new Mesh();
+	s_BlockMesh = ResourceManager<Mesh>::Instance().Create();
 	s_BlockMesh->CreateBox(1.0f);
 
 	// 指定方块材质
@@ -76,8 +76,6 @@ void Block::ReleaseData()
 {
 	if (!s_DataInitialized)
 		return;
-
-	delete s_BlockMesh;
 
 	s_DataInitialized = false;
 }

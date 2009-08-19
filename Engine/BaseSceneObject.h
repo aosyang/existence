@@ -21,6 +21,7 @@ using namespace std;
 
 class BaseSceneObject;
 class SceneGraph;
+class Frustum;
 
 //typedef vector<BaseSceneObject*>	VecBaseSceneObjects;
 typedef set<BaseSceneObject*>		ChildrenSceneObjectsSet;
@@ -43,6 +44,15 @@ struct CollisionInfo
 	Vector3f point, normal;
 	float squaredDistance;
 	BaseSceneObject* obj;
+};
+
+
+struct RenderView
+{
+	Vector3f position;
+	Matrix4 viewMatrix;
+	Matrix4 projMatrix;
+	Frustum* frustum;
 };
 
 typedef vector<CollisionInfo>		ObjectsCollisionInfos;
@@ -71,7 +81,7 @@ public:
 
 	// ----- BaseSceneObject Methods
 
-	virtual void PrepareRenderObjects(SceneObjectList& objects);
+	void PrepareRenderObjects(SceneObjectList& objects, const RenderView& view);
 
 	// collisions
 
@@ -115,6 +125,9 @@ protected:
 	// 指定父对象
 	void SetParentObject(BaseSceneObject* parent, bool keepRotation);
 
+	// 判断物体是否可以被剔除
+	// 重载这个方法以实现不同的剔除方案
+	virtual bool IsCulled(const RenderView& view);
 
 protected:
 	ChildrenSceneObjectsSet			m_ChildrenObjects;

@@ -7,6 +7,13 @@ bool flareVisible = false;
 unsigned long timeToHide = 0;
 CameraShakeEffect	g_CameraShake;
 
+//#define RENDER_TARGET_TEST
+
+#ifdef RENDER_TARGET_TEST
+IRenderTarget*	g_RenderTarget = NULL;
+ITexture*		g_RTT = NULL;
+#endif
+
 GameFps::GameFps()
  : m_Scene(NULL),
    m_Camera(NULL),
@@ -63,10 +70,8 @@ void GameFps::StartGame()
 
 	// 不添加到场景的摄像机将无法移动
 	m_Scene->AddObject(m_Camera);
-	m_Scene->SetCamera(m_Camera);
 
-	m_UIControl = new BaseUIObject();
-	m_Scene->AddUIObject(m_UIControl);
+	m_UIControl = EGUIManager::Instance().CreateImageUIControl();
 
 	ITexture* no_mat = renderer->GetTexture("Brick");
 	unsigned char color[32 * 32 * 3] = { 0x0 };
@@ -157,12 +162,18 @@ void GameFps::StartGame()
 	}
 
 	Material* matSphere = ResourceManager<Material>::Instance().Create("metal_sphere");
-	matSphere->SetTextureLayerEnabled(1, true);
-	matSphere->GetTextureRenderState(0)->texture = renderer->GetTexture("no_material");
-	matSphere->GetTextureRenderState(1)->texture = renderer->GetTexture("cubeMap");
-	matSphere->GetTextureRenderState(1)->envMode = ENV_MODE_MODULATE;
-	matSphere->GetTextureRenderState(1)->genMode = GEN_MODE_CUBE_MAP;
-	//matSphere->SaveToFile("metal_sphere.emt");
+	//matSphere->SetTextureLayerEnabled(1, true);
+	//matSphere->GetTextureRenderState(0)->texture = renderer->GetTexture("no_material");
+	//matSphere->GetTextureRenderState(1)->texture = renderer->GetTexture("cubeMap");
+	//matSphere->GetTextureRenderState(1)->envMode = ENV_MODE_MODULATE;
+	//matSphere->GetTextureRenderState(1)->genMode = GEN_MODE_CUBE_MAP;
+	IGpuProgram* vprogram = renderer->LoadGpuProgram("./base_vp.cg", "main", GPU_VERTEX_PROGRAM);
+	IGpuProgram* fprogram = renderer->LoadGpuProgram("./base_fp.cg", "main", GPU_FRAGMENT_PROGRAM);
+	matSphere->SetVertexProgram(vprogram);
+	matSphere->SetFragmentProgram(fprogram);
+	//matSphere->SetTextureLayerEnabled(1, true);
+	//matSphere->GetTextureRenderState(0)->texture = renderer->GetTexture("no_material");
+	//matSphere->GetTextureRenderState(1)->texture = renderer->GetTexture("Brick");
 
 	MeshObject* sphere = new MeshObject();
 	sphere->SetMesh(ResourceManager<Mesh>::Instance().GetByName("sphere"));
@@ -212,9 +223,8 @@ void GameFps::StartGame()
 
 	System::Instance().ToggleMouseCursor(false);
 
-	m_UIFps = new TextUIControl();
+	m_UIFps = EGUIManager::Instance().CreateTextUIControl();
 	//m_UIFps->SetFont("DefaultFont");
-	m_Scene->AddUIObject(m_UIFps);
 	m_UIFps->SetWidth(640);
 
 
@@ -230,12 +240,38 @@ void GameFps::StartGame()
 
 	//	pool->AddParticle(p);
 	//}
+
+
+#ifdef RENDER_TARGET_TEST
+	m_ScreenQuadScene = new SceneGraph;
+
+	g_RTT = renderer->BuildTexture("RTT", 640, 480, 32, NULL);
+	g_RenderTarget = renderer->CreateRenderTarget();
+	g_RenderTarget->SetTexture(g_RTT);
+	g_RenderTarget->GenerateMipmap();
+
+	Material* matScreenQuad = ResourceManager<Material>::Instance().Create("screen quad");
+	IGpuProgram* quadvs = renderer->LoadGpuProgram("ScreenQuad.cg", "main", GPU_VERTEX_PROGRAM);
+	IGpuProgram* quadfs = renderer->LoadGpuProgram("ScreenQuadFP.cg", "main", GPU_FRAGMENT_PROGRAM);
+	matScreenQuad->SetVertexProgram(quadvs);
+	matScreenQuad->SetFragmentProgram(quadfs);
+	matScreenQuad->SetTexture(g_RTT);
+	matScreenQuad->SetDepthWriting(false);
+
+	Mesh* plane = ResourceManager<Mesh>::Instance().Create("plane");
+	plane->CreatePositiveZPlane(1.0f);
+	MeshObject* screenQuad = new MeshObject();
+	screenQuad->SetMesh(plane);
+
+	m_ScreenQuadScene->AddObject(screenQuad);
+	screenQuad->SetMaterial(matScreenQuad, 0);
+	screenQuad->SetFrustumCulling(false);
+#endif
 }
 
 void GameFps::Shutdown()
 {
-	SAFE_DELETE(m_UIFps);
-	delete m_UIControl;
+
 
 	//for (int i=0; i<MAX_DECAL_NUM; i++)
 	//	delete m_Decals[i];
@@ -482,19 +518,6 @@ void GameFps::Update(unsigned long deltaTime)
 	//	Engine::Instance().AudioSystem()->CreateSourceInstance(fire, m_Camera->WorldTransform().GetPosition());
 	//}
 
-	if (toggleWireframe)
-	{
-		vector<BspTriangle*> triList;
-		m_BspScene->TraverseTree(&triList, m_Camera->WorldTransform().GetPosition());
-
-		for (vector<BspTriangle*>::iterator iter=triList.begin(); iter!=triList.end(); iter++)
-		{
-			m_Scene->DrawLine((*iter)->vertices[0], (*iter)->vertices[1], Color4f(0.5f, 0.5f, 1.0f));
-			m_Scene->DrawLine((*iter)->vertices[1], (*iter)->vertices[2], Color4f(0.5f, 0.5f, 1.0f));
-			m_Scene->DrawLine((*iter)->vertices[2], (*iter)->vertices[0], Color4f(0.5f, 0.5f, 1.0f));
-		}
-	}
-
 	if (flareVisible && timeToHide>=50)
 	{
 		flareVisible = false;
@@ -535,7 +558,47 @@ void GameFps::Update(unsigned long deltaTime)
 
 void GameFps::RenderScene()
 {
+	RenderView rv;
+
+	rv.position = m_Camera->WorldTransform().GetPosition();
+	rv.viewMatrix = m_Camera->GetViewMatrix();
+	rv.projMatrix = m_Camera->GetProjMatrix();
+	rv.frustum = m_Camera->GetFrustum();
+
+	renderer->SetViewport(0, 0, 0, 0);
+
+#ifdef RENDER_TARGET_TEST
+	renderer->SetRenderTarget(g_RenderTarget);
+#endif
+
+	// 设定渲染视点
+	m_Scene->SetupRenderView(rv);
 	m_Scene->RenderScene();
+
+#ifdef RENDER_TARGET_TEST
+	renderer->SetRenderTarget(NULL);
+
+	m_ScreenQuadScene->RenderScene();
+#endif
+
+
+	if (toggleWireframe)
+	{
+		renderer->BeginRender();
+
+		vector<BspTriangle*> triList;
+		m_BspScene->TraverseTree(&triList, m_Camera->WorldTransform().GetPosition());
+
+		for (vector<BspTriangle*>::iterator iter=triList.begin(); iter!=triList.end(); iter++)
+		{
+			renderer->RenderLine((*iter)->vertices[0], (*iter)->vertices[1], Color4f(0.5f, 0.5f, 1.0f));
+			renderer->RenderLine((*iter)->vertices[1], (*iter)->vertices[2], Color4f(0.5f, 0.5f, 1.0f));
+			renderer->RenderLine((*iter)->vertices[2], (*iter)->vertices[0], Color4f(0.5f, 0.5f, 1.0f));
+		}
+
+		renderer->EndRender();
+	}
+
 }
 
 

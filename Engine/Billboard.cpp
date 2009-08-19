@@ -79,13 +79,6 @@ void Billboard::Render()
 
 }
 
-void Billboard::PrepareRenderObjects(SceneObjectList& objects)
-{
-	// TODO: Frustum checking
-	BaseSceneObject::PrepareRenderObjects(objects);
-	//objects.insert(this);
-}
-
 void Billboard::SetColor(const Color4f& color)
 {
 	float new_color[16];

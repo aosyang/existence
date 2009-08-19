@@ -23,6 +23,7 @@ public:
 	inline int GetMaxLightNum() const { return maxLightNum; }
 
 	bool	supportedVBO;
+	bool	supportedFBO;
 	int		maxLightNum;
 };
 

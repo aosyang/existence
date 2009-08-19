@@ -296,6 +296,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\IGpuProgram.h"
+				>
+			</File>
+			<File
 				RelativePath=".\Image.cpp"
 				>
 			</File>
@@ -337,18 +341,6 @@
 			</File>
 		</Filter>
 		<Filter
-			Name="Timer"
-			>
-			<File
-				RelativePath=".\Timer.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\Timer.h"
-				>
-			</File>
-		</Filter>
-		<Filter
 			Name="Engine"
 			>
 			<File
@@ -365,6 +357,10 @@
 			</File>
 			<File
 				RelativePath=".\Log.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Plugin.h"
 				>
 			</File>
 			<File
@@ -521,7 +517,7 @@
 			</File>
 		</Filter>
 		<Filter
-			Name="UI"
+			Name="EGUI"
 			>
 			<File
 				RelativePath=".\BaseUIObject.cpp"
@@ -529,6 +525,14 @@
 			</File>
 			<File
 				RelativePath=".\BaseUIObject.h"
+				>
+			</File>
+			<File
+				RelativePath=".\EGUIManager.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\EGUIManager.h"
 				>
 			</File>
 			<File
@@ -709,6 +713,18 @@
 			</File>
 			<File
 				RelativePath=".\QuadTreeNode.h"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="Timer"
+			>
+			<File
+				RelativePath=".\Timer.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Timer.h"
 				>
 			</File>
 		</Filter>

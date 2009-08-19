@@ -12,10 +12,12 @@
 
 using namespace std;
 
+#include "Plugin.h"
 #include "Input.h"
 #include "System.h"
 #include "NullAudioSystem.h"
 #include "Mesh.h"
+#include "EGUIManager.h"
 
 void LoadConfigFile(const String& filename, ConfigGroups& group, String groupname)
 {
@@ -156,14 +158,14 @@ void Engine::Initialize(bool input)
 	Log.MsgLn("Initializing AudioSystem");
 	m_AudioSystem->Initialize();
 
-	Log.MsgLn("Initializing FontManager");
 	FontManager::Instance().Initialize();
 
 	if (input)
 	{
-		Log.MsgLn("Initializing InputSystem");
 		Input::Instance().Initialize();
 	}
+
+	EGUIManager::Instance().Initialize();
 
 	// 创建默认的空白纹理
 	// 需要在渲染器初始化以后调用
@@ -175,6 +177,7 @@ void Engine::Initialize(bool input)
 
 void Engine::Shutdown()
 {
+	EGUIManager::Instance().Shutdown();
 	FontManager::Instance().Shutdown();
 
 	Platform::SetMessageNotifier(NULL);
@@ -241,6 +244,7 @@ void Engine::ManualUpdate(unsigned long deltaTime)
 	Input::Instance().CaptureDevice();
 
 	m_Game->Update(deltaTime);
+	EGUIManager::Instance().Update(deltaTime);
 
 	// 更新音频系统，删除无用的音源
 	Engine::Instance().AudioSystem()->Update();
@@ -255,9 +259,14 @@ void Engine::ManualUpdate(unsigned long deltaTime)
 
 	// TODO: SceneGraph renders here.
 	if (renderer->GetActive())
+	{
 		m_Game->RenderScene();
 
-	//renderer->Render();
+		// 渲染EGUI
+		EGUIManager::Instance().RenderUI();
+
+		renderer->SwapBuffer();
+	}
 }
 void Engine::ResizeWindow(unsigned int width, unsigned int height)
 {
@@ -266,19 +275,6 @@ void Engine::ResizeWindow(unsigned int width, unsigned int height)
 	m_Game->OnResizeWindow(width, height);
 	renderer->ResizeRenderWindow(width, height);
 }
-
-#if defined __PLATFORM_WIN32
-typedef HINSTANCE Module_t;
-#define LoadModule(filename) LoadLibrary(filename)
-#define GetFunction(module, name) GetProcAddress(module, name)
-#define UnloadModule(module) FreeLibrary(module)
-#elif defined __PLATFORM_LINUX
-#include <dlfcn.h>
-typedef void* Module_t;
-#define LoadModule(filename) dlopen(filename, RTLD_LAZY)
-#define GetFunction(module, name) dlsym(module, name)
-#define UnloadModule(module) dlclose(module)
-#endif	// #if defined __PLATFORM_WIN32
 
 // 从插件中读入音频及视频渲染系统
 void Engine::LoadModules()
@@ -292,6 +288,9 @@ void Engine::LoadModules()
 		return;
 
 	ConfigFileKeys* list = &group["plugins"];
+
+	// 渲染器插件名称，如OpenGL使用的CG插件等
+	String RenderSystemPluginName;
 
 	for (iter=list->begin(); iter!=list->end(); iter++)
 	{
@@ -330,9 +329,14 @@ void Engine::LoadModules()
 
 			m_AudioSystem = (*audioCreator)();
 		}
+		else if (iter->key == "RenderSystemPlugin")
+		{
+			RenderSystemPluginName = iter->value;
+		}
 	}
 
 	AssertFatal(m_Renderer, "Engine::LoadModules() : Failed to create render system from plugin.");
+	m_Renderer->SetGpuPluginName(RenderSystemPluginName);
 
 	// Use a null audio system if we don't find one from plugins
 	if (!m_AudioSystem)

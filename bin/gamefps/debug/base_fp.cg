@@ -1,0 +1,14 @@
+struct Output {
+  float4 color : COLOR;
+};
+
+Output main(float2 texcoord : TEXCOORD0,
+            float4 color : COLOR,
+            uniform sampler2D baseTexture : TEXUNIT0,
+            uniform sampler2D baseTexture1 : TEXUNIT1)
+{
+  Output OUT;
+  OUT.color = color;
+  //OUT.color = float4(texcoord, 0, 1);
+  return OUT;
+}

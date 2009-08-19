@@ -12,13 +12,12 @@
 
 SceneGraph::SceneGraph()
 : m_RootObject(NULL),
-  m_UIRootObject(NULL),
-  m_Camera(NULL),
+  m_ProcessingUpdate(false),
+  //m_Camera(NULL),
   m_Ambient(0.2f, 0.2f, 0.2f, 0.1f)
 {
 	// 创建用于管理其他对象的根对象
 	m_RootObject = new SceneRootObject();
-	m_UIRootObject = new UIRootObject();
 }
 
 SceneGraph::~SceneGraph()
@@ -29,7 +28,6 @@ SceneGraph::~SceneGraph()
 		delete (*iter);
 	}
 
-	SAFE_DELETE(m_UIRootObject)
 	SAFE_DELETE(m_RootObject)
 }
 
@@ -50,90 +48,75 @@ void SceneGraph::RemoveObject(BaseSceneObject* object, bool deleteObj)
 {
 	// TODO: 这个方法删除有子对象的对象时候会怎样？
 
-	// TODO: 在Update过程中调用这个方法会导致潜在错误
-
-	if (m_RootObject->DetachChildObject(object))
+	// 当在Update循环内部执行删除操作的时候，添加到删除列表并稍后销毁
+	if (m_ProcessingUpdate)
 	{
-		// 从自动删除列表中删除对象
-		set<BaseSceneObject*>::iterator iter = m_AutoDeleteList.find(object);
-		if (iter!=m_AutoDeleteList.end())
-			m_AutoDeleteList.erase(iter);
-
-		if (deleteObj)
-			delete object;
+		RemoveListElement elem;
+		elem.obj = object;
+		elem.deleteObj = deleteObj;
+		m_RemoveList.push_back(elem);
+	}
+	else	// 否则直接删除对象
+	{
+		RemoveObjectInternal(object, deleteObj);
 	}
 }
-
-void SceneGraph::AddUIObject(BaseUIObject* object)
-{
-	m_UIRootObject->AttachChildObject(object);
-}
-
-void SceneGraph::SetCamera(Camera* camera, bool useCameraFrustum)
-{
-	m_Camera = camera; 
-
-	//NotifyUpdatingProjectionMatrix();
-
-	// This hacks: 测试一下frustum的工作情况
-	//renderer->ProjectionMatrix() = frustum.BuildPrespectiveProjMatrix();
-	if (useCameraFrustum)
-	{
-		camera->UpdateFrustum();
-		SetFrustum(camera->GetFrustum());
-	}
-}
+//
+//void SceneGraph::SetCamera(Camera* camera, bool useCameraFrustum)
+//{
+//	m_Camera = camera; 
+//
+//	//NotifyUpdatingProjectionMatrix();
+//
+//	// This hacks: 测试一下frustum的工作情况
+//	//renderer->ProjectionMatrix() = frustum.BuildPrespectiveProjMatrix();
+//	if (useCameraFrustum)
+//	{
+//		camera->UpdateFrustum();
+//		SetFrustum(camera->GetFrustum());
+//	}
+//}
 //
 //void SceneGraph::NotifyUpdatingProjectionMatrix()
 //{
 //	renderer->ProjectionMatrix() = m_Camera->GetProjMatrix();
 //}
 
-//-----------------------------------------------------------------------------------
-/// \brief
-/// 指定平头视截体
-/// 
-/// \param frustum
-/// 视截体
-/// 
-/// \remarks
-/// 视截体用于裁剪渲染对象
-//-----------------------------------------------------------------------------------
-void SceneGraph::SetFrustum(Frustum* frustum)
-{
-	//m_Frustum = frustum;
-
-	//renderer->ProjectionMatrix() = frustum->BuildPrespectiveProjMatrix();
-	renderer->SetFrustum(frustum);
-}
-
 void SceneGraph::UpdateScene(unsigned long deltaTime)
 {
+	m_ProcessingUpdate = true;
 	// 通过根对象更新每个子对象
 	m_RootObject->Update(deltaTime);
-	m_UIRootObject->Update(deltaTime);
+
+	m_ProcessingUpdate = false;
+
+	ProcessRemove();
+}
+
+// 设置渲染视点信息
+void SceneGraph::SetupRenderView(const RenderView& view)
+{
+	m_RenderView = view;
+
+	renderer->ViewMatrix() = view.viewMatrix;
+	renderer->ProjectionMatrix() = view.projMatrix;
 }
 
 void SceneGraph::RenderScene()
 {
-
-	if (m_Camera)
-	{
-		renderer->ViewMatrix() = m_Camera->GetViewMatrix();
-		renderer->ProjectionMatrix() = m_Camera->GetProjMatrix();
-	}
-	else
-	{
-		renderer->ViewMatrix().Identity();
-		renderer->ProjectionMatrix().Identity();
-	}
-
 	//ShadowManager::Instance().RenderLightViewScene(m_RootObject);
 
-	DrawScene();
-	DrawUI();
+	// 渲染场景
+	m_RootObject->CollectRenderObjects(m_RenderView);
+	renderer->SetProjectionMode(PROJECTION_MODE_PERSPECTIVE);
+	//renderer->ToggleLighting(true);
+	renderer->ClearBuffer();
+	//renderer->ToggleDepthTest(true);
+	renderer->BeginRender();
+	m_RootObject->Render();
+	//renderer->ClearBuffer(false);
+	renderer->EndRender();
 
-	renderer->SwapBuffer();
 }
 
 void SceneGraph::CollectRayPickingSceneObject(const Ray& ray, ObjectsCollisionInfos& baseSceneObjects, int type, int collisionGroup)
@@ -156,54 +139,27 @@ void SceneGraph::SetAmbientColor(const Color4f color)
 	renderer->SetAmbientColor(color);
 }
 
-void SceneGraph::DrawLine(const Vector3f& start, const Vector3f& end, const Color4f& color)
+void SceneGraph::RemoveObjectInternal(BaseSceneObject* object, bool deleteObj)
 {
-	ElementLine elem;
-	elem.v1 = start;
-	elem.v2 = end;
-	elem.color = color;
-	m_LineElements.push_back(elem);
-}
-
-void SceneGraph::DrawAssistantElements()
-{
-	vector<ElementLine>::iterator iter;
-	for (iter=m_LineElements.begin(); iter!=m_LineElements.end(); iter++)
+	if (m_RootObject->DetachChildObject(object))
 	{
-		renderer->RenderLine(iter->v1, iter->v2, iter->color);
+		// 从自动删除列表中删除对象
+		set<BaseSceneObject*>::iterator iter = m_AutoDeleteList.find(object);
+		if (iter!=m_AutoDeleteList.end())
+			m_AutoDeleteList.erase(iter);
+
+		if (deleteObj)
+			delete object;
 	}
 }
 
-void SceneGraph::DrawScene()
+void SceneGraph::ProcessRemove()
 {
-	// 渲染场景
-	m_RootObject->CollectRenderObjects();
-	renderer->SetProjectionMode(PROJECTION_MODE_PERSPECTIVE);
-	//renderer->ToggleLighting(true);
-	renderer->ClearBuffer();
-	//renderer->ToggleDepthTest(true);
-	renderer->BeginRender();
-	m_RootObject->Render();
-	//renderer->ClearBuffer(false);
-	DrawAssistantElements();
-	renderer->EndRender();
+	vector<RemoveListElement>::iterator remove_iter;
+	for (remove_iter=m_RemoveList.begin(); remove_iter!=m_RemoveList.end(); remove_iter++)
+	{
+		RemoveObjectInternal(remove_iter->obj, remove_iter->deleteObj);
+	}
 
-	m_LineElements.clear();
-
+	m_RemoveList.clear();
 }
-
-void SceneGraph::DrawUI()
-{
-	// 渲染屏幕界面
-	renderer->SetProjectionMode(PROJECTION_MODE_ORTHO);
-	renderer->ToggleLighting(false);
-	renderer->ViewMatrix().Identity();
-	renderer->ClearBuffer(false);
-	renderer->ToggleDepthTest(false);
-	renderer->BeginRender();
-	m_UIRootObject->Render();
-
-	renderer->EndRender();
-
-}
-

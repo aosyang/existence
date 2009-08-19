@@ -10,8 +10,12 @@
 
 bool DefaultParticleUpdateBehavior(Particle* particle, unsigned long deltaTime)
 {
-	if (particle->m_LifeTime > deltaTime)
-		particle->m_LifeTime -= deltaTime;
+	if (particle->m_Duration == -1)
+	{
+		// Á£×ÓÊÙÃüÎÞÏÞ
+	}
+	else if (particle->m_Age < particle->m_Duration)
+		particle->m_Age += deltaTime;
 	else
 		particle->m_Active = false;
 

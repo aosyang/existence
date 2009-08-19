@@ -18,7 +18,8 @@ CameraShakeEffect	g_CameraShake;
 // 粒子初始状态设置
 void ParticleState(Particle* particle, ParticleEmitter* emitter)
 {
-	particle->m_LifeTime = 5000;
+	particle->m_Age = 0;
+	particle->m_Duration= 5000;
 	particle->m_Velocity = particle->m_Position - emitter->WorldTransform().GetPosition();
 	particle->m_Velocity.normalize();
 	particle->m_Velocity *= 2.0f;
@@ -35,8 +36,12 @@ void ParticleState(Particle* particle, ParticleEmitter* emitter)
 // 单一粒子更新行为
 bool ParticleUpdate(Particle* particle, unsigned long deltaTime)
 {
-	if (particle->m_LifeTime > deltaTime)
-		particle->m_LifeTime -= deltaTime;
+	if (particle->m_Duration == -1)
+	{
+		// 粒子寿命无限
+	}
+	else if (particle->m_Age < particle->m_Duration)
+		particle->m_Age += deltaTime;
 	else
 		particle->m_Active = false;
 
@@ -44,7 +49,7 @@ bool ParticleUpdate(Particle* particle, unsigned long deltaTime)
 	particle->m_ZRotation += particle->m_ZRotationInc * (float)deltaTime * 0.001f;
 	particle->m_Scale += particle->m_ScaleInc * (float)deltaTime * 0.001f;
 
-	float alpha = (float)particle->m_LifeTime / 5000 * Math::kPi;
+	float alpha = (float)particle->m_Age / particle->m_Duration * Math::kPi;
 	particle->m_Color.a = sinf(alpha)/* * 0.1f*/;
 
 	return particle->m_Active;
@@ -63,7 +68,6 @@ void particleGame::StartGame()
 	m_Camera->SetPosition(Vector3f(1.0f, 0.0f, 5.0f));
 	m_Camera->SetFarClippingDistance(1000.0f);
 	m_Scene->AddObject(m_Camera);
-	m_Scene->SetCamera(m_Camera);
 
 	m_AudioListener = new AudioListener();
 	m_Scene->AddObject(m_AudioListener);
@@ -78,9 +82,8 @@ void particleGame::StartGame()
 	//m_MatSmoke->SetAlphaRef(0.2f);
 	//m_MatSmoke->GetTextureRenderState(0)->envMode = ENV_MODE_ADD;
 
-	m_UIFps = new TextUIControl();
+	m_UIFps = EGUIManager::Instance().CreateTextUIControl();
 	m_UIFps->SetWidth(640);
-	m_Scene->AddUIObject(m_UIFps);
 
 	//Mesh* mesh = ResourceManager<Mesh>::Instance().GetByName("marcus");
 	Mesh* mesh = ResourceManager<Mesh>::Instance().Create();
@@ -174,7 +177,7 @@ void particleGame::Shutdown()
 		iter->second->SaveToFile(iter->first + ".emt");
 	}
 
-	SAFE_DELETE(m_UIFps);
+
 	SAFE_DELETE(m_Scene);
 }
 
@@ -302,7 +305,25 @@ void particleGame::Update(unsigned long deltaTime)
 
 void particleGame::RenderScene()
 {
+	RenderView rv;
+
+	rv.position = m_Camera->WorldTransform().GetPosition();
+	rv.viewMatrix = m_Camera->GetViewMatrix();
+	rv.projMatrix = m_Camera->GetProjMatrix();
+	rv.frustum = m_Camera->GetFrustum();
+
+	// 全屏渲染
+	renderer->SetViewport(0, 0, 0, 0);
+	//renderer->SetViewport(160, 120, 320, 240);
+
+	// 设定渲染视点
+	m_Scene->SetupRenderView(rv);
 	m_Scene->RenderScene();
+
+	// 使用BeginRender和EndRender方法，进行其他自定义渲染操作
+	renderer->BeginRender();
+	renderer->RenderLine(Vector3f(0.0f, 0.0f, 0.0f), Vector3f(5000.0f, 0.0f, 0.0f), Color4f(0.0f, 1.0f, 1.0f));
+	renderer->EndRender();
 }
 
 void Emitparticle(const Vector3f& pos, SceneGraph* scene, particlePool& pool)

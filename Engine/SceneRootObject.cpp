@@ -51,7 +51,7 @@ void SceneRootObject::Render()
 	}
 }
 
-void SceneRootObject::CollectRenderObjects()
+void SceneRootObject::CollectRenderObjects(const RenderView& view)
 {
 	// 清除渲染对象列表
 	m_RenderObjects.clear();
@@ -62,7 +62,7 @@ void SceneRootObject::CollectRenderObjects()
 		iter != m_ChildrenObjects.end();
 		iter++)
 	{
-		(*iter)->PrepareRenderObjects(m_RenderObjects);
+		(*iter)->PrepareRenderObjects(m_RenderObjects, view);
 	}
 }
 

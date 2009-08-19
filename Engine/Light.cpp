@@ -46,12 +46,12 @@ void Light::DebugRender()
 		break;
 	}
 }
-
-void Light::PrepareRenderObjects(ChildrenSceneObjectsSet& objects)
-{
-	// do nothing...
-	objects.insert(this);
-}
+//
+//void Light::PrepareRenderObjects(SceneObjectList& objects, const RenderView& view)
+//{
+//	// do nothing...
+//	objects.insert(this);
+//}
 
 const Vector3f Light::GetPosition() const
 {

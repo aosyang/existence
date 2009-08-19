@@ -111,21 +111,15 @@ public:
 
 	void MarkerGo(unsigned long deltaTime);
 
-	void PlayFromCamera();
-	void FreeMove();
-
 	bool SaveScene(const String& filename);
 	bool LoadScene(const String& filename);
 
 private:
 	SceneGraph*		m_Scene;
 	Camera*			m_Camera;
-	Camera*			m_FPSCam;
 	TextUIControl*	m_UIFps;
 
 	Light*			m_Sun;
-
-	bool			m_FreeControlMode;
 
 	Mesh*			m_MeshPlane;
 	MeshObject*		m_BasePlane;

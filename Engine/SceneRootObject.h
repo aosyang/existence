@@ -34,7 +34,7 @@ public:
 	// ----- SceneRootObject Methods
 
 	// 收集渲染对象，准备渲染
-	void CollectRenderObjects();
+	void CollectRenderObjects(const RenderView& view);
 
 	void AttachChildObject(BaseSceneObject* object);
 	bool DetachChildObject(BaseSceneObject* object);

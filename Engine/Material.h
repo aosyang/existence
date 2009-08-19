@@ -90,6 +90,12 @@ public:
 	inline void SetAlphaRef(float ref) { m_AlphaReference = ref; }
 	inline float GetAlphaRef() const { return m_AlphaReference; }
 
+	inline void SetVertexProgram(IGpuProgram* program) { m_VertexProgram = program; }
+	inline IGpuProgram* GetVertexProgram() { return m_VertexProgram; }
+
+	inline void SetFragmentProgram(IGpuProgram* program) { m_FragmentProgram = program; }
+	inline IGpuProgram* GetFragmentProgram() { return m_FragmentProgram; }
+
 	// 从文件读取材质
 	static Material* LoadMaterial(const String& filename);
 	static MaterialLoadFuncMap	s_FuncMap;
@@ -128,6 +134,9 @@ private:
 
 	bool			m_AlphaTest;
 	float			m_AlphaReference;
+
+	IGpuProgram*	m_VertexProgram;
+	IGpuProgram*	m_FragmentProgram;
 };
 
 #endif

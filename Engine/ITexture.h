@@ -10,6 +10,7 @@
 
 #include "Matrix4.h"
 #include "EString.h"
+#include "IGpuProgram.h"
 
 using namespace std;
 
@@ -122,13 +123,6 @@ class ITexture
 {
 public:
 	virtual ~ITexture() {}
-
-	// Fixed pipeline has nothing to do with these...
-	virtual void SetVertexProgram(const String& filename, const String& entry) = 0;
-	virtual void SetFragmentProgram(const String& filename, const String& entry) = 0;
-
-
-	// TODO: 这些接口无须暴露给用户
 
 	// 纹理修改相关
 	//virtual void Create(unsigned int width, unsigned int height, unsigned int bpp, unsigned char* data) = 0;

@@ -7,11 +7,8 @@ using namespace std;
 GameGrid::GameGrid()
 : m_Scene(NULL),
   m_Camera(NULL),
-  m_FPSCam(NULL),
   m_UIFps(NULL),
   m_Sun(NULL),
-
-  m_FreeControlMode(true),
 
   m_MeshPlane(NULL),
   m_BasePlane(NULL),
@@ -37,15 +34,8 @@ void GameGrid::StartGame()
 
 	m_Camera = new Camera();
 	m_Camera->SetPosition(Vector3f(1.0f, 0.0f, 5.0f));
-	//m_Camera->SetNearClippingDistance(0.1f);
 	m_Camera->SetFarClippingDistance(2000.0f);
 	m_Scene->AddObject(m_Camera);
-	m_Scene->SetCamera(m_Camera);
-
-	m_FPSCam = new Camera();
-	m_FPSCam->SetNearClippingDistance(0.01f);
-	//m_FPSCam->SetFarClippingDistance(1000.0f);
-	m_Scene->AddObject(m_FPSCam);
 
 	m_Scene->SetAmbientColor(Color4f(0.7f, 0.7f, 0.7f));
 
@@ -100,9 +90,8 @@ void GameGrid::StartGame()
 	//m_IntersectionObject->SetMaterial(m_BoxMaterial);
 	//m_Scene->AddObject(m_IntersectionObject);
 
-	m_UIFps = new TextUIControl();
-	//m_UIFps->SetTextColor(Color4f(0.0f, 0.0f, 0.0f));
-	m_Scene->AddUIObject(m_UIFps);
+	m_UIFps = EGUIManager::Instance().CreateTextUIControl();
+	m_UIFps->SetWidth(640);
 
 	for (int x=0; x<WORLD_SIZE; x++)
 		for (int y=0; y<WORLD_SIZE; y++)
@@ -115,14 +104,6 @@ void GameGrid::StartGame()
 
 void GameGrid::Shutdown()
 {
-	for (int x=0; x<WORLD_SIZE; x++)
-		for (int y=0; y<WORLD_SIZE; y++)
-			for (int z=0; z<WORLD_SIZE; z++)
-			{
-				SAFE_DELETE(m_World[x][y][z].obj);
-			}
-
-	SAFE_DELETE(m_UIFps);
 	SAFE_DELETE(m_Scene);
 }
 
@@ -166,7 +147,7 @@ void GameGrid::OnKeyPressed(unsigned int key)
 			int n = 1;
 			if (Input::Instance().GetKeyDown(KC_LCONTROL))
 				n = 10;
-			m_Layer = MathClamp<int>(0, WORLD_SIZE-1, m_Layer+n);
+			m_Layer = Math::Clamp<int>(0, WORLD_SIZE-1, m_Layer+n);
 			m_BasePlane->SetPosition(Vector3f(0.0f, m_Layer - 0.05f, 0.0f));
 		}
 		break;
@@ -175,20 +156,9 @@ void GameGrid::OnKeyPressed(unsigned int key)
 			int n = 1;
 			if (Input::Instance().GetKeyDown(KC_LCONTROL))
 				n = 10;
-			m_Layer = MathClamp<int>(0, WORLD_SIZE-1, m_Layer-n);
+			m_Layer = Math::Clamp<int>(0, WORLD_SIZE-1, m_Layer-n);
 			m_BasePlane->SetPosition(Vector3f(0.0f, m_Layer - 0.05f, 0.0f));
 		}
-		break;
-	case KC_P:
-		if (m_FreeControlMode)
-		{
-			PlayFromCamera();
-		}
-		else
-		{
-			FreeMove();
-		}
-		m_FreeControlMode = !m_FreeControlMode;
 		break;
 	//case KC_B:
 	//	{
@@ -368,7 +338,6 @@ void GameGrid::Update(unsigned long deltaTime)
 		float y = -(float)Input::Instance().GetMouseRelY() / 5.0f;
 
 		m_Camera->RotateLocal(x, y);
-		m_FPSCam->RotateLocal(x, y);
 	}
 
 	// 按下鼠标左键进行射线检测
@@ -499,53 +468,6 @@ void GameGrid::Update(unsigned long deltaTime)
 	m_MarkerStart->SetRotation(Matrix3::BuildYawRotationMatrix(m_Rotation));
 	m_MarkerGoal->SetRotation(Matrix3::BuildYawRotationMatrix(-m_Rotation));
 
-	// 更新FPS摄像机
-	Vector3f pos = m_FPSCam->WorldTransform().GetPosition();
-	Ray downRay(pos, Vector3f(0.0f, -1.0f, 0.0f), 1.0f);
-	ObjectsCollisionInfos colInfo;
-	Vector3f camPos = m_FPSCam->WorldTransform().GetPosition();
-	m_Scene->CollectRayPickingSceneObject(downRay, colInfo, COLLISION_TYPE_MESH);
-	if (colInfo.size())
-	{
-
-		CollisionInfo* nearest = &(*colInfo.begin());
-
-		for (ObjectsCollisionInfos::iterator iter = colInfo.begin();
-			iter != colInfo.end();
-			iter++)
-		{
-			//(*iter)->SetDebugRender(true);
-			//float dist1 = (nearest->point - m_FPSCam->WorldTransform().GetPosition()).SquaredLength();
-			//float dist2 = ((*iter).point - m_FPSCam->WorldTransform().GetPosition()).SquaredLength();
-			//if (dist2 < dist1 && (*iter).obj!= m_Camera)
-			if ((*iter).squaredDistance < nearest->squaredDistance)
-			{
-				nearest = &(*iter);
-			}
-		}
-
-		if (camPos.y > nearest->point.y)
-		{
-			if (camPos.y - nearest->point.y > 0.1f)
-			{
-				m_FPSCam->SetPosition(camPos - Vector3f(0.0f, 0.1f, 0.0f));
-			}
-			else
-			{
-				m_FPSCam->SetPosition(nearest->point);
-			}
-		}
-		else
-		{
-			m_FPSCam->SetPosition(camPos - Vector3f(0.0f, 0.1f, 0.0f));
-		}
-	}
-	else
-	{
-		m_FPSCam->SetPosition(camPos - Vector3f(0.0f, 0.1f, 0.0f));
-	}
-
-
 	m_Scene->UpdateScene(deltaTime);
 
 	unsigned int fps = Engine::Instance().GetFPS();
@@ -558,6 +480,19 @@ void GameGrid::Update(unsigned long deltaTime)
 
 void GameGrid::RenderScene()
 {
+	RenderView rv;
+
+	rv.position = m_Camera->WorldTransform().GetPosition();
+	rv.viewMatrix = m_Camera->GetViewMatrix();
+	rv.projMatrix = m_Camera->GetProjMatrix();
+	rv.frustum = m_Camera->GetFrustum();
+
+	// 全屏渲染
+	renderer->SetViewport(0, 0, 0, 0);
+	//renderer->SetViewport(160, 120, 320, 240);
+
+	// 设定渲染视点
+	m_Scene->SetupRenderView(rv);
 	m_Scene->RenderScene();
 }
 
@@ -880,18 +815,6 @@ void GameGrid::MarkerGo(unsigned long deltaTime)
 
 		}
 	}
-}
-
-void GameGrid::PlayFromCamera()
-{
-	//m_FPSCam->WorldTransform() = m_Camera->WorldTransform();
-	m_FPSCam->SetPosition(m_Camera->WorldTransform().GetPosition());
-	m_Scene->SetCamera(m_FPSCam);
-}
-
-void GameGrid::FreeMove()
-{
-	m_Scene->SetCamera(m_Camera);
 }
 
 bool GameGrid::SaveScene(const String &filename)

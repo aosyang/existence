@@ -34,6 +34,7 @@ public:
 	void CreateBox(float side);
 
 	void CreatePositiveYPlane(float side);
+	void CreatePositiveZPlane(float side);
 
 	// 通过索引获取三角形
 	void GetFaceByIndex(unsigned int index, unsigned int& x, unsigned int& y, unsigned int& z)

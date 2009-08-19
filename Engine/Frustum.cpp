@@ -155,6 +155,52 @@ bool Frustum::IsPointInFrustum(const Vector3f& point)
 	return true;
 }
 
+// AABB与视截体相交判断
+// 摘自ZFXEngine
+bool Frustum::IntersectsAABB(const AABB& aabb)
+{
+	Vector3f  vMin, vMax;
+
+	// find and test extreme points
+	for (int i=0; i<6; i++) {
+		// x coordinate
+		if (m_FrustumPlanes[i].n.x <= 0.0f) {
+			vMin.x = aabb.worldMin.x;
+			vMax.x = aabb.worldMax.x;
+		}
+		else {
+			vMin.x = aabb.worldMax.x;
+			vMax.x = aabb.worldMin.x;
+		}
+		// y coordinate
+		if (m_FrustumPlanes[i].n.y <= 0.0f) {
+			vMin.y = aabb.worldMin.y;
+			vMax.y = aabb.worldMax.y;
+		}
+		else {
+			vMin.y = aabb.worldMax.y;
+			vMax.y = aabb.worldMin.y;
+		}
+		// z coordinate
+		if (m_FrustumPlanes[i].n.z <= 0.0f) {
+			vMin.z = aabb.worldMin.z;
+			vMax.z = aabb.worldMax.z;
+		}
+		else {
+			vMin.z = aabb.worldMax.z;
+			vMax.z = aabb.worldMin.z;
+		}
+
+		if ( ((m_FrustumPlanes[i].n*vMin) + m_FrustumPlanes[i].d) < 0.0f)
+			return false;
+
+		//if ( ((m_FrustumPlanes[i].n*vMax) + m_FrustumPlanes[i].d) >= 0.0f)
+		//	return true;
+	} // for
+
+	return true;
+}
+
 // 返回在视截体内的球体距离近裁剪面的距离
 float Frustum::SphereInFrustum(const Vector3f& point, float radius)
 {

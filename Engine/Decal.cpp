@@ -29,19 +29,6 @@ void Decal::Render()
 	BaseSceneObject::Render();
 }
 
-void Decal::PrepareRenderObjects(SceneObjectList& objects)
-{
-	// Frustum checking
-	Frustum* frustum = renderer->GetFrustum();
-
-	// ¡°ÊÓ½ØÌå-°üÎ§Çò¡±²Ã¼ô
-	if (!frustum || frustum->SphereInFrustum(m_WorldTransform.GetPosition(), m_BoundingSphereRadius) > 0.0f)
-	{
-		BaseSceneObject::PrepareRenderObjects(objects);
-		//objects.insert(this);
-	}
-}
-
 bool Decal::IntersectsRay(const Ray& ray, CollisionInfo& info)
 {
 	// Do not collide with decal,  for now...

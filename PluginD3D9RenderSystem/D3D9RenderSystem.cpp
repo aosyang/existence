@@ -87,12 +87,6 @@ void D3D9Renderer::SetClearColor(const Color4f& color)
 	m_ClearColor = COLOR4F_TO_D3DCOLOR(color);
 }
 
-void D3D9Renderer::SetFrustum(Frustum* frustum)
-{
-	m_Frustum = frustum;
-	m_ProjMatrix = m_Frustum->ProjectionMatrix();
-}
-
 void D3D9Renderer::ResizeRenderWindow(unsigned int width, unsigned int height)
 {
 	if (width != 0 && height != 0)
@@ -222,7 +216,7 @@ void D3D9Renderer::RenderVertexBuffer(IVertexBuffer* vbuffer, Material* material
 }
 
 
-void D3D9Renderer::RenderAABB(const Vector3f& vMin, const Vector3f& vMax, const Color4f& color, const Matrix4& transform)
+void D3D9Renderer::RenderBox(const Vector3f& vMin, const Vector3f& vMax, const Color4f& color, const Matrix4& transform)
 {
 
 }

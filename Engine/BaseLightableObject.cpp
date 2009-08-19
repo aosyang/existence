@@ -29,3 +29,21 @@ void BaseLightableObject::ClearLights()
 {
 	m_Lights.clear();
 }
+
+// ÉèÖÃäÖÈ¾Æ÷µÄµÆ¹â×´Ì¬
+void BaseLightableObject::SetupLights()
+{
+	int maxLightNum = renderer->GetMaxLightsNumber();
+
+	int i;
+	for (i=0; i<m_Lights.size() && i<maxLightNum; i++)
+	{
+		renderer->SetupLight(i, m_Lights[i]);
+	}
+
+	for (; i<maxLightNum; i++)
+	{
+		renderer->SetupLight(i, NULL);
+	}
+}
+

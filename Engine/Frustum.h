@@ -12,6 +12,7 @@
 #include "Matrix4.h"
 #include "Vector3f.h"
 #include "Plane3.h"
+#include "AABB.h"
 
 class Frustum
 {
@@ -32,6 +33,9 @@ public:
 
 	// “点-视截体”检测
 	bool IsPointInFrustum(const Vector3f& point);
+
+	// 与AABB相交判断
+	bool IntersectsAABB(const AABB& aabb);
 
 	// “球体-视截体”检测
 	float SphereInFrustum(const Vector3f& point, float radius);

@@ -77,7 +77,9 @@ Material::Material()
   m_DepthWriting(true),
   m_DepthTest(true),
   m_AlphaTest(false),
-  m_AlphaReference(0.0f)
+  m_AlphaReference(0.0f),
+  m_VertexProgram(NULL),
+  m_FragmentProgram(NULL)
 {
 	for (int i=1; i<8; i++)
 		m_TextureLayerEnabled[i] = false;

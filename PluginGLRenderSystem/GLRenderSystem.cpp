@@ -8,6 +8,7 @@
 
 #include "GLRenderSystem.h"
 
+#include "Plugin.h"
 #include "Debug.h"
 #include "GLTexture.h"
 #include "GLCubeTexture.h"
@@ -20,6 +21,15 @@
 
 #include "EString.h"
 
+// gpu插件句柄
+Module_t	g_GpuPluginHandle = NULL;
+
+// gpu插件函数
+CREATEGPUPLUGIN				g_CreateGpuPluginFunc = NULL;
+DESTROYGPUPLUGIN			g_DestroyGpuPluginFunc = NULL;
+LOADGPUPROGRAM				g_LoadGpuProgramFunc = NULL;
+BINDGPUPROGRAM				g_BindGpuProgramFunc = NULL;
+UNBINDGPUPROGRAM			g_UnbindGpuProgramFunc = NULL;
 
 //#define FORCE_VERTEX_ARRAY
 
@@ -28,7 +38,6 @@ GLRenderer::GLRenderer()
 : m_hWnd(0), m_hDC(0), m_hRC(0),
   m_WindowWidth(0), m_WindowHeight(0), // m_FullScreen(false),
   m_Active(true),
-  m_Frustum(NULL),
   m_DepthWriting(true),
   m_VertexBufferFactoryFunc(NULL)
 {
@@ -42,6 +51,11 @@ GLRenderer::~GLRenderer()
 RenderWindowHandle GLRenderer::GetRenderWindowHandle()
 {
 	return m_hWnd;
+}
+
+void GLRenderer::SetGpuPluginName(const String& filename)
+{
+	m_PluginName = filename;
 }
 
 bool GLRenderer::Initialize(RenderWindowParam* windowParam)
@@ -82,6 +96,23 @@ bool GLRenderer::Initialize(RenderWindowParam* windowParam)
 	// 注：glewInit必须放在wglMakeCurrent之后进行，否则无法成功初始化
 	AssertFatal(GLEW_OK == glewInit(), "GLRenderer::Initialize() : Failed to init glew.");
 	m_HardwareFeature.DetectFeature();
+
+	if (m_PluginName!="")
+	{
+		g_GpuPluginHandle = LoadModule(m_PluginName.Data());
+
+		if (g_GpuPluginHandle)
+		{
+			g_CreateGpuPluginFunc = (CREATEGPUPLUGIN)GetFunction(g_GpuPluginHandle, "CreateGpuPlugin");
+			g_DestroyGpuPluginFunc = (DESTROYGPUPLUGIN)GetFunction(g_GpuPluginHandle, "DestroyGpuPlugin");
+			g_LoadGpuProgramFunc = (LOADGPUPROGRAM)GetFunction(g_GpuPluginHandle, "LoadGpuProgram");
+			g_BindGpuProgramFunc = (BINDGPUPROGRAM)GetFunction(g_GpuPluginHandle, "BindGpuProgram");
+			g_UnbindGpuProgramFunc = (UNBINDGPUPROGRAM)GetFunction(g_GpuPluginHandle, "UnbindGpuProgram");
+
+			// 初始化插件
+			(*g_CreateGpuPluginFunc)();
+		}
+	}
 
 	ResizeRenderWindow(windowParam->width, windowParam->height);							// Set Up Our Perspective GL Screen
 
@@ -143,6 +174,10 @@ bool GLRenderer::Initialize(RenderWindowParam* windowParam)
 void GLRenderer::Shutdown()
 {
 	UnloadAllTextures();
+	UnloadGpuPrograms();
+
+	if (g_GpuPluginHandle)
+		(*g_DestroyGpuPluginFunc)();
 
 	if (m_hRC)												// Do We Have A Rendering Context?
 	{
@@ -167,16 +202,17 @@ void GLRenderer::Shutdown()
 
 }
 
-void GLRenderer::SetFrustum(Frustum* frustum)
-{
-	m_Frustum = frustum;
-	//m_ProjMatrix = m_Frustum->BuildPrespectiveProjMatrix();
-	m_ProjMatrix = m_Frustum->ProjectionMatrix();
-}
-
 void GLRenderer::SetClearColor(const Color4f& color)
 {
 	glClearColor(color.r, color.g, color.b, color.a);
+}
+
+void GLRenderer::SetViewport(int left, int bottom, unsigned int width, unsigned int height)
+{
+	if (height)
+		glViewport(left, bottom, width, height);
+	else
+		glViewport(left, bottom, m_WindowWidth, m_WindowHeight);
 }
 
 void GLRenderer::ResizeRenderWindow(unsigned int width, unsigned int height)
@@ -188,7 +224,7 @@ void GLRenderer::ResizeRenderWindow(unsigned int width, unsigned int height)
 	}
 
 	if (m_WindowHeight == 0) m_WindowHeight = 1;
-	glViewport(0, 0, m_WindowWidth, m_WindowHeight);	//Reset The Current Viewport
+	//glViewport(0, 0, m_WindowWidth, m_WindowHeight);	//Reset The Current Viewport
 
 	/*
 	glMatrixMode(GL_PROJECTION);
@@ -378,6 +414,8 @@ void GLRenderer::SwapBuffer()
 
 void GLRenderer::RenderVertexBuffer(IVertexBuffer* vbuffer, Material* material, const Matrix4& transform)
 {
+	m_ModelMatrix = transform;
+
 	// 指定材质
 	SetupMaterial(material);
 
@@ -397,12 +435,13 @@ void GLRenderer::RenderVertexBuffer(IVertexBuffer* vbuffer, Material* material, 
 	//glMatrixMode(GL_MODELVIEW);
 }
 
-void GLRenderer::RenderAABB(const Vector3f& vMin, const Vector3f& vMax, const Color4f& color, const Matrix4& transform)
+void GLRenderer::RenderBox(const Vector3f& vMin, const Vector3f& vMax, const Color4f& color, const Matrix4& transform)
 {
 	SetupMaterialWhite();
 
 	glColor4fv(color.GetArray());
 
+	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
 
 	float mat[16];
@@ -488,20 +527,12 @@ void GLRenderer::RenderScreenQuad(float left, float top, float right, float bott
 	for (int i=1; i<8; i++)
 		ToggleTexture(false, i);
 	ToggleTexture(true);
+	UnbindGpuProgram(GPU_VERTEX_PROGRAM);
+	UnbindGpuProgram(GPU_FRAGMENT_PROGRAM);
 
 	glColor4f(color.r, color.g, color.b, color.a);
 
-	if (texture)
-	{
-		BindTextureRenderState(texRenderState(texture));
-	}
-	else
-	{
-		ITexture* null_texture = GetTexture("no_material");
-		AssertFatal(null_texture, "GLRenderer::Render() : Unable to find 'no_material', define it in texture.cfg first.");
-
-		BindTextureRenderState(texRenderState(null_texture));
-	}
+	BindTextureRenderState(texRenderState(texture));
 
 	glBegin(GL_QUADS);
 	//glBegin(GL_TRIANGLES);
@@ -540,24 +571,12 @@ void GLRenderer::RenderScreenQuad(int x1, int y1, int x2, int y2, ITexture* text
 	for (int i=1; i<8; i++)
 		ToggleTexture(false, i);
 	ToggleTexture(true);
+	UnbindGpuProgram(GPU_VERTEX_PROGRAM);
+	UnbindGpuProgram(GPU_FRAGMENT_PROGRAM);
 
 	glColor4f(color.r, color.g, color.b, color.a);
 
-	if (texture)
-	{
-		texRenderState rs(texture);
-		//rs.magFilterType = FILTER_TYPE_NEAREST;
-		//rs.minFilterType = FILTER_TYPE_NEAREST;
-		//rs.wrapType = WRAP_TYPE_CLAMP;
-		BindTextureRenderState(rs);
-	}
-	else
-	{
-		ITexture* null_texture = GetTexture("no_material");
-		AssertFatal(null_texture, "GLRenderer::Render() : Unable to find 'no_material', define it in texture.cfg first.");
-
-		BindTextureRenderState(texRenderState(null_texture));
-	}
+	BindTextureRenderState(texRenderState(texture));
 
 	float aspect = (float)m_WindowWidth / m_WindowHeight;
 
@@ -673,6 +692,43 @@ ITexture* GLRenderer::GetTexture(const String& textureName)
 	return NULL;
 }
 
+IGpuProgram* GLRenderer::LoadGpuProgram(const String& filename, const String& entry, GpuProgramType type)
+{
+	if (!g_GpuPluginHandle) return NULL;
+
+	GpuProgramInfo info;
+	info.filename = filename;
+	info.entry = entry;
+	info.type = type;
+
+	// 如果已经存在这个资源
+	if (m_GpuPrograms.find(info)!=m_GpuPrograms.end())
+	{
+		return NULL;
+	}
+
+	IGpuProgram* program = (*g_LoadGpuProgramFunc)(filename, entry, type);
+	m_GpuPrograms[info] = program;
+
+	return program;
+}
+
+// 获取一个已有Shader
+IGpuProgram* GLRenderer::GetGpuProgram(const String& filename, const String& entry, GpuProgramType type)
+{
+	if (!g_GpuPluginHandle) return NULL;
+
+	GpuProgramInfo info;
+	info.filename = filename;
+	info.entry = entry;
+	info.type = type;
+
+	if (m_GpuPrograms.find(info)==m_GpuPrograms.end())
+		return NULL;
+
+	return m_GpuPrograms[info];
+}
+
 int GLRenderer::GetMaxLightsNumber()
 {
 	return m_HardwareFeature.GetMaxLightNum();
@@ -735,7 +791,7 @@ IVertexBuffer* GLRenderer::BuildVertexBuffer()
 // 创建一个新的渲染目标
 IRenderTarget* GLRenderer::CreateRenderTarget()
 {
-	if (GLEW_EXT_framebuffer_object)
+	if (m_HardwareFeature.supportedFBO)
 		return new GLRenderTargetFBO();
 	return NULL;
 }
@@ -789,8 +845,16 @@ void GLRenderer::BindTextureRenderState(const texRenderState_t& texState)
 {
 	GLTexture* glTex = static_cast<GLTexture*>(texState.texture);
 
-	texState.texture->BindTexture();
-	//glBindTexture(texState.texture->GetTarget(), glTex->GetGLTextureID());
+	ITexture* texture;
+	if (texState.texture)
+		texture = texState.texture;
+	else
+	{
+		texture = GetTexture("no_material");
+		AssertFatal(texture, "GLRenderer::BindTextureRenderState() : Unable to find 'no_material', define it in texture.cfg first.");
+	}
+
+	texture->BindTexture();
 
 	// 纹理环绕模式
 	GLint wrapMode;
@@ -809,15 +873,15 @@ void GLRenderer::BindTextureRenderState(const texRenderState_t& texState)
 	default:
 		break;
 	}
-	glTexParameteri(texState.texture->GetTarget(), GL_TEXTURE_WRAP_S, wrapMode);
-	glTexParameteri(texState.texture->GetTarget(), GL_TEXTURE_WRAP_T, wrapMode);
+	glTexParameteri(texture->GetTarget(), GL_TEXTURE_WRAP_S, wrapMode);
+	glTexParameteri(texture->GetTarget(), GL_TEXTURE_WRAP_T, wrapMode);
 
 	// TODO: 纹理过滤模式(是否使用mipmap)应当由纹理类决定
 	GLint minFilterType = GetFilterType(texState.minFilterType);
 	GLint magFilterType = GetFilterType(texState.magFilterType);
 
-	glTexParameteri(texState.texture->GetTarget(), GL_TEXTURE_MIN_FILTER, minFilterType);
-	glTexParameteri(texState.texture->GetTarget(), GL_TEXTURE_MAG_FILTER, magFilterType);
+	glTexParameteri(texture->GetTarget(), GL_TEXTURE_MIN_FILTER, minFilterType);
+	glTexParameteri(texture->GetTarget(), GL_TEXTURE_MAG_FILTER, magFilterType);
 
 	//glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 	//glEnable(GL_TEXTURE_CUBE_MAP);
@@ -914,7 +978,7 @@ void GLRenderer::BindTextureRenderState(const texRenderState_t& texState)
 	{
 		ToggleBlend(true);
 		glBlendFunc(GetBlendFactor(texState.srcBlendFactor),
-					GetBlendFactor(texState.dstBlendFactor));
+			GetBlendFactor(texState.dstBlendFactor));
 	}
 	else
 	{
@@ -923,8 +987,28 @@ void GLRenderer::BindTextureRenderState(const texRenderState_t& texState)
 
 	// TODO: 给一个单独的状态设置
 	glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
-	glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB, GetEnvMode(texState.envMode));	
+	glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB, GetEnvMode(texState.envMode));
 }
+
+void GLRenderer::BindGpuProgram(IGpuProgram* program, GpuProgramType type)
+{
+	if (g_GpuPluginHandle)
+	{
+		Matrix4 mvp = m_ProjMatrix * m_ViewMatrix * m_ModelMatrix;
+		program->SetMatrix4Param("autoMatModelViewProj", mvp);
+
+		(g_BindGpuProgramFunc)(program, type);
+	}
+}
+
+void GLRenderer::UnbindGpuProgram(GpuProgramType type)
+{
+	if (g_GpuPluginHandle)
+	{
+		(g_UnbindGpuProgramFunc)(type);
+	}
+}
+
 
 GLint GLRenderer::GetFilterType(int type)
 {
@@ -1056,7 +1140,6 @@ void GLRenderer::SetupMaterial(Material* material)
 		else
 			glDisable(GL_ALPHA_TEST);
 
-		texRenderState_t* rs;
 		for (int i=0; i<8; i++)
 		{
 			if (material->GetTextureLayerEnabled(i))
@@ -1065,17 +1148,7 @@ void GLRenderer::SetupMaterial(Material* material)
 				//glActiveTexture(GL_TEXTURE0 + i);
 				//glEnable(GL_TEXTURE_2D);
 
-				if ((rs = material->GetTextureRenderState(i)) && material->GetTextureRenderState(i)->texture)
-				{
-					BindTextureRenderState(*rs);
-				}
-				else
-				{
-					ITexture* null_texture = GetTexture("no_material");
-					AssertFatal(null_texture, "GLRenderer::Render() : Unable to find 'no_material', define it in texture.cfg first.");
-
-					BindTextureRenderState(texRenderState(null_texture));
-				}
+				BindTextureRenderState(*material->GetTextureRenderState(i));
 			}
 			else
 			{
@@ -1085,6 +1158,16 @@ void GLRenderer::SetupMaterial(Material* material)
 				//glDisable(GL_TEXTURE_2D);
 			}
 		}
+
+		if (material->GetVertexProgram())
+			BindGpuProgram(material->GetVertexProgram(), GPU_VERTEX_PROGRAM);
+		else
+			UnbindGpuProgram(GPU_VERTEX_PROGRAM);
+
+		if (material->GetFragmentProgram())
+			BindGpuProgram(material->GetFragmentProgram(), GPU_FRAGMENT_PROGRAM);
+		else
+			UnbindGpuProgram(GPU_FRAGMENT_PROGRAM);
 	}
 	else
 	{
@@ -1094,33 +1177,36 @@ void GLRenderer::SetupMaterial(Material* material)
 		}
 		ToggleTexture(true);
 
+		UnbindGpuProgram(GPU_VERTEX_PROGRAM);
+		UnbindGpuProgram(GPU_FRAGMENT_PROGRAM);
+
 		// 绑定默认材质
 		ToggleLighting(false);
 		glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 		ToggleDepthWriting(true);
 		ToggleDepthTest(true);
 
-		ITexture* null_texture = GetTexture("no_material");
-		AssertFatal(null_texture, "GLRenderer::Render() : Unable to find 'no_material', define it in texture.cfg first.");
-
-		BindTextureRenderState(texRenderState(null_texture));
+		BindTextureRenderState(texRenderState(NULL));
 	}
 }
 
 void GLRenderer::SetupMaterialWhite()
 {
-		for (int i=1; i<8; i++)
-		{
-			ToggleTexture(false, i);
-		}
-		ToggleTexture(true);
+	for (int i=1; i<8; i++)
+	{
+		ToggleTexture(false, i);
+	}
+	UnbindGpuProgram(GPU_VERTEX_PROGRAM);
+	UnbindGpuProgram(GPU_FRAGMENT_PROGRAM);
 
-		ToggleLighting(false);
-		ToggleDepthWriting(true);
-		ToggleDepthTest(true);
+	ToggleTexture(true);
 
-		ITexture* null_texture = GetTexture("#white");
-		BindTextureRenderState(texRenderState(null_texture));
+	ToggleLighting(false);
+	ToggleDepthWriting(true);
+	ToggleDepthTest(true);
+
+	ITexture* null_texture = GetTexture("#white");
+	BindTextureRenderState(texRenderState(null_texture));
 }
 
 
@@ -1158,6 +1244,16 @@ void GLRenderer::UnloadAllTextures()
 	m_TextureList.clear();
 }
 
+void GLRenderer::UnloadGpuPrograms()
+{
+	GpuPrograms::iterator iter;
+	for (iter=m_GpuPrograms.begin(); iter!=m_GpuPrograms.end(); iter++)
+	{
+		delete iter->second;
+	}
+
+	m_GpuPrograms.clear();
+}
 
 IRenderer* CreateRenderSystem()
 {

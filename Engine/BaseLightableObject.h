@@ -35,6 +35,8 @@ public:
 	void AddLight(Light* light);
 	void ClearLights();
 
+	void SetupLights();
+
 	void SetMoved(bool moved) { m_Moved = moved; }
 	bool HasMoved() const { return m_Moved; }
 

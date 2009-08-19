@@ -42,9 +42,6 @@ public:
 
 	//void NotifyUpdateProjectionMatrix();
 
-	void SetFrustum(Frustum* frustum);
-	Frustum* GetFrustum() const { return m_Frustum; }
-
 	// 调整渲染窗口尺寸，并重设投影矩阵纵横比
 	//   使用默认参数调用时将仅重置投影矩阵纵横比
 	void ResizeRenderWindow(unsigned int width = 0, unsigned int height = 0);
@@ -65,7 +62,7 @@ public:
 
 	void RenderVertexBuffer(IVertexBuffer* vbuffer, Material* material, const Matrix4& transform);
 
-	void RenderAABB(const Vector3f& vMin, const Vector3f& vMax, const Color4f& color, const Matrix4& transform);
+	void RenderBox(const Vector3f& vMin, const Vector3f& vMax, const Color4f& color, const Matrix4& transform);
 	void RenderSphere(const Vector3f& point, float radius, const Color4f& color, unsigned int segment);
 	void RenderLine(const Vector3f& begin, const Vector3f& end, const Color4f& color);
 
@@ -115,8 +112,6 @@ protected:
 
 	Matrix4			m_ViewMatrix;
 	Matrix4			m_ProjMatrix;
-
-	Frustum*		m_Frustum;
 
 	typedef map<String, ITexture*>	TextureList;
 	TextureList		m_TextureList;

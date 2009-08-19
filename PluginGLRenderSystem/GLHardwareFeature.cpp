@@ -7,6 +7,11 @@ void GLHardwareFeature::DetectFeature()
 		supportedVBO = true;
 	}
 
+	if (glewIsSupported("GL_EXT_framebuffer_object") == GL_TRUE)
+	{
+		supportedFBO = true;
+	}
+
 	glGetIntegerv(GL_MAX_LIGHTS, &maxLightNum);
 
 	//int max_fragment_instructions = 0;

@@ -92,3 +92,9 @@ bool DistantViewObject::RayPicking(const Ray& ray, Vector3f& point, Vector3f& no
 	// forget it...
 	return false;
 }
+
+bool DistantViewObject::IsCulled(const RenderView& view)
+{
+	// ×èÖ¹ÊÓ½ØÌå²Ã¼õ
+	return !m_Visible;
+}

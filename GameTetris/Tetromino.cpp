@@ -32,8 +32,9 @@ TetrisGame* Tetromino::s_Game;
 list<Block*> Tetromino::s_BlocksInGame;
 
 Tetromino::Tetromino()
-: /*m_PosX(0), m_PosY(0), */m_Position(0, 0), m_ShapeType(SHAPE_TYPE_I), m_RotType(ROT_0)
+: /*m_PosX(0), m_PosY(0), */m_Position(0, 0), m_RotType(ROT_0)
 {
+	m_ShapeType = Math::Random(0, (int)MAX_SHAPE_TYPE_NUM);
 	for (int i=0; i<4; i++)
 	{
 		m_Blocks[i] = 0;
@@ -127,7 +128,7 @@ bool Tetromino::MoveRight()
 
 bool Tetromino::Rotate()
 {
-	unsigned char rot = MathRepeat(0, 4, m_RotType+1);
+	unsigned char rot = Math::Repeat(0, 4, m_RotType+1);
 
 	if (!TryPosition(m_Position, rot))
 		return false;
@@ -185,13 +186,15 @@ bool Tetromino::Apply()
 	//while (m_ShapeType >= MAX_SHAPE_TYPE_NUM)
 	//	m_ShapeType-=MAX_SHAPE_TYPE_NUM;
 
-	m_ShapeType = MathRepeat(0, (int)MAX_SHAPE_TYPE_NUM, m_ShapeType+1);
+	//m_ShapeType = Math::Repeat(0, (int)MAX_SHAPE_TYPE_NUM, m_ShapeType+1);
+	m_ShapeType = Math::Random(0, (int)MAX_SHAPE_TYPE_NUM);
 
 	// TODO: 创建新的Block之前需要将旧的Block保存起来，方便退出程序时进行删除
 	BuildShape();
 	SetPosition(4, 19);
 
-	Engine::Instance().AudioSystem()->PlaySource("down");
+	IAudioBuffer* buffer = Engine::Instance().AudioSystem()->GetAudioBuffer("down");
+	Engine::Instance().AudioSystem()->CreateSourceInstance(buffer, Vector3f(0.0f, 0.0f, 0.0f));
 
 	// GameOver的判定
 	if (!TryPosition(m_Position, m_RotType))

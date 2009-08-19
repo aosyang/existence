@@ -191,6 +191,57 @@ void MeshElement::CreatePositiveYPlane(float side)
 	UpdateOBB();
 }
 
+void MeshElement::CreatePositiveZPlane(float side)
+{
+	m_FaceNum = 2;
+	m_VertexNum = 4;
+
+	static unsigned int planeIndex[] = 
+	{	0, 2, 1,
+		2, 0, 3};
+
+	m_FaceArray = new unsigned int[m_FaceNum * 3];
+
+	memcpy(m_FaceArray, &planeIndex, sizeof(unsigned int) * m_FaceNum * 3);
+
+	static float planeVertex[] =
+	{
+		0.5, -0.5, 0.0, 
+		-0.5, -0.5, 0.0, 
+		-0.5, 0.5, 0.0,
+		0.5, 0.5, 0.0};
+
+	m_VertexArray = new float[m_VertexNum * 3];
+
+	memcpy(m_VertexArray, &planeVertex, sizeof(float) * m_VertexNum * 3);
+	for (unsigned int i=0; i<m_VertexNum * 3; i++)
+		m_VertexArray[i] *= side;
+
+	static float planeNormal[] = 
+	{
+	0	,	0	,	1	,
+	0	,	0	,	1	,
+	0	,	0	,	1	,
+	0	,	0	,	1	,
+	-1	,	0	,	0};
+
+	m_NormalArray = new float[m_VertexNum * 3];
+	memcpy(m_NormalArray, &planeNormal, sizeof(float) * m_VertexNum * 3);
+
+	static float planeTexcoord[] =
+	{
+		1	,	1	,
+		0	,	1	,
+		0	,	0	,
+		1	,	0};
+
+	m_TexCoordArray = new float[m_VertexNum * 2];
+	memcpy(m_TexCoordArray, &planeTexcoord, sizeof(float) * m_VertexNum * 2);
+
+	BuildVertexBufferData();
+	UpdateOBB();
+}
+
 void MeshElement::UpdateOBB()
 {
 	if (!m_VertexNum)

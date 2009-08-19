@@ -115,6 +115,18 @@ void Mesh::CreatePositiveYPlane(float side)
 	m_BoundingRadius = side * 0.7071f;
 }
 
+void Mesh::CreatePositiveZPlane(float side)
+{
+	ClearMeshElements();
+
+	MeshElement* elem = new MeshElement();
+	elem->CreatePositiveZPlane(side);
+
+	AddMeshElement(elem);
+
+	m_BoundingRadius = side * 0.7071f;
+}
+
 void Mesh::AddMeshElement(MeshElement* elem)
 {
 	m_MeshElements.push_back(elem);

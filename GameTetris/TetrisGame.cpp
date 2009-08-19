@@ -28,7 +28,6 @@ void TetrisGame::StartGame()
 	m_Camera->SetPosition(Vector3f(11.0f, 11.0f, 30.0f));
 
 	m_Scene->AddObject(m_Camera);
-	m_Scene->SetCamera(m_Camera);
 
 	m_Sun = new Light();
 	m_Sun->SetLightType(LIGHT_TYPE_DIRECTIONAL);
@@ -93,7 +92,6 @@ void TetrisGame::Shutdown()
 	// 释放模型、纹理资源
 	Block::ReleaseData();
 
-	delete m_Camera;
 	delete m_Scene;
 }
 
@@ -193,6 +191,17 @@ void TetrisGame::Update(unsigned long deltaTime)
 
 void TetrisGame::RenderScene()
 {
+	RenderView rv;
+
+	rv.position = m_Camera->WorldTransform().GetPosition();
+	rv.viewMatrix = m_Camera->GetViewMatrix();
+	rv.projMatrix = m_Camera->GetProjMatrix();
+	rv.frustum = m_Camera->GetFrustum();
+
+	renderer->SetViewport(0, 0, 0, 0);
+
+	// 设定渲染视点
+	m_Scene->SetupRenderView(rv);
 	m_Scene->RenderScene();
 }
 
@@ -207,7 +216,7 @@ void TetrisGame::MoveUp()
 	int x, y;
 	m_Tetromino->GetPosition(&x, &y);
 
-	y = MathClamp(0, 19, ++y);
+	y = Math::Clamp(0, 19, ++y);
 
 	m_Tetromino->SetPosition(x, y);
 }
@@ -232,7 +241,8 @@ void TetrisGame::MoveDown()
 		CheckAndRemove();
 	}
 
-	Engine::Instance().AudioSystem()->PlaySource("move");
+	IAudioBuffer* buffer = Engine::Instance().AudioSystem()->GetAudioBuffer("move");
+	Engine::Instance().AudioSystem()->CreateSourceInstance(buffer, Vector3f(0.0f, 0.0f, 0.0f));
 }
 
 // 向左移动
@@ -251,7 +261,8 @@ void TetrisGame::MoveLeft()
 	//m_Tetromino->SetPosition(x, y);
 	m_Tetromino->MoveLeft();
 
-	Engine::Instance().AudioSystem()->PlaySource("move");
+	IAudioBuffer* buffer = Engine::Instance().AudioSystem()->GetAudioBuffer("move");
+	Engine::Instance().AudioSystem()->CreateSourceInstance(buffer, Vector3f(0.0f, 0.0f, 0.0f));
 }
 
 // 向右移动
@@ -270,7 +281,8 @@ void TetrisGame::MoveRight()
 	//m_Tetromino->SetPosition(x, y);
 	m_Tetromino->MoveRight();
 
-	Engine::Instance().AudioSystem()->PlaySource("move");
+	IAudioBuffer* buffer = Engine::Instance().AudioSystem()->GetAudioBuffer("move");
+	Engine::Instance().AudioSystem()->CreateSourceInstance(buffer, Vector3f(0.0f, 0.0f, 0.0f));
 }
 
 void TetrisGame::Rotate()
@@ -324,7 +336,8 @@ void TetrisGame::CheckAndRemove()
 
 	if (remove)
 	{
-		Engine::Instance().AudioSystem()->PlaySource("remove");
+		IAudioBuffer* buffer = Engine::Instance().AudioSystem()->GetAudioBuffer("remove");
+		Engine::Instance().AudioSystem()->CreateSourceInstance(buffer, Vector3f(0.0f, 0.0f, 0.0f));
 	}
 }
 

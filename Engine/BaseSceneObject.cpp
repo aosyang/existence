@@ -73,20 +73,6 @@ void BaseSceneObject::Render()
 {
 	if (Engine::Instance().GetDebugRender() || m_DebugRender)
 		DebugRender();
-
-	// TODO: 不使用递归调用的Render方法
-
-	// 派生类也需要调用这个基类方法以实现遍历渲染
-	//ChildrenSceneObjectsSet::iterator iter;
-	//for (iter = m_ChildrenObjects.begin();
-	//	iter != m_ChildrenObjects.end();
-	//	iter++)
-	//{
-	//	(*iter)->Render();
-	//}
-
-	// for test only, turn off debug render each frame
-	//m_DebugRender = false;
 }
 
 // 渲染调试信息
@@ -95,28 +81,27 @@ void BaseSceneObject::DebugRender()
 	// render obb, for test only
 
 	// 渲染OBB
-	renderer->RenderAABB(m_OBB.localMin, m_OBB.localMax, Color4f(0.0f, 1.0f, 0.0f)/*, m_WorldTransform*/);
+	renderer->RenderBox(m_OBB.localMin, m_OBB.localMax, Color4f(0.0f, 1.0f, 0.0f), m_WorldTransform);
 
 	// 渲染AABB
-	renderer->RenderAABB(m_AABB.worldMin, m_AABB.worldMax, Color4f(1.0f, 1.0f, 0.0f));
+	renderer->RenderBox(m_AABB.worldMin, m_AABB.worldMax, Color4f(1.0f, 1.0f, 0.0f));
 }
 
-void BaseSceneObject::PrepareRenderObjects(SceneObjectList& objects)
+void BaseSceneObject::PrepareRenderObjects(SceneObjectList& objects, const RenderView& view)
 {
 	// Base method, just add object to the list...
 	// this should be overrided in derived classes
 
-	if (!m_Visible) return;
-
-	objects.push_back(this);
-
+	if (!IsCulled(view))
+		objects.push_back(this);
+	
 	// 递归添加子对象
 	ChildrenSceneObjectsSet::iterator iter;
 	for (iter = m_ChildrenObjects.begin();
 		iter != m_ChildrenObjects.end();
 		iter++)
 	{
-		(*iter)->PrepareRenderObjects(objects);
+		(*iter)->PrepareRenderObjects(objects, view);
 	}
 }
 
@@ -222,22 +207,6 @@ void BaseSceneObject::SetRotation(const Quaternion& rot)
 	m_Transform.SetRotation(rot.GetRotationMatrix());
 }
 
-//-----------------------------------------------------------------------------------
-/// \brief
-/// 为场景物体指定父对象
-/// 
-/// \param parent
-/// 新的父对象
-/// 
-/// \param keepRotation
-/// 子对象是否采用自身的旋转矩阵
-//-----------------------------------------------------------------------------------
-void BaseSceneObject::SetParentObject(BaseSceneObject* parent, bool keepRotation)
-{
-	m_ParentObject = parent;
-	m_KeepRotation = keepRotation;
-}
-
 void BaseSceneObject::RotateLocal(const Quaternion& quat)
 {
 	m_Rotation *= quat;
@@ -258,5 +227,37 @@ void BaseSceneObject::SetVisibleRecursively(bool visible)
 	{
 		(*iter)->SetVisibleRecursively(visible);
 	}
+}
+
+
+//-----------------------------------------------------------------------------------
+/// \brief
+/// 为场景物体指定父对象
+/// 
+/// \param parent
+/// 新的父对象
+/// 
+/// \param keepRotation
+/// 子对象是否采用自身的旋转矩阵
+//-----------------------------------------------------------------------------------
+void BaseSceneObject::SetParentObject(BaseSceneObject* parent, bool keepRotation)
+{
+	m_ParentObject = parent;
+	m_KeepRotation = keepRotation;
+}
+
+
+bool BaseSceneObject::IsCulled(const RenderView& view)
+{
+	// 不可见
+	if (!m_Visible) return true;
+
+	// 没有指定视截体
+	if (!view.frustum) return false;
+
+	// AABB与视截体相交判定
+	if (view.frustum->IntersectsAABB(m_AABB)) return false;
+
+	return true;
 }
 

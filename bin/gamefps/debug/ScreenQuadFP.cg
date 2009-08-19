@@ -1,0 +1,56 @@
+float2 PixelKernel[13] =
+{
+    { 0, -6 },
+    { 0, -5 },
+    { 0, -4 },
+    { 0, -3 },
+    { 0, -2 },
+    { 0, -1 },
+    { 0,  0 },
+    { 0,  1 },
+    { 0,  2 },
+    { 0,  3 },
+    { 0,  4 },
+    { 0,  5 },
+    { 0,  6 },
+};
+
+
+static const float BlurWeights[13] = 
+{
+    0.002216,
+    0.008764,
+    0.026995,
+    0.064759,
+    0.120985,
+    0.176033,
+    0.199471,
+    0.176033,
+    0.120985,
+    0.064759,
+    0.026995,
+    0.008764,
+    0.002216,
+};
+
+
+
+struct Output {
+  float4 color : COLOR;
+};
+
+Output main(float2 texcoord : TEXCOORD0,
+            uniform sampler2D baseTexture : TEXUNIT0)
+{
+  Output OUT;
+  OUT.color = 0;
+
+    for (int i = 0; i < 13; i++)
+    {    
+        OUT.color += tex2D( baseTexture, texcoord + PixelKernel[i].xy / 200 ) * BlurWeights[i];
+    }
+    
+  OUT.color.a = 1;
+  //OUT.color = float4(texcoord, 0, 1);
+  return OUT;
+}

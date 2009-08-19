@@ -26,7 +26,6 @@ void GameSkeletal::StartGame()
 
 	// 不添加到场景的摄像机将无法移动
 	m_Scene->AddObject(m_Camera);
-	m_Scene->SetCamera(m_Camera);
 
 	m_Sky = new DistantViewObject();
 	m_Sky->SetMesh(ResourceManager<Mesh>::Instance().GetByName("skybox"));
@@ -34,16 +33,11 @@ void GameSkeletal::StartGame()
 
 	skel.LoadFromFile("E:/testout.txt");
 
-	m_UIFps = new TextUIControl();
-	m_Scene->AddUIObject(m_UIFps);
+	m_UIFps = EGUIManager::Instance().CreateTextUIControl();
 }
 
 void GameSkeletal::Shutdown()
 {
-	SAFE_DELETE(m_UIFps);
-	SAFE_DELETE(m_Sky);
-	SAFE_DELETE(m_Camera);
-
 	delete m_Scene;
 }
 
@@ -74,6 +68,8 @@ void GameSkeletal::OnResizeWindow(unsigned int width, unsigned int height)
 	}
 
 }
+
+static int frame = 0;
 
 void GameSkeletal::Update(unsigned long deltaTime)
 {
@@ -124,7 +120,6 @@ void GameSkeletal::Update(unsigned long deltaTime)
 	float y = -(float)Input::Instance().GetJoyStickAbs(0) / 0x7FFF * 0.1f * deltaTime;
 	m_Camera->RotateLocal(x, y);
 
-	static int frame = 0;
 	static unsigned long timeToAdvance = 0;
 	timeToAdvance += deltaTime;
 	if (timeToAdvance > 33)
@@ -136,11 +131,7 @@ void GameSkeletal::Update(unsigned long deltaTime)
 
 		skel.Update(frame);
 	}
-	for (vector<Bone*>::iterator iter=skel.m_Bones[frame].begin(); iter!=skel.m_Bones[frame].end(); iter++)
-	{
-		if ((*iter)->m_Parent)
-			m_Scene->DrawLine((*iter)->m_RootTransform.GetPosition(), (*iter)->m_Parent->m_RootTransform.GetPosition());
-	}
+
 
 	// ******************************************* 更新 *******************************************
 	m_Scene->UpdateScene(deltaTime);
@@ -159,5 +150,22 @@ void GameSkeletal::Update(unsigned long deltaTime)
 
 void GameSkeletal::RenderScene()
 {
+	RenderView rv;
+
+	rv.position = m_Camera->WorldTransform().GetPosition();
+	rv.viewMatrix = m_Camera->GetViewMatrix();
+	rv.projMatrix = m_Camera->GetProjMatrix();
+	rv.frustum = m_Camera->GetFrustum();
+
+	// 设定渲染视点
+	m_Scene->SetupRenderView(rv);
 	m_Scene->RenderScene();
+
+	renderer->BeginRender();
+	for (vector<Bone*>::iterator iter=skel.m_Bones[frame].begin(); iter!=skel.m_Bones[frame].end(); iter++)
+	{
+		if ((*iter)->m_Parent)
+			renderer->RenderLine((*iter)->m_RootTransform.GetPosition(), (*iter)->m_Parent->m_RootTransform.GetPosition());
+	}
+	renderer->EndRender();
 }

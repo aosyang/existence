@@ -48,9 +48,11 @@ public:
 	// ----- UIRootObject Methods
 
 	void AttachChildObject(BaseUIObject* object);
+	void RemoveAllChildObjects();
 private:
 
 	ChildrenUIObjectsSet	m_ChildrenObjects;
 };
 
 #endif
+

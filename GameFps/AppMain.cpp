@@ -14,6 +14,8 @@ int WINAPI WinMain(	HINSTANCE hInstance,
 	Engine::Instance().SetGame(game);
 
 	// 创建并初始化渲染窗口
+	//System::Instance().CreateRenderWindow("Test window", 100, 100, 32, false);	// 多窗体创建测试
+
 	System::Instance().CreateRenderWindow("Existence FPS", 640, 480, 32, false);
 	Engine::Instance().Initialize();
 

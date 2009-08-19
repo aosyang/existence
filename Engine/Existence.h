@@ -64,6 +64,7 @@ class ParticlePool;
 class ParticleEmitter;
 class String;
 
+class EGUIManager;
 class UIRootObject;
 class BaseUIObject;
 class TextUIControl;
@@ -125,6 +126,7 @@ class ImageUIControl;
 
 #include "ResourceManager.h"
 
+#include "EGUIManager.h"
 #include "UIRootObject.h"
 #include "BaseUIObject.h"
 #include "TextUIControl.h"

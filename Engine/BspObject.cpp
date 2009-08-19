@@ -39,21 +39,6 @@ void BspObject::DebugRender()
 	BaseSceneObject::DebugRender();
 }
 
-
-void BspObject::PrepareRenderObjects(SceneObjectList& objects)
-{
-	// TODO: 如果在可见范围，就添加到渲染队列
-	Frustum* frustum = renderer->GetFrustum();
-
-	// “视截体-包围球”裁剪
-	if (!frustum || frustum->SphereInFrustum(m_WorldTransform.GetPosition(), m_BoundingSphereRadius) > 0.0f)
-	{
-		BaseSceneObject::PrepareRenderObjects(objects);
-		//objects.insert(this);
-	}
-}
-
-
 bool BspObject::IntersectsRay(const Ray& ray, CollisionInfo& info)
 {
 	Vector3f localPoint;

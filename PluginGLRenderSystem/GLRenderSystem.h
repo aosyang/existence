@@ -17,6 +17,32 @@
 
 typedef IVertexBuffer*(*FactoryCreateVertexBufferFunc)();
 
+typedef void(*CREATEGPUPLUGIN)();
+typedef void(*DESTROYGPUPLUGIN)();
+typedef IGpuProgram*(*LOADGPUPROGRAM)(const String&, const String&, GpuProgramType);
+typedef void(*BINDGPUPROGRAM)(IGpuProgram*, GpuProgramType);
+typedef void(*UNBINDGPUPROGRAM)(GpuProgramType);
+
+struct GpuProgramInfo
+{
+	String	filename;
+	String	entry;
+	GpuProgramType type;
+
+	bool operator<(const GpuProgramInfo& rhs) const
+	{
+		if (filename==rhs.filename)
+			if (entry==rhs.entry)
+				return type<rhs.type;
+			else
+				return entry<rhs.entry;
+
+		return filename<rhs.filename;
+	}
+};
+
+typedef map<GpuProgramInfo, IGpuProgram*> GpuPrograms;
+
 class GLRenderer : public IRenderer
 {
 public:
@@ -35,19 +61,20 @@ public:
 	void SetActive(bool active) { m_Active = active; }
 	bool GetActive() { return m_Active; }
 
+	void SetGpuPluginName(const String& filename);
+
 	bool Initialize(RenderWindowParam* windowParam);
 	void Shutdown();
 
 	void SetClearColor(const Color4f& color);
+
+	void SetViewport(int left, int bottom, unsigned int width, unsigned int height);
 
 	//void SetViewMatrix(const Matrix4& mat) { m_ViewMatrix = mat; }
 	Matrix4& ViewMatrix() { return m_ViewMatrix; }
 	Matrix4& ProjectionMatrix() { return m_ProjMatrix; }
 
 	//void NotifyUpdateProjectionMatrix();
-
-	void SetFrustum(Frustum* frustum);
-	Frustum* GetFrustum() const { return m_Frustum; }
 
 	// 调整渲染窗口尺寸，并重设投影矩阵纵横比
 	//   使用默认参数调用时将仅重置投影矩阵纵横比
@@ -69,7 +96,7 @@ public:
 
 	void RenderVertexBuffer(IVertexBuffer* vbuffer, Material* material, const Matrix4& transform);
 
-	void RenderAABB(const Vector3f& vMin, const Vector3f& vMax, const Color4f& color, const Matrix4& transform);
+	void RenderBox(const Vector3f& vMin, const Vector3f& vMax, const Color4f& color, const Matrix4& transform);
 	void RenderSphere(const Vector3f& point, float radius, const Color4f& color, unsigned int segment);
 	void RenderLine(const Vector3f& begin, const Vector3f& end, const Color4f& color);
 
@@ -89,6 +116,14 @@ public:
 
 	ITexture* GetTexture(const String& textureName);
 
+	// Shaders
+
+	// 读取一个Shader
+	IGpuProgram* LoadGpuProgram(const String& filename, const String& entry, GpuProgramType type);
+
+	// 获取一个已有Shader
+	IGpuProgram* GetGpuProgram(const String& filename, const String& entry, GpuProgramType type);
+
 	int GetMaxLightsNumber();
 
 	void SetupLight(int index, ILight* light);
@@ -105,6 +140,10 @@ protected:
 	void BuildGLMatrix(const Matrix4& mat, float* glMat);
 
 	void BindTextureRenderState(const texRenderState_t& texState);
+
+	void BindGpuProgram(IGpuProgram* program, GpuProgramType type);
+	void UnbindGpuProgram(GpuProgramType type);
+
 	GLint GetFilterType(int type);
 	GLint GetBlendFactor(int factor);
 	GLint GetEnvMode(int mode);
@@ -113,6 +152,7 @@ protected:
 
 	bool UnloadTexture(const String& textureName);
 	void UnloadAllTextures();
+	void UnloadGpuPrograms();
 protected:
 	HWND	m_hWnd;
 	HDC		m_hDC;
@@ -124,13 +164,16 @@ protected:
 
 	bool			m_Active;
 
+	String			m_PluginName;
+
+	Matrix4			m_ModelMatrix;
 	Matrix4			m_ViewMatrix;
 	Matrix4			m_ProjMatrix;
 
-	Frustum*		m_Frustum;
-
 	typedef map<String, ITexture*>	TextureList;
 	TextureList		m_TextureList;
+
+	GpuPrograms		m_GpuPrograms;
 
 	bool			m_DepthWriting;
 

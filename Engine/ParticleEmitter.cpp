@@ -12,7 +12,8 @@
 
 void DefaultParticleState(Particle* particle, ParticleEmitter* emitter)
 {
-	particle->m_LifeTime = 5000;
+	particle->m_Age = 0;
+	particle->m_Duration= 5000;
 	particle->m_Velocity = Vector3f(0.0f, 1.0f, 0.0f);
 }
 

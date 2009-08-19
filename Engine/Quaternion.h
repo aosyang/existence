@@ -67,6 +67,7 @@ public:
 	float x, y, z, w;
 
 	Quaternion();
+	Quaternion(const Matrix3& mat);
 
 	Quaternion operator*(const Quaternion& rhs) const;
 	Quaternion operator*=(const Quaternion& rhs);
@@ -77,6 +78,10 @@ public:
 	void CreateFromLocalAxisAngle(const Vector3f axis, float angle_rad);
 
 	Matrix3 GetRotationMatrix() const;
+
+	static Quaternion Slerp(const Quaternion &p, const Quaternion &q, float t);
+	static float DotProduct(const Quaternion &a, const Quaternion &b);
 };
+
 
 #endif

@@ -28,7 +28,8 @@ struct Particle
 
 	Color4f		m_Color;
 
-	long		m_LifeTime;
+	long		m_Age;
+	long		m_Duration;		///< 粒子生命周期，-1为永不消亡
 
 	float		m_ZRotation;
 	float		m_ZRotationInc;
@@ -49,7 +50,8 @@ struct Particle
 		: m_Active(false),
 		  m_Position(0.0f, 0.0f, 0.0f),
 		  m_Velocity(0.0f, 0.0f, 0.0f),
-		  m_LifeTime(-1),
+		  m_Age(-1),
+		  m_Duration(-1),
 		  m_ZRotation(0.0f),
 		  m_ZRotationInc(0.0f),
 		  m_Scale(1.0f),

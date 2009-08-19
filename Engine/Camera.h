@@ -42,7 +42,7 @@ public:
 	// ----- Overwrite BaseSceneObject
 
 	int GetCollisionType() const { return COLLISION_TYPE_CAMERA; }
-	void PrepareRenderObjects(ChildrenSceneObjectsSet& objects);
+	//void PrepareRenderObjects(SceneObjectList& objects, const RenderView& view);
 	//bool IntersectsRay(const Ray& ray, CollisionInfo& info);
 	void SetPosition(const Vector3f& pos)
 	{

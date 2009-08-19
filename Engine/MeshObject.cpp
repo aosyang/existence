@@ -33,27 +33,17 @@ void MeshObject::Update(unsigned long deltaTime)
 
 void MeshObject::Render()
 {
-
-	// TODO: 集中灯光状态的切换
-	int maxLightNum = renderer->GetMaxLightsNumber();
-
-	int i;
-	for (i=0; i<m_Lights.size() && i<maxLightNum; i++)
+	if (m_Mesh)
 	{
-		renderer->SetupLight(i, m_Lights[i]);
-	}
+		BaseLightableObject::SetupLights();
 
-	for (; i<maxLightNum; i++)
-	{
-		renderer->SetupLight(i, NULL);
-	}
-
-	for (i=0; i<m_Mesh->GetElementsNum(); i++)
-	{
-		MeshElement* elem = m_Mesh->GetElement(i);
-		renderer->RenderVertexBuffer(elem->m_VertexBuffer,
-									 m_Materials[i],
-									 m_WorldTransform);
+		for (int i=0; i<m_Mesh->GetElementsNum(); i++)
+		{
+			MeshElement* elem = m_Mesh->GetElement(i);
+			renderer->RenderVertexBuffer(elem->m_VertexBuffer,
+										 m_Materials[i],
+										 m_WorldTransform);
+		}
 	}
 
 	BaseSceneObject::Render();
@@ -65,19 +55,6 @@ void MeshObject::DebugRender()
 
 	//renderer->RenderSphere(m_WorldTransform.GetPosition(), m_BoundingSphereRadius);
 	//renderer->RenderLine(mesh_point, mesh_point + mesh_normal, Color4f(0.0f, 1.0f, 0.0f));
-}
-
-void MeshObject::PrepareRenderObjects(SceneObjectList& objects)
-{
-	// TODO: 如果在可见范围，就添加到渲染队列
-	Frustum* frustum = renderer->GetFrustum();
-
-	// “视截体-包围球”裁剪
-	if (!m_FrustumCulling || !frustum || frustum->SphereInFrustum(m_WorldTransform.GetPosition(), m_BoundingSphereRadius) > 0.0f)
-	{
-		BaseSceneObject::PrepareRenderObjects(objects);
-		//objects.insert(this);
-	}
 }
 
 bool MeshObject::IntersectsRay(const Ray& ray, CollisionInfo& info)
@@ -199,4 +176,11 @@ bool MeshObject::RayPicking(const Ray& ray, Vector3f& point, Vector3f& normal, f
 	//}
 
 	return result;
+}
+
+bool MeshObject::IsCulled(const RenderView& view)
+{
+	if (m_FrustumCulling) return BaseSceneObject::IsCulled(view);
+
+	return false;
 }

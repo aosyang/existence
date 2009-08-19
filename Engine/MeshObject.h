@@ -30,7 +30,6 @@ public:
 	// ----- Overwrite BaseSceneObject
 
 	int GetCollisionType() const { return COLLISION_TYPE_MESH; }
-	void PrepareRenderObjects(SceneObjectList& objects);
 	bool IntersectsRay(const Ray& ray, CollisionInfo& info);
 
 	// ----- MeshObject Methods
@@ -49,6 +48,9 @@ public:
 	bool GetFrustumCulling() const { return m_FrustumCulling; }
 
 	bool RayPicking(const Ray& ray, Vector3f& point, Vector3f& normal, float& d, bool infiniteLength = false);
+protected:
+	bool IsCulled(const RenderView& view);
+
 
 private:
 	Mesh*		m_Mesh;

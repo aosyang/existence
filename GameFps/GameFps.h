@@ -41,6 +41,7 @@ public:
 
 private:
 	SceneGraph*	m_Scene;
+	SceneGraph* m_ScreenQuadScene;
 
 	Camera*		m_Camera;
 

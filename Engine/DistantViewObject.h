@@ -38,6 +38,10 @@ public:
 	inline Vector3f GetOffsetScale() const { return m_OffsetScale; }
 
 	bool RayPicking(const Ray& ray, Vector3f& point, Vector3f& normal, float& d, bool infiniteLength = false);
+protected:
+	// ----- Overwrite BaseSceneObject
+
+	bool IsCulled(const RenderView& view);
 
 private:
 	Mesh*		m_Mesh;

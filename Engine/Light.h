@@ -23,7 +23,7 @@ public:
 
 	// ----- Overwrite BaseSceneObject
 
-	void PrepareRenderObjects(ChildrenSceneObjectsSet& objects);
+	//void PrepareRenderObjects(SceneObjectList& objects, const RenderView& view);
 
 	// ----- Overwrite ILight
 	void SetAmbientColor(const Color4f& color) { m_Ambient = color; }

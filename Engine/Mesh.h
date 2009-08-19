@@ -83,6 +83,7 @@ public:
 	void CreateBox(float side);
 
 	void CreatePositiveYPlane(float side);
+	void CreatePositiveZPlane(float side);
 
 	void AddMeshElement(MeshElement* elem);
 
