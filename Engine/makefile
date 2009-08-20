@@ -3,12 +3,13 @@ CC = gcc
 XX = g++
 CFLAGS = -Wall -O -g -D_LINUX
 INCLUDE = -I ../extra/include/ -I ../extra/include/freetype2/freetype2/ -I ../extra/include/tinyxml/
+LIB = -lXxf86vm
 TARGET = ./Engine.a
 
 %.o: %.c
-	$(CC) $(CFLAGS) $(INCLUDE) -c $< -o $@
+	$(CC) $(CFLAGS) $(INCLUDE) $(LIB) -c $< -o $@
 %.o: %.cpp
-	$(XX) $(CFLAGS) $(INCLUDE) -c $< -o $@
+	$(XX) $(CFLAGS) $(INCLUDE) $(LIB) -c $< -o $@
 SOURCES = $(wildcard *.c *.cpp)
 OBJS = $(patsubst %.c, %.o, $(patsubst %.cpp, %.o, $(SOURCES)))
 

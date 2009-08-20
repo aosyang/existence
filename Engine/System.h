@@ -11,6 +11,16 @@
 #include "Singleton.h"
 #include "Platform.h"
 
+#ifdef __PLATFORM_LINUX
+namespace X11	// 防止X11的类型名与FreeType冲突
+{
+#include <X11/Xlib.h>
+#include <X11/extensions/xf86vmode.h>
+#include <X11/keysym.h>
+#include <X11/Xutil.h>
+}
+#endif	// #ifdef __PLATFORM_LINUX
+
 class System : public Singleton<System>
 {
 public:
@@ -69,6 +79,10 @@ private:
 
 	bool				m_FullScreen;
 	String				m_TitleName;
+#ifdef __PLATFORM_LINUX
+	X11::Display*		m_Display;
+	X11::Window			m_XWindow;
+#endif
 };
 
 #endif

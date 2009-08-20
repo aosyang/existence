@@ -7,12 +7,6 @@
 //-----------------------------------------------------------------------------------
 #include "Engine.h"
 
-#ifdef __PLATFORM_LINUX
-#include <X11/Xlib.h>
-#include <X11/extensions/xf86vmode.h>
-#include <X11/keysym.h>
-#endif	// #ifdef __PLATFORM_LINUX
-
 #include "System.h"
 #include "Image.h"
 #include "Mesh.h"
@@ -22,6 +16,7 @@
 #include "EString.h"
 
 using namespace std;
+using namespace X11;
 
 System::System()
 : m_FullScreen(false)
@@ -173,18 +168,7 @@ void System::LoadMeshes(ConfigFileKeys* list)
 
 bool System::CreateRenderWindow(const String& title, unsigned int width, unsigned int height, unsigned int bits, bool fullscreen)
 {
-#if defined __PLATFORM_WIN32
-	WNDCLASS wc;
-
-	DWORD	dwExStyle;
-	DWORD	dwStyle;
-
 	m_TitleName = title;
-
-	//m_WindowWidth = width;
-	//m_WindowHeight = height;
-
-	//m_Bits = bits;
 
 	m_RenderWindowParam.width = width;
 	m_RenderWindowParam.height = height;
@@ -195,6 +179,13 @@ bool System::CreateRenderWindow(const String& title, unsigned int width, unsigne
 
 	Log.OutputTime();
 	Log << "Creating render window: width = " << width << ", height = " << height << ", color depth = " << bits << ", fullscreen = " << fullscreen << "\n";
+
+
+#if defined __PLATFORM_WIN32
+	WNDCLASS wc;
+
+	DWORD	dwExStyle;
+	DWORD	dwStyle;
 
 	RECT WindowRect;
 	WindowRect.left = (long)0;
@@ -243,7 +234,7 @@ bool System::CreateRenderWindow(const String& title, unsigned int width, unsigne
 
 	AdjustWindowRectEx (&WindowRect, dwStyle, false, dwExStyle);
 
-	if (!(m_RenderWindowParam.handle = CreateWindowEx(	dwExStyle,
+	bool result = (m_RenderWindowParam.handle = CreateWindowEx(	dwExStyle,
 		title.Data(), 
 		title.Data(), 
 		dwStyle |
@@ -256,123 +247,47 @@ bool System::CreateRenderWindow(const String& title, unsigned int width, unsigne
 		NULL, 
 		NULL, 
 		hInstance, 
-		NULL)))
-	{
-		MessageBox( NULL, "Create Error", "ERROR", MB_OK|MB_ICONEXCLAMATION);
-		return false;
-	}
+		NULL)));
+	AssertFatal(result, "System::CreateRenderWindow(): Error creating render window.");
 
 	ShowWindow(m_RenderWindowParam.handle,SW_SHOW);						// Show The Window
 	SetForegroundWindow(m_RenderWindowParam.handle);						// Slightly Higher Priority
 	SetFocus(m_RenderWindowParam.handle);									// Sets Keyboard Focus To The Window
 	
 #elif defined __PLATFORM_LINUX
+	// 建立与X Server的连接，获取Display
+	m_Display = XOpenDisplay(0);
+	
+	// 创建X窗体
+	XSetWindowAttributes attrib;
+	attrib.border_pixel = 0;
+	attrib.event_mask = ExposureMask | KeyPressMask | StructureNotifyMask; 
+	m_XWindow = XCreateWindow(m_Display,
+							   XDefaultRootWindow(m_Display),
+							   0, 0, width, height, 1,
+							   XDefaultDepth(m_Display, 0),
+							   InputOutput,
+							   XDefaultVisualOfScreen(XDefaultScreenOfDisplay(m_Display)),
+							   CWBorderPixel | CWColormap | CWEventMask,
+							   &attrib);
 
-    XVisualInfo *vi;
-    Colormap cmap;
-    int dpyWidth, dpyHeight;
-    int i;
-    int glxMajorVersion, glxMinorVersion;
-    int vidModeMajorVersion, vidModeMinorVersion;
-    XF86VidModeModeInfo **modes;
-    int modeNum;
-    int bestMode;
-    Atom wmDelete;
-    Window winDummy;
-    unsigned int borderDummy;
-    
-    GLWin.fs = fullscreenflag;
-    /* set best mode to current */
-    bestMode = 0;
-    /* get a connection */
-    GLWin.dpy = XOpenDisplay(0);
-    GLWin.screen = DefaultScreen(GLWin.dpy);
-    XF86VidModeQueryVersion(GLWin.dpy, &vidModeMajorVersion,
-        &vidModeMinorVersion);
-    printf("XF86VidModeExtension-Version %d.%d\n", vidModeMajorVersion,
-        vidModeMinorVersion);
-    XF86VidModeGetAllModeLines(GLWin.dpy, GLWin.screen, &modeNum, &modes);
-    /* save desktop-resolution before switching modes */
-    GLWin.deskMode = *modes[0];
-    /* look for mode with requested resolution */
-    for (i = 0; i < modeNum; i++)
-    {
-        if ((modes[i]->hdisplay == width) && (modes[i]->vdisplay == height))
-        {
-            bestMode = i;
-        }
-    }
-    /* get an appropriate visual */
-    vi = glXChooseVisual(GLWin.dpy, GLWin.screen, attrListDbl);
-    if (vi == NULL)
-    {
-        vi = glXChooseVisual(GLWin.dpy, GLWin.screen, attrListSgl);
-        GLWin.doubleBuffered = False;
-        printf("Only Singlebuffered Visual!\n");
-    }
-    else
-    {
-        GLWin.doubleBuffered = True;
-        printf("Got Doublebuffered Visual!\n");
-    }
-    glXQueryVersion(GLWin.dpy, &glxMajorVersion, &glxMinorVersion);
-    printf("glX-Version %d.%d\n", glxMajorVersion, glxMinorVersion);
-    /* create a GLX context */
-    GLWin.ctx = glXCreateContext(GLWin.dpy, vi, 0, GL_TRUE);
-    /* create a color map */
-    cmap = XCreateColormap(GLWin.dpy, RootWindow(GLWin.dpy, vi->screen),
-        vi->visual, AllocNone);
-    GLWin.attr.colormap = cmap;
-    GLWin.attr.border_pixel = 0;
+	XStoreName(m_Display, m_XWindow, title.Data());
+	XSizeHints* hint;
+	hint = XAllocSizeHints();
+	hint->x = 0;
+	hint->y = 0;
+	hint->width = width;
+	hint->height = height;
+	hint->flags = USPosition | USSize;
+	XSetNormalHints(m_Display, m_XWindow, hint);
+	XFree(hint);
+	
+	// 显示窗口
+	XMapWindow(m_Display, m_XWindow);
+	
+	// 刷新缓冲
+	XFlush(m_Display);
 
-    if (GLWin.fs)
-    {
-        XF86VidModeSwitchToMode(GLWin.dpy, GLWin.screen, modes[bestMode]);
-        XF86VidModeSetViewPort(GLWin.dpy, GLWin.screen, 0, 0);
-        dpyWidth = modes[bestMode]->hdisplay;
-        dpyHeight = modes[bestMode]->vdisplay;
-        printf("Resolution %dx%d\n", dpyWidth, dpyHeight);
-        XFree(modes);
-    
-        /* create a fullscreen window */
-        GLWin.attr.override_redirect = True;
-        GLWin.attr.event_mask = ExposureMask | KeyPressMask | ButtonPressMask |
-            StructureNotifyMask;
-        GLWin.win = XCreateWindow(GLWin.dpy, RootWindow(GLWin.dpy, vi->screen),
-            0, 0, dpyWidth, dpyHeight, 0, vi->depth, InputOutput, vi->visual,
-            CWBorderPixel | CWColormap | CWEventMask | CWOverrideRedirect,
-            &GLWin.attr);
-        XWarpPointer(GLWin.dpy, None, GLWin.win, 0, 0, 0, 0, 0, 0);
-		XMapRaised(GLWin.dpy, GLWin.win);
-        XGrabKeyboard(GLWin.dpy, GLWin.win, True, GrabModeAsync,
-            GrabModeAsync, CurrentTime);
-        XGrabPointer(GLWin.dpy, GLWin.win, True, ButtonPressMask,
-            GrabModeAsync, GrabModeAsync, GLWin.win, None, CurrentTime);
-    }
-    else
-    {
-        /* create a window in window mode*/
-        GLWin.attr.event_mask = ExposureMask | KeyPressMask | ButtonPressMask |
-            StructureNotifyMask;
-        GLWin.win = XCreateWindow(GLWin.dpy, RootWindow(GLWin.dpy, vi->screen),
-            0, 0, width, height, 0, vi->depth, InputOutput, vi->visual,
-            CWBorderPixel | CWColormap | CWEventMask, &GLWin.attr);
-        /* only set window title and handle wm_delete_events if in windowed mode */
-        wmDelete = XInternAtom(GLWin.dpy, "WM_DELETE_WINDOW", True);
-        XSetWMProtocols(GLWin.dpy, GLWin.win, &wmDelete, 1);
-        XSetStandardProperties(GLWin.dpy, GLWin.win, title,
-            title, None, NULL, 0, NULL);
-        XMapRaised(GLWin.dpy, GLWin.win);
-    }       
-    /* connect the glx-context to the window */
-    glXMakeCurrent(GLWin.dpy, GLWin.win, GLWin.ctx);
-    XGetGeometry(GLWin.dpy, GLWin.win, &winDummy, &GLWin.x, &GLWin.y,
-        &GLWin.width, &GLWin.height, &borderDummy, &GLWin.depth);
-    printf("Depth %d\n", GLWin.depth);
-    if (glXIsDirect(GLWin.dpy, GLWin.ctx)) 
-        printf("Congrats, you have Direct Rendering!\n");
-    else
-        printf("Sorry, no Direct Rendering possible!\n");
 #endif	// #if defined __PLATFORM_WIN32
 
 	return true;
@@ -380,6 +295,7 @@ bool System::CreateRenderWindow(const String& title, unsigned int width, unsigne
 
 void System::DestroyRenderWindow()
 {
+#if defined __PLATFORM_WIN32
 	if (m_RenderWindowParam.handle)
 	{
 		AssertFatal(DestroyWindow(m_RenderWindowParam.handle), "System::DestroyRenderWindow() : Could Not Release hWnd.");
@@ -391,19 +307,26 @@ void System::DestroyRenderWindow()
 		ShowCursor(TRUE);									// Show Mouse Pointer
 	}
 
-	if (!UnregisterClass(m_TitleName.Data(), GetModuleHandle(NULL)))				// Are We Able To Unregister Class
-	{
-		MessageBox(NULL,"Could Not Unregister Class.","SHUTDOWN ERROR",MB_OK | MB_ICONINFORMATION);
-		//hInstance=NULL;										// Set hInstance To NULL
-	}
-
+	AssertFatal(UnregisterClass(m_TitleName.Data(), GetModuleHandle(NULL)), "System::DestroyRenderWindow(): Could not unregister class.");
+	
+#elif defined __PLATFORM_LINUX
+	// 关闭窗体
+	XDestroyWindow(m_Display, m_XWindow);
+	
+	XFlush(m_Display);
+	
+	// 关闭display
+	XCloseDisplay(m_Display);
+#endif	// #if defined __PLATFORM_WIN32
 	Log.MsgLn("Render window successfully destroyed.");
 }
 
 void System::SetWindowTitle(const String& title)
 {
+#if defined __PLATFORM_WIN32
 	//m_TitleName = title;
 	SetWindowText(m_RenderWindowParam.handle, title.Data());
+#endif	// #if defined __PLATFORM_WIN32
 }
 
 void System::ResizeWindow(unsigned int width, unsigned int height)

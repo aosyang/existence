@@ -1,4 +1,5 @@
 #include "VertexData.h"
+#include <memory.h>
 
 VertexData::VertexData()
 : m_Size(0), 

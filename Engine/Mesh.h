@@ -30,8 +30,11 @@ class BspTree;
 class MeshElement;
 class Mesh;
 
-//template class ResourceManager<Mesh>;
+#if defined __PLATFORM_WIN32
 ResourceManager<Mesh>;
+#elif defined __PLATFORM_LINUX
+template class ResourceManager<Mesh>;
+#endif
 
 enum EMDL_LUMP
 {

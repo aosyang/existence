@@ -19,9 +19,7 @@
 
 #ifdef __PLATFORM_WIN32
 typedef HWND RenderWindowHandle;
-#endif
-
-#ifdef __PLATFORM_LINUX
+#elif defined __PLATFORM_LINUX
 // TODO: 添加Linux平台的RenderWindowHandle
 typedef void* RenderWindowHandle;
 #endif

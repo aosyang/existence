@@ -17,8 +17,11 @@ using namespace std;
 
 class Material;
 
-//template class ResourceManager<Material>;
+#if defined __PLATFORM_WIN32
 ResourceManager<Material>;
+#elif defined __PLATFORM_LINUX
+template class ResourceManager<Material>;
+#endif
 
 typedef void(*SetMaterialAttribFunc)(Material*, const String&);
 typedef map<const String, SetMaterialAttribFunc> MaterialLoadFuncMap;
