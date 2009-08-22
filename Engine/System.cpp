@@ -16,12 +16,16 @@
 #include "EString.h"
 
 using namespace std;
+
+#if defined __PLATFORM_LINUX
 using namespace X11;
+Display*	g_Display = 0;		// 给Platform使用的X11 Display
+#endif	// #if defined __PLATFORM_LINUX
 
 System::System()
 : m_FullScreen(false)
 {
-	m_RenderWindowParam.handle = 0;
+	//m_RenderWindowParam.handle = 0;
 	m_RenderWindowParam.width = 0;
 	m_RenderWindowParam.height = 0;
 	m_RenderWindowParam.color_depth_bit = 0;
@@ -234,7 +238,7 @@ bool System::CreateRenderWindow(const String& title, unsigned int width, unsigne
 
 	AdjustWindowRectEx (&WindowRect, dwStyle, false, dwExStyle);
 
-	bool result = (m_RenderWindowParam.handle = CreateWindowEx(	dwExStyle,
+	m_RenderWindowParam.handle = CreateWindowEx(	dwExStyle,
 		title.Data(), 
 		title.Data(), 
 		dwStyle |
@@ -247,8 +251,8 @@ bool System::CreateRenderWindow(const String& title, unsigned int width, unsigne
 		NULL, 
 		NULL, 
 		hInstance, 
-		NULL)));
-	AssertFatal(result, "System::CreateRenderWindow(): Error creating render window.");
+		NULL);
+	AssertFatal(m_RenderWindowParam.handle, "System::CreateRenderWindow(): Error creating render window.");
 
 	ShowWindow(m_RenderWindowParam.handle,SW_SHOW);						// Show The Window
 	SetForegroundWindow(m_RenderWindowParam.handle);						// Slightly Higher Priority
@@ -256,22 +260,29 @@ bool System::CreateRenderWindow(const String& title, unsigned int width, unsigne
 	
 #elif defined __PLATFORM_LINUX
 	// 建立与X Server的连接，获取Display
-	m_Display = XOpenDisplay(0);
+	RenderWindowHandle* handle = &m_RenderWindowParam.handle;
+	handle->display = g_Display = XOpenDisplay(0);
+	Display* display = static_cast<Display*>(handle->display);
+	handle->screen = DefaultScreen(display);
+	
+	Window rootwin = XDefaultRootWindow(display);
+	Visual* visual = XDefaultVisualOfScreen(XDefaultScreenOfDisplay(display));
 	
 	// 创建X窗体
 	XSetWindowAttributes attrib;
+	attrib.colormap = XCreateColormap(display, rootwin, visual, AllocNone);
 	attrib.border_pixel = 0;
 	attrib.event_mask = ExposureMask | KeyPressMask | StructureNotifyMask; 
-	m_XWindow = XCreateWindow(m_Display,
-							   XDefaultRootWindow(m_Display),
+	handle->window = XCreateWindow(display,
+							   rootwin,
 							   0, 0, width, height, 1,
-							   XDefaultDepth(m_Display, 0),
+							   XDefaultDepth(display, 0),
 							   InputOutput,
-							   XDefaultVisualOfScreen(XDefaultScreenOfDisplay(m_Display)),
+							   visual,
 							   CWBorderPixel | CWColormap | CWEventMask,
 							   &attrib);
 
-	XStoreName(m_Display, m_XWindow, title.Data());
+	XStoreName(display, handle->window, title.Data());
 	XSizeHints* hint;
 	hint = XAllocSizeHints();
 	hint->x = 0;
@@ -279,14 +290,14 @@ bool System::CreateRenderWindow(const String& title, unsigned int width, unsigne
 	hint->width = width;
 	hint->height = height;
 	hint->flags = USPosition | USSize;
-	XSetNormalHints(m_Display, m_XWindow, hint);
+	XSetNormalHints(display, handle->window, hint);
 	XFree(hint);
 	
 	// 显示窗口
-	XMapWindow(m_Display, m_XWindow);
+	XMapWindow(display, handle->window);
 	
 	// 刷新缓冲
-	XFlush(m_Display);
+	XFlush(display);
 
 #endif	// #if defined __PLATFORM_WIN32
 
@@ -310,13 +321,15 @@ void System::DestroyRenderWindow()
 	AssertFatal(UnregisterClass(m_TitleName.Data(), GetModuleHandle(NULL)), "System::DestroyRenderWindow(): Could not unregister class.");
 	
 #elif defined __PLATFORM_LINUX
+
+	Display* display = static_cast<Display*>(m_RenderWindowParam.handle.display);
 	// 关闭窗体
-	XDestroyWindow(m_Display, m_XWindow);
+	XDestroyWindow(display, m_RenderWindowParam.handle.window);
 	
-	XFlush(m_Display);
+	XFlush(display);
 	
 	// 关闭display
-	XCloseDisplay(m_Display);
+	XCloseDisplay(display);
 #endif	// #if defined __PLATFORM_WIN32
 	Log.MsgLn("Render window successfully destroyed.");
 }

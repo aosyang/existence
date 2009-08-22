@@ -21,10 +21,25 @@ void QuadTree::Create(float size, unsigned int subdivCount)
 
 	m_RootNode = new QuadTreeNode();
 	m_RootNode->m_OffsetX = m_RootNode->m_OffsetZ = 0.0f;
-	m_RootNode->CreateNode(this, subdivCount, 0);
+	m_RootNode->CreateNode(this, size, subdivCount, 0);
 }
 
 bool QuadTree::QueryObjectsByAABB(const AABB& aabb, const SceneObjectList& list)
 {
 	return m_RootNode->QueryObjectsByAABB(aabb, list);
+}
+
+void QuadTree::Render()
+{
+	m_RootNode->Render();
+}
+
+void QuadTree::TraverseRender(const Vector3f pos)
+{
+	m_RootNode->TraverseRender(pos);
+}
+	
+void QuadTree::TraverseRenderBox(const Vector3f vMin, const Vector3f vMax)
+{
+	m_RootNode->TraverseRenderBox(vMin, vMax);
 }

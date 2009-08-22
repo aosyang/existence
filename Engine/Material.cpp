@@ -8,7 +8,7 @@
 #include "Material.h"
 #include "Engine.h"
 
-#include "tinyxml.h"
+#include "tinyxml/tinyxml.h"
 
 template <> unsigned int ResourceManager<Material>::m_sIndex = 0;
 template <> ResourceManager<Material>::LoadFunc ResourceManager<Material>::m_sLoadFunc = &Material::LoadMaterial;

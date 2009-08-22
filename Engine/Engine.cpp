@@ -1,8 +1,8 @@
 //-----------------------------------------------------------------------------------
 /// Engine.cpp 引擎类的实现
-/// 
+///
 /// File Encoding : GB2312
-/// 
+///
 /// Copyright (c) 2009 by Mwolf
 //-----------------------------------------------------------------------------------
 #include "Engine.h"
@@ -150,7 +150,8 @@ Engine::Engine()
 void Engine::Initialize(bool input)
 {
 	// 如果窗体句柄为空，报错
-	AssertFatal(System::Instance().GetRenderWindowParameters()->handle, "Engine::Initialize(): Render window handle is never expected to be null.");
+
+	//AssertFatal(System::Instance().GetRenderWindowParameters()->handle, "Engine::Initialize(): Render window handle is never expected to be null.");
 
 	Log.MsgLn("Initializing RenderSystem");
 	renderer->Initialize(System::Instance().GetRenderWindowParameters());
@@ -217,6 +218,8 @@ void Engine::Run()
 		// 如果没有实际渲染就不要占用CPU周期
 #ifdef __PLATFORM_WIN32
 		Sleep(1);
+#elif defined __PLATFORM_LINUX
+		usleep(1000);	// 单位，微秒us
 #endif	// #ifdef __PLATFORM_WIN32
 	}
 
@@ -296,13 +299,26 @@ void Engine::LoadModules()
 	{
 		if (iter->key == "RenderSystem")
 		{
-			Module_t hDLL;
+			Module_t hDLL = 0;
 			hDLL = LoadModule(iter->value.Data());
+
+			if (!hDLL)
+			{
+				String msg;
+				msg.Format("Failed to open %s", iter->value.Data());
+				Log.Error(msg);
+
+				//String error;
+				//error.Format("Error: %s", dlerror());
+				//Log.Error(error);
+
+                continue;
+			}
 
 			RenderSystemFactoryCreateFunc rendererCreator = (RenderSystemFactoryCreateFunc)GetFunction(hDLL, "CreateRenderSystem");
 			if (rendererCreator == NULL)
 			{
-				String msg;
+                String msg;
 				msg.Format("Failed to load render system from %s, unable to find entrance func CreateRenderSystem", iter->value.Data());
 				Log.Error(msg);
 				continue;

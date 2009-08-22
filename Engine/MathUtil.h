@@ -14,10 +14,6 @@
 
 namespace Math
 {
-
-	// 屏蔽Win32的min和max宏定义
-#define NOMINMAX
-
 	const float kPi = 3.14159265f;
 	const float k2Pi = kPi * 2.0f;
 	const float kPiOver2 = kPi/2.0f;
@@ -40,22 +36,14 @@ namespace Math
 #define FLOAT_EQUALS_ZERO(num) (fabs(num) <= EPSILON)
 #define FLOAT_EQUAL(a, b) (fabs(a-b) <= EPSILON)
 
-#ifndef max
-#define max(a,b)            (((a) > (b)) ? (a) : (b))
-#endif
-
-#ifndef min
-#define min(a,b)            (((a) < (b)) ? (a) : (b))
-#endif
-
 	template <typename T> inline T Max(const T& a, const T& b)
 	{
-		return max(a, b);
+		return (a > b) ? a : b;
 	}
 
 	template <typename T> inline T Min(const T& a, const T& b)
 	{
-		return min(a, b);
+		return (a < b) ? a : b;
 	}
 
 	// Clamp，将数值限定在给定的最大值和最小值之间，

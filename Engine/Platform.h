@@ -19,9 +19,20 @@
 
 #ifdef __PLATFORM_WIN32
 typedef HWND RenderWindowHandle;
+
+#define DLLEXPORT __declspec(dllexport)
+
 #elif defined __PLATFORM_LINUX
-// TODO: 添加Linux平台的RenderWindowHandle
-typedef void* RenderWindowHandle;
+
+typedef struct
+{
+    void*              display;
+    int         	   screen;
+    unsigned long      window;
+} RenderWindowHandle;
+
+#define DLLEXPORT __attribute__ ((visibility("default")))
+
 #endif
 
 struct RenderWindowParam

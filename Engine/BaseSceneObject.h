@@ -110,6 +110,8 @@ public:
 
 	float GetBoundingRadius() const { return m_BoundingSphereRadius; }
 
+	AABB GetAABB() const { return m_AABB; }
+
 	void SetVisible(bool visible) { m_Visible = visible; }
 	bool GetVisible() const { return m_Visible; }
 

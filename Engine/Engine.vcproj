@@ -40,8 +40,8 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\extra\include;..\extra\include\al;..\extra\include\freetype2;..\extra\include\freetype2\freetype2;..\extra\include\tinyxml"
-				PreprocessorDefinitions="WIN32;_DEBUG;_LIB"
+				AdditionalIncludeDirectories="..\extra\include;..\extra\include\al;..\extra\include\freetype2;..\extra\include\freetype2\freetype2"
+				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;TIXML_USE_STL"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -62,9 +62,8 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				AdditionalDependencies="tinyxmld.lib"
 				OutputFile="$(OutDir)\$(ProjectName)_d.lib"
-				AdditionalLibraryDirectories="..\extra\lib\"
+				AdditionalLibraryDirectories=""
 				IgnoreDefaultLibraryNames=""
 			/>
 			<Tool
@@ -108,8 +107,8 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="..\extra\include;..\extra\include\al;..\extra\include\freetype2;..\extra\include\freetype2\freetype2;..\extra\include\tinyxml"
-				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
+				AdditionalIncludeDirectories="..\extra\include;..\extra\include\al;..\extra\include\freetype2;..\extra\include\freetype2\freetype2"
+				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;TIXML_USE_STL"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
@@ -128,8 +127,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				AdditionalDependencies="tinyxml.lib"
-				AdditionalLibraryDirectories="..\extra\lib\"
+				AdditionalLibraryDirectories=""
 				IgnoreDefaultLibraryNames=""
 			/>
 			<Tool
@@ -725,6 +723,34 @@
 			</File>
 			<File
 				RelativePath=".\Timer.h"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="tinyxml"
+			>
+			<File
+				RelativePath=".\tinyxml\tinystr.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\tinyxml\tinystr.h"
+				>
+			</File>
+			<File
+				RelativePath=".\tinyxml\tinyxml.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\tinyxml\tinyxml.h"
+				>
+			</File>
+			<File
+				RelativePath=".\tinyxml\tinyxmlerror.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\tinyxml\tinyxmlparser.cpp"
 				>
 			</File>
 		</Filter>

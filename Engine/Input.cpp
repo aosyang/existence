@@ -111,6 +111,7 @@ void Input::Initialize()
 	OIS::ParamList pl;
 
 	std::ostringstream wnd;
+#if defined __PLATFORM_WIN32
 	wnd << (size_t)System::Instance().GetRenderWindowParameters()->handle;
 
 	pl.insert(std::make_pair( std::string("WINDOW"), wnd.str() ));
@@ -118,6 +119,15 @@ void Input::Initialize()
 	//Default mode is foreground exclusive..but, we want to show mouse - so nonexclusive
 	pl.insert(std::make_pair(std::string("w32_mouse"), std::string("DISCL_FOREGROUND" )));
 	pl.insert(std::make_pair(std::string("w32_mouse"), std::string("DISCL_NONEXCLUSIVE")));
+#elif defined __PLATFORM_LINUX
+	wnd << (size_t)System::Instance().GetRenderWindowParameters()->handle.window;
+
+	pl.insert(std::make_pair(std::string("WINDOW"), wnd.str()));
+
+	// show mouse and do not grab (confine to window)
+	pl.insert(std::make_pair(std::string("x11_mouse_grab"), std::string("false")));
+	pl.insert(std::make_pair(std::string("x11_mouse_hide"), std::string("false")));
+#endif
 
 	m_InputManager = OIS::InputManager::createInputSystem(pl);
 

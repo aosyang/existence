@@ -10,6 +10,7 @@
 
 #include "Plugin.h"
 #include "Debug.h"
+#include "EString.h"
 #include "GLTexture.h"
 #include "GLCubeTexture.h"
 #include "MathUtil.h"
@@ -19,7 +20,27 @@
 
 #include "GL/glu.h"
 
-#include "EString.h"
+#if defined __PLATFORM_LINUX
+
+/* attributes for a single buffered visual in RGBA format with at least
+ * 4 bits per color and a 16 bit depth buffer */
+static int attrListSgl[] = {GLX_RGBA, GLX_RED_SIZE, 4,
+    GLX_GREEN_SIZE, 4,
+    GLX_BLUE_SIZE, 4,
+    GLX_DEPTH_SIZE, 16,
+    None
+};
+
+/* attributes for a double buffered visual in RGBA format with at least
+ * 4 bits per color and a 16 bit depth buffer */
+static int attrListDbl[] = { GLX_RGBA, GLX_DOUBLEBUFFER,
+    GLX_RED_SIZE, 4,
+    GLX_GREEN_SIZE, 4,
+    GLX_BLUE_SIZE, 4,
+    GLX_DEPTH_SIZE, 16,
+    None
+};
+#endif
 
 // gpu插件句柄
 Module_t	g_GpuPluginHandle = NULL;
@@ -35,7 +56,13 @@ UNBINDGPUPROGRAM			g_UnbindGpuProgramFunc = NULL;
 
 
 GLRenderer::GLRenderer()
-: m_hWnd(0), m_hDC(0), m_hRC(0),
+:
+#if defined __PLATFORM_WIN32
+  m_WindowHandle(0),
+  m_hDC(0), m_hRC(0),
+#elif defined __PLATFORM_LINUX
+  m_Context(0),
+#endif
   m_WindowWidth(0), m_WindowHeight(0), // m_FullScreen(false),
   m_Active(true),
   m_DepthWriting(true),
@@ -50,7 +77,7 @@ GLRenderer::~GLRenderer()
 
 RenderWindowHandle GLRenderer::GetRenderWindowHandle()
 {
-	return m_hWnd;
+	return m_WindowHandle;
 }
 
 void GLRenderer::SetGpuPluginName(const String& filename)
@@ -60,9 +87,10 @@ void GLRenderer::SetGpuPluginName(const String& filename)
 
 bool GLRenderer::Initialize(RenderWindowParam* windowParam)
 {
-	m_hWnd = windowParam->handle;
+	m_WindowHandle = windowParam->handle;
 
-	AssertFatal(m_hDC = GetDC(m_hWnd), "GLRenderer::Initialize() : Failed to get device context.");
+#if defined __PLATFORM_WIN32
+	AssertFatal(m_hDC = GetDC(m_WindowHandle), "GLRenderer::Initialize() : Failed to get device context.");
 
 	int PixelFormat;
 
@@ -92,6 +120,23 @@ bool GLRenderer::Initialize(RenderWindowParam* windowParam)
 	AssertFatal(SetPixelFormat(m_hDC, PixelFormat, &pfd), "GLRenderer::CreateRenderWindow() : Can't Set The PixelFormat.");
 	AssertFatal(m_hRC=wglCreateContext(m_hDC), "GLRenderer::CreateRenderWindow() : Can't Create A GL Rendering Context.");
 	AssertFatal(wglMakeCurrent(m_hDC, m_hRC), "GLRenderer::CreateRenderWindow() : Can't Activate The GL Rendering Context.");
+	
+#elif defined __PLATFORM_LINUX
+
+	// TODO: 目前只针对窗口模式有效
+    XVisualInfo *vi;
+
+    vi = glXChooseVisual((Display*)m_WindowHandle.display, m_WindowHandle.screen, attrListDbl);
+    if (vi == NULL)
+    {
+        vi = glXChooseVisual((Display*)m_WindowHandle.display, m_WindowHandle.screen, attrListSgl);
+    }
+
+    m_Context = glXCreateContext((Display*)m_WindowHandle.display, vi, 0, GL_TRUE);
+
+    glXMakeCurrent((Display*)m_WindowHandle.display, m_WindowHandle.window, m_Context);
+
+#endif	// #if defined __PLATFORM_WIN32
 
 	// 注：glewInit必须放在wglMakeCurrent之后进行，否则无法成功初始化
 	AssertFatal(GLEW_OK == glewInit(), "GLRenderer::Initialize() : Failed to init glew.");
@@ -179,6 +224,7 @@ void GLRenderer::Shutdown()
 	if (g_GpuPluginHandle)
 		(*g_DestroyGpuPluginFunc)();
 
+#if defined __PLATFORM_WIN32
 	if (m_hRC)												// Do We Have A Rendering Context?
 	{
 		AssertFatal(wglMakeCurrent(NULL, NULL), "GLRenderer::Shutdown() : Release Of DC And RC Failed.");
@@ -189,17 +235,24 @@ void GLRenderer::Shutdown()
 
 	if (m_hDC)
 	{
-		AssertFatal(ReleaseDC(m_hWnd, m_hDC), "GLRenderer::Shutdown() : Release Device Context Failed.");
+		AssertFatal(ReleaseDC(m_WindowHandle, m_hDC), "GLRenderer::Shutdown() : Release Device Context Failed.");
 		m_hDC = NULL;
 	}
 
 	// hWnd不要擅自删除，交由System完成
-	//if (m_hWnd)
+	//if (m_WindowHandle)
 	//{
-	//	AssertFatal(DestroyWindow(m_hWnd), "GLRenderer::Shutdown() : Could Not Release hWnd.");
-	//	m_hWnd = NULL;
+	//	AssertFatal(DestroyWindow(m_WindowHandle), "GLRenderer::Shutdown() : Could Not Release hWnd.");
+	//	m_WindowHandle = NULL;
 	//}
-
+#elif defined __PLATFORM_LINUX
+	if (m_Context)
+	{
+		AssertFatal(glXMakeCurrent((Display*)m_WindowHandle.display, None, 0), "GLRenderer::Shutdown(): Could not release drawing context.");
+		glXDestroyContext((Display*)m_WindowHandle.display, m_Context);
+		m_Context = 0;
+	}
+#endif	// #if defined __PLATFORM_WIN32
 }
 
 void GLRenderer::SetClearColor(const Color4f& color)
@@ -281,6 +334,7 @@ void GLRenderer::ClearBuffer(bool color, bool depth, bool stencil)
 
 	GLbitfield clearMask = 0;
 	if (color) clearMask |= GL_COLOR_BUFFER_BIT;
+
 	if (depth)
 	{
 		// 如果深度写入被关闭，必须重新打开，否则无法清除深度缓冲
@@ -290,6 +344,7 @@ void GLRenderer::ClearBuffer(bool color, bool depth, bool stencil)
 		}
 		clearMask |= GL_DEPTH_BUFFER_BIT;
 	}
+
 	if (stencil) clearMask |= GL_STENCIL_BUFFER_BIT;
 
 	glClear(clearMask);
@@ -409,7 +464,11 @@ void GLRenderer::EndRender()
 
 void GLRenderer::SwapBuffer()
 {
+#if defined __PLATFORM_WIN32
 	SwapBuffers(m_hDC);
+#elif defined __PLATFORM_LINUX
+    glXSwapBuffers((Display*)m_WindowHandle.display, m_WindowHandle.window);
+#endif	// #if defined __PLATFORM_WIN32
 }
 
 void GLRenderer::RenderVertexBuffer(IVertexBuffer* vbuffer, Material* material, const Matrix4& transform)
@@ -843,8 +902,6 @@ void GLRenderer::BuildGLMatrix(const Matrix4& mat, float* glMat)
 
 void GLRenderer::BindTextureRenderState(const texRenderState_t& texState)
 {
-	GLTexture* glTex = static_cast<GLTexture*>(texState.texture);
-
 	ITexture* texture;
 	if (texState.texture)
 		texture = texState.texture;
@@ -857,7 +914,7 @@ void GLRenderer::BindTextureRenderState(const texRenderState_t& texState)
 	texture->BindTexture();
 
 	// 纹理环绕模式
-	GLint wrapMode;
+	GLint wrapMode = GL_CLAMP;
 
 	switch(texState.wrapType)
 	{
@@ -869,8 +926,6 @@ void GLRenderer::BindTextureRenderState(const texRenderState_t& texState)
 		break;
 	case WRAP_TYPE_CLAMP_TO_EDGE:
 		wrapMode = GL_CLAMP_TO_EDGE;
-		break;
-	default:
 		break;
 	}
 	glTexParameteri(texture->GetTarget(), GL_TEXTURE_WRAP_S, wrapMode);

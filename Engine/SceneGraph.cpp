@@ -109,12 +109,13 @@ void SceneGraph::RenderScene()
 	// 渲染场景
 	m_RootObject->CollectRenderObjects(m_RenderView);
 	renderer->SetProjectionMode(PROJECTION_MODE_PERSPECTIVE);
-	//renderer->ToggleLighting(true);
-	renderer->ClearBuffer();
-	//renderer->ToggleDepthTest(true);
+	renderer->ClearBuffer(
+#if defined __PLATFORM_LINUX	// 为何在glx下面清除深度缓冲会崩溃？
+						 true, false
+#endif
+						 );
 	renderer->BeginRender();
 	m_RootObject->Render();
-	//renderer->ClearBuffer(false);
 	renderer->EndRender();
 
 }

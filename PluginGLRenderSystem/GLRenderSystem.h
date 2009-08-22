@@ -12,8 +12,11 @@
 #include "IRenderer.h"
 #include "GLHardwareFeature.h"
 
-#include <windows.h>
 #include "GL/glew.h"
+
+#if defined __PLATFORM_LINUX
+#include <GL/glx.h>
+#endif	// #if defined __PLATFORM_LINUX
 
 typedef IVertexBuffer*(*FactoryCreateVertexBufferFunc)();
 
@@ -32,10 +35,12 @@ struct GpuProgramInfo
 	bool operator<(const GpuProgramInfo& rhs) const
 	{
 		if (filename==rhs.filename)
+		{
 			if (entry==rhs.entry)
 				return type<rhs.type;
 			else
 				return entry<rhs.entry;
+		}
 
 		return filename<rhs.filename;
 	}
@@ -154,9 +159,13 @@ protected:
 	void UnloadAllTextures();
 	void UnloadGpuPrograms();
 protected:
-	HWND	m_hWnd;
+	RenderWindowHandle	m_WindowHandle;
+#if defined __PLATFORM_WIN32
 	HDC		m_hDC;
 	HGLRC	m_hRC;
+#elif defined __PLATFORM_LINUX
+	GLXContext      m_Context;
+#endif	// #if defined __PLATFORM_WIN32
 
 	unsigned int	m_WindowWidth;
 	unsigned int	m_WindowHeight;
@@ -182,6 +191,6 @@ protected:
 	FactoryCreateVertexBufferFunc	m_VertexBufferFactoryFunc;
 };
 
-extern "C" __declspec(dllexport) IRenderer* CreateRenderSystem();
+extern "C" DLLEXPORT IRenderer* CreateRenderSystem();
 
 #endif

@@ -9,6 +9,16 @@
 
 PlatformMessageNotifier* Platform::m_MessageNotifier = (PlatformMessageNotifier *)0x00000001;
 
+#if defined __PLATFORM_LINUX
+namespace X11	// 防止X11的类型名与FreeType冲突
+{
+#include <X11/Xlib.h>
+}
+
+extern X11::Display*	g_Display;
+
+#endif	// #if defined __PLATFORM_LINUX
+
 void Platform::HandleWindowMessage()
 {
 #ifdef __PLATFORM_WIN32
@@ -26,6 +36,21 @@ void Platform::HandleWindowMessage()
 		{
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
+		}
+	}
+#elif defined __PLATFORM_WIN32
+	if (XPending(g_Display) > 0)
+	{
+		X11::XEvent event;
+		
+		XNextEvent(g_Display, &event);
+		
+		switch (event.type)
+		{
+		case ConfigureNotify:
+			break;
+		case DestroyNotify:
+			break;
 		}
 	}
 #endif

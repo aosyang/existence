@@ -72,7 +72,7 @@ PointListLoc Plane3::TestPoly(const BspTriangle& triangle)
 }
 
 
-inline const Vector3f Plane3::Split(const Vector3f& a, const Vector3f& b) const
+const Vector3f Plane3::Split(const Vector3f& a, const Vector3f& b) const
 {
 	float aDot = a * n;
 	float bDot = b * n;

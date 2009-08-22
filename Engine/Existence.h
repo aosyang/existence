@@ -71,9 +71,6 @@ class TextUIControl;
 class ImageUIControl;
 
 
-#pragma warning ( disable : 4819 )
-
-
 #include "Platform.h"
 #include "Debug.h"
 

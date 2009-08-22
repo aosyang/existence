@@ -21,6 +21,10 @@ public:
 	float GetSize() const { return m_Size; }
 
 	bool QueryObjectsByAABB(const AABB& aabb, const SceneObjectList& list);
+
+	void Render();
+	void TraverseRender(const Vector3f pos);
+	void TraverseRenderBox(const Vector3f vMin, const Vector3f vMax);
 protected:
 	float			m_Size;					///< 边长
 	unsigned int	m_SubdivisionCount;		///< 细分次数，0为未初始化
