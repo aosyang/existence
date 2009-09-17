@@ -8,14 +8,15 @@
 #ifndef _ALAUDIOSYSTEM_H
 #define _ALAUDIOSYSTEM_H
 
+#include "Platform.h"
 #include "IAudioSystem.h"
 #include "ALAudioSource.h"
 #include "ALAudioBuffer.h"
 #include "FileFormatFuncs.h"
 
-#include <al/al.h>
-#include <al/alc.h>
-#include <al/alut.h>
+#include <AL/al.h>
+#include <AL/alc.h>
+#include <AL/alut.h>
 
 #include <map>
 #include <set>
@@ -58,7 +59,7 @@ private:
 	map<const String, CreateFileFormatFunc>			m_FileFormatCreator;
 };
 
-extern "C" __declspec(dllexport) IAudioSystem* CreateAudioSystem();
+extern "C" DLLEXPORT IAudioSystem* CreateAudioSystem();
 
 #endif
 

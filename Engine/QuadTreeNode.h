@@ -1,7 +1,14 @@
+//-----------------------------------------------------------------------------------
+/// QuadTreeNode.h 四叉树节点
+/// 
+/// File Encoding : GB2312
+/// 
+/// Copyright (c) 2009 by Mwolf
+//-----------------------------------------------------------------------------------
 #ifndef _QUADTREENODE_H
 #define _QUADTREENODE_H
 
-#include "BaseSceneObject.h"
+#include "SceneObject.h"
 #include "QuadTree.h"
 
 class QuadTree;
@@ -28,7 +35,7 @@ protected:
 	float			m_Size;
 	float			m_OffsetX, m_OffsetZ;	///< X和Z方向上的偏移(基于四叉树的位置)
 
-	ChildrenSceneObjectsSet	m_SceneObjects;
+	SceneObjectSet	m_SceneObjects;
 };
 
 #endif

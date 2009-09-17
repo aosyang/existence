@@ -18,8 +18,7 @@ void DefaultParticleState(Particle* particle, ParticleEmitter* emitter)
 }
 
 ParticleEmitter::ParticleEmitter()
-: BaseSceneObject(),
-  m_EmitterShape(EMITTER_SHAPE_POINT),
+: m_EmitterShape(EMITTER_SHAPE_POINT),
   m_ParticlePool(NULL),
   m_Material(NULL),
   m_BoxMin(0.0f, 0.0f, 0.0f),
@@ -33,6 +32,10 @@ ParticleEmitter::ParticleEmitter()
 
 ParticleEmitter::~ParticleEmitter()
 {
+}
+
+void ParticleEmitter::Destroy()
+{
 	// 粒子池留着自生自灭，有可能销毁发射器时仍有粒子处于活动状态
 	if (m_ParticlePool)
 		m_ParticlePool->m_Emitter = NULL;
@@ -40,6 +43,7 @@ ParticleEmitter::~ParticleEmitter()
 
 void ParticleEmitter::Update(unsigned long deltaTime)
 {
+	// TODO: 这样做是为了防止m_Scene为NULL，但这种方法并不好
 	if (!m_ParticlePool)
 	{
 		// 不要让粒子池在发射器还存在时就自行销毁
@@ -49,7 +53,7 @@ void ParticleEmitter::Update(unsigned long deltaTime)
 		m_ParticlePool->SetMaterial(m_Material);
 	}
 
-	BaseSceneObject::Update(deltaTime);
+	SceneObject::Update(deltaTime);
 
 	if (m_Interval == -1) return;
 
@@ -83,6 +87,14 @@ void ParticleEmitter::Update(unsigned long deltaTime)
 			m_TimeSinceLastUpdate = 0;
 		}
 	}
+}
+
+void ParticleEmitter::CollectRenderableObject(RenderableObjectList& renderableObjs, Frustum* frustum)
+{
+	SceneObject::CollectRenderableObject(renderableObjs, frustum);
+
+	if (m_ParticlePool)
+		renderableObjs.push_back(m_ParticlePool);
 }
 
 void ParticleEmitter::SetMaterial(Material* material)

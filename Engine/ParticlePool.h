@@ -10,7 +10,7 @@
 #define _PARTICLEPOOL_H
 
 #include "IVertexBuffer.h"
-#include "BaseSceneObject.h"
+#include "RenderableObjectBase.h"
 #include "Particle.h"
 #include "Material.h"
 #include "ParticleEmitter.h"
@@ -23,7 +23,7 @@ class ParticleEmitter;
 
 bool ParticleComparer(Particle lhs, Particle rhs);
 
-class ParticlePool : public BaseSceneObject
+class ParticlePool : public RenderableObjectBase
 {
 	friend class ParticleEmitter;
 public:
@@ -32,9 +32,16 @@ public:
 
 	// ----- Overwrite ISceneObject
 
+	void Destroy();
+
 	void Update(unsigned long deltaTime);
-	void Render();
-	//void DebugRender();
+
+	const String GetTypeName() const { return "ParticlePool"; }
+
+
+	// ----- Overwrite IRenderableObject
+
+	void RenderSingleObject();
 
 	// ----- ParticlePool Methods
 	inline Material* GetMaterial() const { return m_Material; }

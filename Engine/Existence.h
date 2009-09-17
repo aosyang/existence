@@ -31,7 +31,7 @@ class Platform;
 class LightingManager;
 class ILight;
 class Light;
-class BaseLightableObject;
+class LightableObject;
 class ShadowManager;
 
 class Color4f;
@@ -44,7 +44,7 @@ class Input;
 class Timer;
 class System;
 class SceneGraph;
-class BaseSceneObject;
+class SceneObject;
 class SceneRootObject;
 class MeshObject;
 class DistantViewObject;
@@ -63,6 +63,10 @@ class Image;
 class ParticlePool;
 class ParticleEmitter;
 class String;
+
+class FileSystem;
+
+class GameObjectBase;
 
 class EGUIManager;
 class UIRootObject;
@@ -92,7 +96,7 @@ class ImageUIControl;
 #include "Light.h"
 #include "LightingManager.h"
 #include "ShadowManager.h"
-#include "BaseLightableObject.h"
+#include "LightableObject.h"
 #include "Material.h"
 #include "Singleton.h"
 #include "Mesh.h"
@@ -102,7 +106,7 @@ class ImageUIControl;
 #include "System.h"
 #include "ISceneObject.h"
 #include "SceneGraph.h"
-#include "BaseSceneObject.h"
+#include "SceneObject.h"
 #include "SceneRootObject.h"
 #include "MeshObject.h"
 #include "DistantViewObject.h"
@@ -122,6 +126,10 @@ class ImageUIControl;
 #include "EString.h"
 
 #include "ResourceManager.h"
+
+#include "FileSystem.h"
+
+#include "GameObjectBase.h"
 
 #include "EGUIManager.h"
 #include "UIRootObject.h"

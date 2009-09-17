@@ -17,11 +17,7 @@ using namespace std;
 
 class Material;
 
-#if defined __PLATFORM_WIN32
-ResourceManager<Material>;
-#elif defined __PLATFORM_LINUX
-template class ResourceManager<Material>;
-#endif
+DECLARE_RESOURCEMANAGER(Material);
 
 typedef void(*SetMaterialAttribFunc)(Material*, const String&);
 typedef map<const String, SetMaterialAttribFunc> MaterialLoadFuncMap;
@@ -86,7 +82,7 @@ public:
 	inline void SetDepthTest(bool test) { m_DepthTest = test; }
 	inline bool GetDepthTest() const { return m_DepthTest; }
 
-	// TODO: Alpha test;
+	// Alpha test
 	inline void SetAlphaTest(bool test) { m_AlphaTest = test; }
 	inline bool GetAlphaTest() const { return m_AlphaTest; }
 
@@ -129,10 +125,8 @@ private:
 
 	texRenderState_t	m_TextureRenderState[8];
 	bool			m_TextureLayerEnabled[8];
-	// TODO: 这里ITexture换成texRenderState_t
-	//ITexture*	m_Texture;			///< 材质使用的纹理贴图
 
-	bool			m_DepthWriting;		///< 是否写入深度缓冲(FIXME: 不正确，参见PluginGLRenderSystem)
+	bool			m_DepthWriting;		///< 是否写入深度缓冲
 	bool			m_DepthTest;		///< 是否进行深度测试
 
 	bool			m_AlphaTest;

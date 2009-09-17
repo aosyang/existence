@@ -12,19 +12,25 @@
 
 #include "GL/glew.h"
 #include <memory.h>
+#include "EString.h"
 
 class GLHardwareFeature
 {
 public:
-	GLHardwareFeature() { memset(this, 0, sizeof(GLHardwareFeature)); }
+	GLHardwareFeature();
 
 	void DetectFeature();
 
 	inline int GetMaxLightNum() const { return maxLightNum; }
 
+	inline const String& GetFeatureString() const { return m_FeatureString; }
+
+	String	m_FeatureString;
+
 	bool	supportedVBO;
 	bool	supportedFBO;
 	int		maxLightNum;
+	bool	supportedNonPowOf2Texture;
 };
 
 #endif

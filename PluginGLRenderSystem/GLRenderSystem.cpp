@@ -52,8 +52,6 @@ LOADGPUPROGRAM				g_LoadGpuProgramFunc = NULL;
 BINDGPUPROGRAM				g_BindGpuProgramFunc = NULL;
 UNBINDGPUPROGRAM			g_UnbindGpuProgramFunc = NULL;
 
-//#define FORCE_VERTEX_ARRAY
-
 
 GLRenderer::GLRenderer()
 :
@@ -165,22 +163,13 @@ bool GLRenderer::Initialize(RenderWindowParam* windowParam)
 	glClearDepth(1.0f);										// Depth Buffer Setup
 
 	glEnable(GL_CULL_FACE);
-	//glFrontFace(GL_CW);
 
 	ToggleTexture(true);
-	//glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);					// Set Line Antialiasing
+	glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);					// Set Line Antialiasing
 	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
-	//glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LEQUAL);								// The Type Of Depth Testing To Do
-	//glEnable(GL_BLEND);										// Enable Blending
 
-	// Alpha Test(AKA: Alpha Rejection)
-	//glEnable(GL_ALPHA_TEST);
-	//glAlphaFunc(GL_GEQUAL, 0.5f);
-
-//	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_DST_ALPHA);		// Type Of Blending To Use
-	//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
+	// 雾相关代码
 	//GLfloat fogColor[4] = {0.5, 0.5, 0.5, 0.5}; //set the for color to grey
 	//glEnable (GL_FOG); //enable the fog
 	//glFogi (GL_FOG_MODE, GL_EXP2); //set the fog mode to GL_EXP2
@@ -195,10 +184,8 @@ bool GLRenderer::Initialize(RenderWindowParam* windowParam)
 	glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, 1);
 	//glLightModeli(GL_LIGHT_MODEL_COLOR_CONTROL, GL_SEPARATE_SPECULAR_COLOR);
 
-	// 开启光照
-	//glEnable(GL_LIGHTING);
-	//glEnable(GL_LIGHT0);
-	//glEnable(GL_LIGHT1);
+
+//#define FORCE_VERTEX_ARRAY
 
 #ifndef FORCE_VERTEX_ARRAY
 	if (m_HardwareFeature.supportedVBO)
@@ -210,7 +197,7 @@ bool GLRenderer::Initialize(RenderWindowParam* windowParam)
 #endif
 		m_VertexBufferFactoryFunc = FactoryCreateVertexArray;
 
-	if (__GLEW_ARB_texture_non_power_of_two==GL_FALSE)
+	if (!m_HardwareFeature.supportedNonPowOf2Texture)
 		GLTexture::s_ForcePowOfTwo = true;
 
 	return true;
@@ -253,6 +240,11 @@ void GLRenderer::Shutdown()
 		m_Context = 0;
 	}
 #endif	// #if defined __PLATFORM_WIN32
+}
+
+const String GLRenderer::GetFeatureString() const
+{
+	return m_HardwareFeature.m_FeatureString;
 }
 
 void GLRenderer::SetClearColor(const Color4f& color)
@@ -683,12 +675,7 @@ ITexture* GLRenderer::BuildTexture(const String& textureName, unsigned int width
 	if (width==0 || height==0)
 		return NULL;
 	
-	//if this texture ID is in use, unload the current texture
-	if(m_TextureList.find(textureName) != m_TextureList.end())
-	{
-		delete m_TextureList[textureName];
-		//glDeleteTextures(1, &(m_TextureList[textureName]));
-	}
+	AssertFatal(m_TextureList.find(textureName)==m_TextureList.end(), "GLRenderer::BuildTexture(): Same texture name is already in use.");
 
 	GLTexture* tex = new GLTexture();
 
@@ -907,8 +894,8 @@ void GLRenderer::BindTextureRenderState(const texRenderState_t& texState)
 		texture = texState.texture;
 	else
 	{
-		texture = GetTexture("no_material");
-		AssertFatal(texture, "GLRenderer::BindTextureRenderState() : Unable to find 'no_material', define it in texture.cfg first.");
+		texture = GetTexture("no_material.bmp");
+		AssertFatal(texture, "GLRenderer::BindTextureRenderState() : Unable to find 'no_material.bmp', put it in your data path.");
 	}
 
 	texture->BindTexture();
@@ -928,15 +915,26 @@ void GLRenderer::BindTextureRenderState(const texRenderState_t& texState)
 		wrapMode = GL_CLAMP_TO_EDGE;
 		break;
 	}
-	glTexParameteri(texture->GetTarget(), GL_TEXTURE_WRAP_S, wrapMode);
-	glTexParameteri(texture->GetTarget(), GL_TEXTURE_WRAP_T, wrapMode);
+
+	GLenum target;
+	switch (texture->GetTextureType())
+	{
+	case TEXTURE_TYPE_CUBE:
+		target = GL_TEXTURE_CUBE_MAP;
+	case TEXTURE_TYPE_2D:
+	default:
+		target = GL_TEXTURE_2D;
+	}
+
+	glTexParameteri(target, GL_TEXTURE_WRAP_S, wrapMode);
+	glTexParameteri(target, GL_TEXTURE_WRAP_T, wrapMode);
 
 	// TODO: 纹理过滤模式(是否使用mipmap)应当由纹理类决定
 	GLint minFilterType = GetFilterType(texState.minFilterType);
 	GLint magFilterType = GetFilterType(texState.magFilterType);
 
-	glTexParameteri(texture->GetTarget(), GL_TEXTURE_MIN_FILTER, minFilterType);
-	glTexParameteri(texture->GetTarget(), GL_TEXTURE_MAG_FILTER, magFilterType);
+	glTexParameteri(target, GL_TEXTURE_MIN_FILTER, minFilterType);
+	glTexParameteri(target, GL_TEXTURE_MAG_FILTER, magFilterType);
 
 	//glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 	//glEnable(GL_TEXTURE_CUBE_MAP);

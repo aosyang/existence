@@ -9,7 +9,7 @@
 #ifndef _DECAL_H
 #define _DECAL_H
 
-#include "BaseLightableObject.h"
+#include "RenderableObjectBase.h"
 #include "Material.h"
 #include "IVertexBuffer.h"
 
@@ -23,20 +23,19 @@
 /// \remarks
 /// Write remarks for Decal here.
 //-----------------------------------------------------------------------------------
-class Decal : public BaseLightableObject
+class Decal : public RenderableObjectBase
 {
 public:
 	Decal();
 	~Decal();
 
-	// ----- Overwrite ISceneObject
+	// ----- Overwrite SceneObject
 
-	void Render();
-	//void DebugRender();
+	const String GetTypeName() const { return "Decal"; }
 
-	// ----- Overwrite BaseSceneObject
+	// ----- Overwrite IRenderableObject
 
-	bool IntersectsRay(const Ray& ray, CollisionInfo& info);
+	void RenderSingleObject();
 
 	// ----- Decal Methods
 

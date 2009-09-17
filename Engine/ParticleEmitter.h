@@ -9,7 +9,7 @@
 #ifndef _PARTICLEEMITTER_H
 #define _PARTICLEEMITTER_H
 
-#include "BaseSceneObject.h"
+#include "SceneObject.h"
 #include "ParticlePool.h"
 
 enum ParticleEmitterShape
@@ -24,15 +24,22 @@ typedef void(*ParticleInitStateFunc)(Particle*, ParticleEmitter*);
 
 void DefaultParticleState(Particle* particle, ParticleEmitter* emitter);
 
-class ParticleEmitter : public BaseSceneObject
+class ParticleEmitter : public SceneObject
 {
 public:
 	ParticleEmitter();
 	~ParticleEmitter();
 
-	// ----- Overwrite ISceneObject
+	// ----- Overwrite IObject
+
+	void Destroy();
 
 	void Update(unsigned long deltaTime);
+
+	const String GetTypeName() const { return "ParticleEmitter"; }
+
+	// ----- SceneObject methods
+	void CollectRenderableObject(RenderableObjectList& renderableObjs, Frustum* frustum);
 
 	// ----- ParticleEmitter Methods
 	void SetEmitterShape(ParticleEmitterShape shape) { m_EmitterShape = shape; }

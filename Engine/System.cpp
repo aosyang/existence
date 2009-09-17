@@ -11,9 +11,11 @@
 #include "Image.h"
 #include "Mesh.h"
 #include "Log.h"
-
-#include <fstream>
+#include "FileSystem.h"
 #include "EString.h"
+
+#include <algorithm>
+#include <fstream>
 
 using namespace std;
 
@@ -21,6 +23,64 @@ using namespace std;
 using namespace X11;
 Display*	g_Display = 0;		// 给Platform使用的X11 Display
 #endif	// #if defined __PLATFORM_LINUX
+
+// 纹理载入函数
+bool LoadTextures(const String& resName, const String& filename)
+{
+	Image* image = new Image();
+
+	String msg;
+	bool result = image->LoadFromFile(filename);
+	if (result)
+	{
+		renderer->BuildTexture(resName,
+							   image->GetWidth(),
+							   image->GetHeight(),
+							   image->GetBPP(),
+							   image->GetData());
+
+	}
+
+	delete image;
+	return result;
+
+	return true;
+}
+
+// 材质载入函数
+bool LoadMaterials(const String& resName, const String& filename)
+{
+	// 去掉扩展名
+	size_t pos = resName.Find(".");
+	String acture_res_name = resName.Substr(0, pos);
+	if (ResourceManager<Material>::Instance().LoadResource(acture_res_name, filename))
+		return true;
+	return false;
+}
+
+bool LoadFonts(const String& resName, const String& filename)
+{
+	// 去掉扩展名
+	size_t pos = resName.Find(".");
+	String acture_res_name = resName.Substr(0, pos);
+	if (FontManager::Instance().LoadFont(acture_res_name, filename))
+		return true;
+	return false;
+}
+
+bool LoadEmdMeshes(const String& resName, const String& filename)
+{
+	if (ResourceManager<Mesh>::Instance().LoadResource(resName, filename))
+		return true;
+	return false;
+}
+
+bool LoadAudios(const String& resName, const String& filename)
+{
+	if (Engine::Instance().AudioSystem()->LoadAudioBufferFromFile(resName, filename))
+		return true;
+	return false;
+}
 
 System::System()
 : m_FullScreen(false)
@@ -31,141 +91,141 @@ System::System()
 	m_RenderWindowParam.color_depth_bit = 0;
 
 	Math::InitRandom();
+
+	// TODO: 注册各个扩展名读取函数
+
+	// 图像文件
+	RegisterExtensionLoader(".bmp", &LoadTextures);
+	RegisterExtensionLoader(".tga", &LoadTextures);
+	RegisterExtensionLoader(".jpg", &LoadTextures);
+	RegisterExtensionLoader(".png", &LoadTextures);
+	// To be more...
+
+	// 材质
+	RegisterExtensionLoader(".emt", &LoadMaterials);
+
+	// 字体
+	RegisterExtensionLoader(".ttf", &LoadFonts);
+	RegisterExtensionLoader(".ttc", &LoadFonts);
+
+	// 模型
+	RegisterExtensionLoader(".emd", &LoadEmdMeshes);
+
+	// 音频
+	RegisterExtensionLoader(".wav", &LoadAudios);
+	RegisterExtensionLoader(".ogg", &LoadAudios);
+}
+
+bool ResourceComparer(const FileNameInfo& lhs, const FileNameInfo& rhs)
+{
+	return lhs.period < rhs.period;
 }
 
 void System::LoadResources(const String& filename)
 {
 	Log.MsgLn("Loading resources");
 	ConfigGroups group;
+	
 	LoadConfigFile(filename, group);
 
-	if (group.find("audios") != group.end())
-		LoadAudios(&group["audios"]);
-
-	if (group.find("textures") != group.end())
-		LoadTextures(&group["textures"]);
-
-	if (group.find("materials") != group.end())
-		LoadMaterials(&group["materials"]);
-
-	if (group.find("fonts") != group.end())
-		LoadFonts(&group["fonts"]);
-
-	if (group.find("meshes") != group.end())
-		LoadMeshes(&group["meshes"]);
-}
-
-void System::LoadAudios(ConfigFileKeys* list)
-{
-	ConfigFileKeys::iterator iter;
-
-	for (iter=list->begin(); iter!=list->end(); iter++)
+	if (group.find("path") != group.end())
 	{
-		String msg;
-		if (Engine::Instance().AudioSystem()->LoadAudioBufferFromFile(iter->key, iter->value))
+		ConfigFileKeys::iterator iter;
+		
+		for (iter=group["path"].begin();
+			 iter!=group["path"].end();
+			 iter++)
 		{
-			msg.Format("Loading audio %s... OK.", iter->value.Data());
-			Log.MsgLn(msg);
-		}
-		else
-		{
-			msg.Format("Loading audio %s FAILED.", iter->value.Data());
-			Log.Error(msg);
+			if (iter->key=="data")
+			{
+				FileSystem::Instance().SetRelativeDataPath(iter->value);
+			}
 		}
 	}
-}
 
-void System::LoadTextures(ConfigFileKeys* list)
-{
-	ConfigFileKeys::iterator iter;
+	// 从data路径搜索所有文件名称(包含子目录)
+	vector<FileNameInfo> list;
+	String dataPath = FileSystem::Instance().GetValidResourcePath(FileSystem::Instance().GetDataPath());
+	FileSystem::Instance().FindFilesInDir(dataPath, list, true);
 
-	for (iter=list->begin(); iter!=list->end(); iter++)
+	sort(list.begin(), list.end(), ResourceComparer);
+
+	// 根据扩展名，使用对应的读取函数载入资源
+	for (vector<FileNameInfo>::iterator iter=list.begin();
+		 iter!=list.end();
+		 iter++)
 	{
-		Image* image = new Image();
-
-		String msg;
-		if (image->LoadFromFile(iter->value))
+		// 如果已经注册过这个扩展名，调用注册函数进行载入
+		if (m_FileLoaders.find(iter->ext)!=m_FileLoaders.end())
 		{
-			renderer->BuildTexture(iter->key,
-														image->GetWidth(),
-														image->GetHeight(),
-														image->GetBPP(),
-														image->GetData());
+			String msg;
+			String pathName = iter->path + CORRECT_SLASH + iter->filename;
 
-			msg.Format("Loading texture %s... OK.", iter->value.Data());
+			// 对于文件的载入，使用文件基于$data路径的相对路径作为资源访问名称
+			// 例：
+			//    $data\texture\glow.bmp
+			//    其访问名称应该为：texture\glow.bmp
+
+			msg.Format("Loading resource %s.", pathName.Data());
 			Log.MsgLn(msg);
-		}
-		else
-		{
-			msg.Format("Loading texture %s FAILED.", iter->value.Data());
-			Log.Error(msg);
-		}
 
-		delete image;
+			if (!(*m_FileLoaders[iter->ext])(iter->filename, pathName))
+			{
+				msg.Format("FAILED loading resource %s.", pathName.Data());
+				Log.Error(msg);
+			}
+		}
 	}
 
-}
-
-void System::LoadMaterials(ConfigFileKeys* list)
-{
-	ConfigFileKeys::iterator iter;
-
-	for (iter=list->begin(); iter!=list->end(); iter++)
+	// 独立指定路径的资源都放在resources组当中
+	// 这个组中的文件需要指定完整的路径
+	ConfigGroups::iterator group_iter;
+	if ((group_iter=group.find("resources"))!=group.end())
 	{
-		String msg;
-		if (ResourceManager<Material>::Instance().LoadResource(iter->key, iter->value))
+		// 遍历组中所有项目
+		ConfigFileKeys::iterator iter;
+		for (iter=group_iter->second.begin();
+			 iter!=group_iter->second.end();
+			 iter++)
 		{
-			msg.Format("Loading material %s... OK.", iter->value.Data());
-			Log.MsgLn(msg);
-		}
-		else
-		{
-			msg.Format("Loading material %s FAILED.", iter->value.Data());
-			Log.Error(msg);
+			// 获取扩展名，决定读取函数
+			String ext = FileSystem::Instance().GetExtension(iter->value);
+			ext.ToLowerCase();
+
+			// 修正斜杠与反斜杠
+			CorrectSlash(iter->key);
+			CorrectSlash(iter->value);
+
+			if (m_FileLoaders.find(ext)!=m_FileLoaders.end())
+			{
+				String msg;
+				msg.Format("Loading resource %s.", iter->value.Data());
+				Log.MsgLn(msg);
+
+				if (!(*m_FileLoaders[ext])(iter->key, iter->value))
+				{
+					msg.Format("FAILED loading resource %s.", iter->value.Data());
+					Log.Error(msg);
+				}
+			}
 		}
 	}
+
+	//if (group.find("audios") != group.end())
+	//	LoadAudios(&group["audios"]);
+
+	//if (group.find("textures") != group.end())
+	//	LoadTextures(&group["textures"]);
+
+	//if (group.find("materials") != group.end())
+	//	LoadMaterials(&group["materials"]);
+
+	//if (group.find("fonts") != group.end())
+	//	LoadFonts(&group["fonts"]);
+
+	//if (group.find("meshes") != group.end())
+	//	LoadMeshes(&group["meshes"]);
 }
-
-void System::LoadFonts(ConfigFileKeys* list)
-{
-	ConfigFileKeys::iterator iter;
-
-	for (iter=list->begin(); iter!=list->end(); iter++)
-	{
-		String msg;
-		if (FontManager::Instance().LoadFont(iter->key, iter->value))
-		{
-			msg.Format("Loading font %s... OK.", iter->value.Data());
-			Log.MsgLn(msg);
-		}
-		else
-		{
-			msg.Format("Loading font %s FAILED.", iter->value.Data());
-			Log.Error(msg);
-		}
-	}
-}
-
-void System::LoadMeshes(ConfigFileKeys* list)
-{
-	ConfigFileKeys::iterator iter;
-
-	for (iter=list->begin(); iter!=list->end(); iter++)
-	{
-		String msg;
-		if (ResourceManager<Mesh>::Instance().LoadResource(iter->key, iter->value))
-		{
-			msg.Format("Loading mesh %s... OK.", iter->value.Data());
-			Log.MsgLn(msg);
-		}
-		else
-		{
-			msg.Format("Loading mesh %s FAILED.", iter->value.Data());
-			Log.Error(msg);
-		}
-	}
-}
-
 
 // 创建渲染窗体
 // 注：这个方法必须在调用程序内部使用，否则Platform::WndProc会因dll的加载而导致多个副本
@@ -268,6 +328,9 @@ bool System::CreateRenderWindow(const String& title, unsigned int width, unsigne
 	Window rootwin = XDefaultRootWindow(display);
 	Visual* visual = XDefaultVisualOfScreen(XDefaultScreenOfDisplay(display));
 	
+	unsigned int screen_width = DisplayWidth(display, handle->screen);
+	unsigned int screen_height = DisplayHeight(display, handle->screen);
+	
 	// 创建X窗体
 	XSetWindowAttributes attrib;
 	attrib.colormap = XCreateColormap(display, rootwin, visual, AllocNone);
@@ -275,7 +338,9 @@ bool System::CreateRenderWindow(const String& title, unsigned int width, unsigne
 	attrib.event_mask = ExposureMask | KeyPressMask | StructureNotifyMask; 
 	handle->window = XCreateWindow(display,
 							   rootwin,
-							   0, 0, width, height, 1,
+							   (screen_width - width) / 2,
+							   (screen_height - height) / 2,
+							   width, height, 1,
 							   XDefaultDepth(display, 0),
 							   InputOutput,
 							   visual,
@@ -285,8 +350,8 @@ bool System::CreateRenderWindow(const String& title, unsigned int width, unsigne
 	XStoreName(display, handle->window, title.Data());
 	XSizeHints* hint;
 	hint = XAllocSizeHints();
-	hint->x = 0;
-	hint->y = 0;
+	hint->x = (screen_width - width) / 2;
+	hint->y = (screen_height - height) / 2;
 	hint->width = width;
 	hint->height = height;
 	hint->flags = USPosition | USSize;
@@ -380,3 +445,12 @@ void System::CenterMouseCursor()
 #elif defined __PLATFORM_LINUX
 #endif	// #if defined __PLATFORM_WIN32
 }
+
+void System::RegisterExtensionLoader(const String& ext, FileLoadFuncPtr func)
+{
+	// 防止同名扩展名重复注册
+	AssertFatal(m_FileLoaders.find(ext)==m_FileLoaders.end(), "System::RegisterExtensionLoader(): Extension has been already registered.");
+	AssertFatal(func, "System::RegisterExtensionLoader(): Loader function cannot be null.");
+	m_FileLoaders[ext] = func;
+}
+

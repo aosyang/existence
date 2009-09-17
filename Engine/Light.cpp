@@ -10,8 +10,7 @@
 #include "Engine.h"
 
 Light::Light()
-: BaseSceneObject(),
-  m_Ambient(0.0f, 0.0f, 0.0f, 1.0f),
+: m_Ambient(0.0f, 0.0f, 0.0f, 1.0f),
   m_Diffuse(1.0f, 1.0f, 1.0f, 1.0f),
   m_Specular(1.0f, 1.0f, 1.0f, 1.0f),
   m_Type(LIGHT_TYPE_POINT),
@@ -23,34 +22,23 @@ Light::Light()
 {
 }
 
-void Light::Render()
-{
-	BaseSceneObject::Render();
-}
-
-void Light::DebugRender()
-{
-	BaseSceneObject::DebugRender();
-	//renderer->RenderSphere(m_WorldTransform.GetPosition(), m_BoundingSphereRadius);
-
-	switch (m_Type)
-	{
-	case LIGHT_TYPE_POINT:
-	case LIGHT_TYPE_SPOT:
-		// ¹âÕÕ·¶Î§
-		renderer->RenderSphere(m_WorldTransform.GetPosition(), m_Range, Color4f(1.0f, 1.0f, 0.0f));
-		break;
-
-	case LIGHT_TYPE_DIRECTIONAL:
-		renderer->RenderLine(m_Direction * 10, Vector3f(0.0f, 0.0f, 0.0f));
-		break;
-	}
-}
-//
-//void Light::PrepareRenderObjects(SceneObjectList& objects, const RenderView& view)
+//void Light::DebugRender()
 //{
-//	// do nothing...
-//	objects.insert(this);
+//	BaseSceneObject::DebugRender();
+//	//renderer->RenderSphere(m_WorldTransform.GetPosition(), m_BoundingSphereRadius);
+//
+//	switch (m_Type)
+//	{
+//	case LIGHT_TYPE_POINT:
+//	case LIGHT_TYPE_SPOT:
+//		// ¹âÕÕ·¶Î§
+//		renderer->RenderSphere(m_WorldTransform.GetPosition(), m_Range, Color4f(1.0f, 1.0f, 0.0f));
+//		break;
+//
+//	case LIGHT_TYPE_DIRECTIONAL:
+//		renderer->RenderLine(m_Direction * 10, Vector3f(0.0f, 0.0f, 0.0f));
+//		break;
+//	}
 //}
 
 const Vector3f Light::GetPosition() const

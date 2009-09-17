@@ -26,7 +26,7 @@ GLRenderTargetFBO::~GLRenderTargetFBO()
 // 指定RT使用的纹理，并根据纹理设置RT尺寸
 void GLRenderTargetFBO::SetTexture(ITexture* texture)
 {
-	AssertFatal(texture->GetTarget()==GL_TEXTURE_2D, "GLRenderTargetFBO::SetTexture(): GLRenderTargetFBO supports only target GL_TEXTURE_2D for now.");
+	AssertFatal(texture->GetTextureType()==TEXTURE_TYPE_2D, "GLRenderTargetFBO::SetTexture(): GLRenderTargetFBO supports only target GL_TEXTURE_2D for now.");
 	m_Texture = static_cast<GLTexture*>(texture);
 
 	m_Width = texture->GetWidth();

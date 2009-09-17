@@ -93,6 +93,9 @@ public:
 	//-----------------------------------------------------------------------------------
 	inline IAudioSystem* AudioSystem() { return m_AudioSystem; }
 
+	inline void SetRenderBatchCount(unsigned int count) { m_RenderBatchCount = count; }
+	inline unsigned int GetRenderBatchCount() const { return m_RenderBatchCount; }
+
 	inline void SetQuitting(bool quit) { m_Quit = quit; }
 
 	inline void SetGame(IGame* game) { m_Game = game; }
@@ -106,6 +109,8 @@ private:
 
 	IRenderer*		m_Renderer;
 	IAudioSystem*	m_AudioSystem;
+
+	unsigned int	m_RenderBatchCount;
 
 	EngineMessageNotifier* m_MessageNotifier;
 

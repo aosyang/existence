@@ -9,28 +9,32 @@
 #define _SCENEGRAPH_H
 
 #include "ISceneObject.h"
-#include "BaseSceneObject.h"
-#include "SceneRootObject.h"
+#include "SceneObject.h"
 #include "Platform.h"
 #include "Camera.h"
 #include "Ray.h"
 #include "Color4f.h"
+#include "Collision.h"
 
+#include <set>
 #include <vector>
 
 using namespace std;
 
-struct ElementLine
-{
-	Vector3f v1, v2;
-	Color4f color;
-};
-
 struct RemoveListElement
 {
-	BaseSceneObject* obj;
+	SceneObject* obj;
 	bool	deleteObj;
 };
+
+struct RenderView
+{
+	Vector3f position;
+	Matrix4 viewMatrix;
+	Matrix4 projMatrix;
+	Frustum* frustum;
+};
+
 
 //-----------------------------------------------------------------------------------
 /// \brief
@@ -45,14 +49,10 @@ public:
 	~SceneGraph();
 
 	// 添加对象
-	void AddObject(BaseSceneObject* object, bool autoDelete=true);
+	void AddObject(SceneObject* object, bool autoDelete=true);
 
 	// 删除对象
-	void RemoveObject(BaseSceneObject* object, bool deleteObj=true);
-
-	//void SetCamera(Camera* camera, bool useCameraFrustum = true);
-	//Camera* GetCamera() { return m_Camera; }
-	//void NotifyUpdatingProjectionMatrix();
+	void RemoveObject(SceneObject* object, bool deleteObj=true);
 
 	// Update & Render
 	void UpdateScene(unsigned long deltaTime);
@@ -60,14 +60,16 @@ public:
 	void SetupRenderView(const RenderView& view);
 	void RenderScene();
 
-	void CollectRayPickingSceneObject(const Ray& ray, ObjectsCollisionInfos& baseSceneObjects, int type, int collisionGroup = COLLISION_GROUP_ALL);
+	// 对场景进行射线检测
+	// TODO: 这个type目前完全没有用途
+	void RayPickingSceneObject(const Ray& ray, ObjectsCollisionInfos& sceneObjects, int type, int collisionGroup = COLLISION_GROUP_ALL);
 
-	void SetAmbientColor(const Color4f color);
-	const Color4f GetAmbientColor() const { return m_Ambient; }
+	// 将场景结构输出到log
+	void DumpToLog();
 
 private:
 
-	void RemoveObjectInternal(BaseSceneObject* object, bool deleteObj);
+	void RemoveSceneObjectInternal(SceneObject* object, bool deleteObj);
 
 	// 执行真正的删除工作，在每帧更新后进行
 	void ProcessRemove();
@@ -76,17 +78,17 @@ private:
 	//typedef vector<ISceneObject*> SceneObjects;
 	//SceneObjects	m_SceneObjects;
 
-	SceneRootObject*			m_RootObject;		///< 场景对象根对象
+	//SceneRootObject*			m_RootObject;		///< 场景对象根对象
 
-	set<BaseSceneObject*>		m_AutoDeleteList;
+	SceneObjectSet				m_SceneObjects;
+	SceneObjectSet				m_AutoDeleteList;
 	vector<RemoveListElement>	m_RemoveList;		///< 删除列表，记录了这一帧更新后需要删除的对象
+
+	RenderableObjectSet			m_RenderableObjects;
 
 	bool						m_ProcessingUpdate;	///< 当前是否正在更新场景的状态标识
 
 	RenderView					m_RenderView;
-	//Camera*						m_Camera;
-
-	Color4f						m_Ambient;
 };
 
 #endif

@@ -10,6 +10,8 @@
 
 #include "Platform.h"
 #include "Singleton.h"
+#include "Debug.h"
+#include "FileSystem.h"
 
 #include <map>
 #include "EString.h"
@@ -25,6 +27,8 @@ class ResourceManager : public Singleton< ResourceManager<T> >		// use "> >" ins
 {
 	friend class Singleton< ResourceManager<T> >;
 public:
+	typedef map<const String, T*>	ResourceMap;
+
 	// 创建对象实例
 	T* Create(const String& name = "")
 	{
@@ -46,15 +50,18 @@ public:
 		}
 		else
 		{
-			res_name.Format("%s", name.Data());
-			unsigned int n = 1;
+			res_name = name;
+			CorrectSlash(res_name);
 
-			while (m_ResourceMap.find(res_name)!=m_ResourceMap.end())
-			{
-				// 与已有资源名称重复，重命名
-				res_name.Format("%s_%d", name.Data(), n);
-				n++;
-			}
+			// 创建资源已存在，致命错误
+			AssertFatal(m_ResourceMap.find(res_name)==m_ResourceMap.end(), "ResourceManager::Create(): Specified resource name already exists.");
+
+			//while (m_ResourceMap.find(res_name)!=m_ResourceMap.end())
+			//{
+			//	// 与已有资源名称重复，重命名
+			//	res_name.Format("%s_%d", name.Data(), n);
+			//	n++;
+			//}
 		}
 		m_ResourceMap[res_name] = res;
 		res->m_Name = &(m_ResourceMap.find(res_name)->first);
@@ -86,8 +93,11 @@ public:
 
 	T* GetByName(const String& name)
 	{
+		String sName(name);
+		CorrectSlash(sName);
+
 		typename ResourceMap::iterator iter;
-		if ((iter = m_ResourceMap.find(name))!=m_ResourceMap.end())
+		if ((iter = m_ResourceMap.find(sName))!=m_ResourceMap.end())
 			return iter->second;
 
 		return NULL;
@@ -103,7 +113,20 @@ public:
 		}
 	}
 
-	typedef map<const String, T*>	ResourceMap;
+	void DumpToLog()
+	{
+		Log.MsgLn("----------- Begin dumping ResourceManager");
+
+		typename ResourceMap::iterator iter;
+		for (iter=m_ResourceMap.begin();
+			 iter!=m_ResourceMap.end();
+			 iter++)
+		{
+			Log.MsgLn(iter->first);
+		}
+
+		Log.MsgLn("----------- End dumping ResourceManager");
+	}
 	
 	ResourceMap& GetResourceMap() { return m_ResourceMap; }
 
@@ -119,5 +142,12 @@ private:
 protected:
 	ResourceMap			m_ResourceMap;
 };
+
+// 宏定义，用于声明一个类将使用资源管理器
+#if defined __PLATFORM_WIN32
+#define DECLARE_RESOURCEMANAGER(className) ResourceManager<className>
+#elif defined __PLATFORM_LINUX
+#define DECLARE_RESOURCEMANAGER(className) template class ResourceManager<className>
+#endif
 
 #endif

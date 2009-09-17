@@ -48,48 +48,38 @@ void LoadConfigFile(const String& filename, ConfigGroups& group, String groupnam
 
 		fs.getline(buf, sizeof(buf));
 
-		string line(buf);
+		String line(buf);
 
 		// 从'#'开始的内容作为注释，不予处理
-		size_t comment = line.find("#");
-		if (comment!=string::npos)
-			line = line.substr(0, comment);
+		size_t comment = line.Find("#");
+		if (comment!=String::npos)
+			line = line.Substr(0, comment);
 
 		size_t header, tail;
 
-		if (((header = line.find_first_not_of(" \t"))!=string::npos) &&
-			((tail = line.find_last_not_of(" \t"))!=string::npos))
+		if (((header = line.FindFirstNotOf(" \t\r"))!=String::npos) &&
+			((tail = line.FindLastNotOf(" \t\r"))!=String::npos))
 		{
 			if (line[header]=='[' && line[tail]==']')
 			{
-				groupname = line.substr(header + 1, tail - header - 1);
-				header = groupname.FindFirstNotOf(" \t");
-				tail = groupname.FindLastNotOf(" \t");
-				groupname = groupname.Substr(header, tail - header + 1);
+				groupname = line.Substr(header + 1, tail - header - 1);
+				groupname.Trim();
 				continue;
 			}
 		}
 
-		size_t pos = line.find("=");
-		if (pos != string::npos)
+		size_t pos = line.Find("=");
+		if (pos != String::npos)
 		{
 			// 键名
-			string key_name = line.substr(0, pos);
-
-			// 去除字符串前后的空格和制表符
-			header = key_name.find_first_not_of(" \t");
-			tail = key_name.find_last_not_of(" \t");
-			key_name = key_name.substr(header, tail - header + 1);
+			String key_name = line.Substr(0, pos);
+			key_name.Trim();
 
 			// 对应的文件路径名
-			string key_value = line.substr(pos+1);
+			String key_value = line.Substr(pos+1);
+			key_value.Trim();
 
-			// 去除字符串前后的空格和制表符
-			header = key_value.find_first_not_of(" \t");
-			tail = key_value.find_last_not_of(" \t");
-			key_value = key_value.substr(header, tail - header + 1);
-
-			if (key_name.size() && key_value.size())
+			if (key_name.Size() && key_value.Size())
 			{
 				ConfigFileLine line;
 				line.key = key_name;
@@ -126,6 +116,7 @@ void EngineMessageNotifier::OnMessageResizeWindow(unsigned int width, unsigned i
 Engine::Engine()
 : m_Renderer(NULL),
   m_AudioSystem(NULL),
+  m_RenderBatchCount(0),
   m_MessageNotifier(NULL),
   m_Game(NULL),
   m_Quit(false),
@@ -155,6 +146,8 @@ void Engine::Initialize(bool input)
 
 	Log.MsgLn("Initializing RenderSystem");
 	renderer->Initialize(System::Instance().GetRenderWindowParameters());
+
+	Log.MsgLn(renderer->GetFeatureString());
 
 	Log.MsgLn("Initializing AudioSystem");
 	m_AudioSystem->Initialize();
@@ -286,9 +279,8 @@ void Engine::LoadModules()
 	ConfigGroups group;
 	ConfigFileKeys::iterator iter;
 	LoadConfigFile("plugins.cfg", group, "plugins");
-
-	if (group.find("plugins") == group.end())
-		return;
+	
+	AssertFatal(group.find("plugins")!=group.end(), "Engine::LoadModules(): Unable to find sector \"plugins\".");
 
 	ConfigFileKeys* list = &group["plugins"];
 

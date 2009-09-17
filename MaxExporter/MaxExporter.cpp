@@ -167,11 +167,11 @@ int	ExistanceMaxExporter::DoExport(const TCHAR *name,ExpInterface *ei,Interface 
 	//TODO: Implement the actual file Export here and 
 	//		return TRUE If the file is exported properly
 
-	if(!suppressPrompts)
-		DialogBoxParam(hInstance, 
-				MAKEINTRESOURCE(IDD_PANEL), 
-				GetActiveWindow(), 
-				ExistanceMaxExporterOptionsDlgProc, (LPARAM)this);
+	//if(!suppressPrompts)
+	//	DialogBoxParam(hInstance, 
+	//			MAKEINTRESOURCE(IDD_PANEL), 
+	//			GetActiveWindow(), 
+	//			ExistanceMaxExporterOptionsDlgProc, (LPARAM)this);
 
 	typedef int(*ExportFunc)(const TCHAR*, ExpInterface*, Interface*, BOOL, DWORD);
 

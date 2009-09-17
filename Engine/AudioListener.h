@@ -8,7 +8,7 @@
 #ifndef _AUDIOLISTENER_H
 #define _AUDIOLISTENER_H
 
-#include "BaseSceneObject.h"
+#include "SceneObject.h"
 
 //-----------------------------------------------------------------------------------
 /// \brief
@@ -16,20 +16,17 @@
 /// 
 /// 提供收听者的位置信息
 //-----------------------------------------------------------------------------------
-class AudioListener : public BaseSceneObject
+class AudioListener : public SceneObject
 {
 public:
 	AudioListener();
 	~AudioListener();
 
-	// ----- Overwrite ISceneObject
+	// ----- Overwrite IObject
 
 	void Update(unsigned long deltaTime);
-	void DebugRender();
 
-	// ----- Overwrite BaseSceneObject
-
-	bool IntersectsRay(const Ray& ray, CollisionInfo& info);
+	const String GetTypeName() const { return "AudioListener"; }
 
 	// ----- AudioListener Methods
 

@@ -23,7 +23,7 @@ AudioSourceObject::~AudioSourceObject()
 
 void AudioSourceObject::Update(unsigned long deltaTime)
 {
-	BaseSceneObject::Update(deltaTime);
+	SceneObject::Update(deltaTime);
 
 	// 更新音源者速度信息
 	Vector3f vel = (m_WorldTransform.GetPosition() - m_OldPosition) * 1000.0f / (float)deltaTime * m_VelocityFactor;
@@ -32,20 +32,6 @@ void AudioSourceObject::Update(unsigned long deltaTime)
 	m_Source->SetPosition(this->WorldTransform().GetPosition());
 	m_Source->SetVelocity(vel);
 }
-
-void AudioSourceObject::DebugRender() {}
-
-bool AudioSourceObject::IntersectsRay(const Ray& ray, CollisionInfo& info)
-{
-	return false;
-}
-//
-//void AudioSourceObject::SetAudioSource(IAudioSource* source)
-//{
-//	// 自动删除的对象不能使用，否则会出现问题
-//	AssertFatal(!source->GetAutoRemove(), "AudioSourceObject::SetAudioSource(): Unable to use a source which will auto remove.");
-//	m_Source = source;
-//}
 
 bool AudioSourceObject::CreateAudioSource(IAudioBuffer* buffer)
 {

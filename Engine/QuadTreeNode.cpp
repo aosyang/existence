@@ -1,3 +1,10 @@
+//-----------------------------------------------------------------------------------
+/// QuadTreeNode.cpp 四叉树节点实现
+/// 
+/// File Encoding : GB2312
+/// 
+/// Copyright (c) 2009 by Mwolf
+//-----------------------------------------------------------------------------------
 #include "QuadTreeNode.h"
 #include "Platform.h"
 #include "Engine.h"
@@ -46,7 +53,7 @@ bool QuadTreeNode::QueryObjectsByAABB(const AABB& aabb, const SceneObjectList& l
 {
 	bool result = false;
 
-	ChildrenSceneObjectsSet::iterator iter;
+	SceneObjectSet::iterator iter;
 	for (iter=m_SceneObjects.begin(); iter!=m_SceneObjects.end(); iter++)
 	{
 		// TODO: 如果物体与这个aabb相交，添加到list中

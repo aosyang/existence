@@ -1,6 +1,7 @@
 #include "GameGrid.h"
 #include <fstream>
 #include <map>
+#include <algorithm>
 
 using namespace std;
 
@@ -32,13 +33,15 @@ void GameGrid::StartGame()
 	//renderer->SetClearColor(Color4f(0.5f, 1.0f, 1.0f));
 	m_Scene = new SceneGraph;
 
+	// 创建摄像机
 	m_Camera = new Camera();
 	m_Camera->SetPosition(Vector3f(1.0f, 0.0f, 5.0f));
 	m_Camera->SetFarClippingDistance(2000.0f);
 	m_Scene->AddObject(m_Camera);
 
-	m_Scene->SetAmbientColor(Color4f(0.7f, 0.7f, 0.7f));
+	renderer->SetAmbientColor(Color4f(0.7f, 0.7f, 0.7f));
 
+	// 设置默认的全局方向光
 	m_Sun = new Light();
 	m_Sun->SetLightType(LIGHT_TYPE_DIRECTIONAL);
 	Vector3f sunDir = Vector3f(0.2f, 1.0f, 0.5f);
@@ -47,6 +50,7 @@ void GameGrid::StartGame()
 	LightingManager::Instance().AddGlobalLight(m_Sun);
 	m_Scene->AddObject(m_Sun);
 
+	// 构建基准平面
 	m_MeshPlane = ResourceManager<Mesh>::Instance().Create();
 	m_MeshPlane->CreatePositiveYPlane(WORLD_SIZE);
 
@@ -54,34 +58,35 @@ void GameGrid::StartGame()
 	m_BasePlane->SetMesh(m_MeshPlane);
 	m_Scene->AddObject(m_BasePlane);
 
+	// 创建盒子
 	m_MeshBox = ResourceManager<Mesh>::Instance().Create();
 	m_MeshBox->CreateBox(1.0f);
 
 	m_BoxMaterial = ResourceManager<Material>::Instance().Create();
-	m_BoxMaterial->SetTexture(renderer->GetTexture("grid"));
+	m_BoxMaterial->SetTexture(renderer->GetTexture("grid_tex.bmp"));
 	//m_BoxMaterial->SetDepthWriting(false);
 	//m_BoxMaterial->SetDepthTest(false);
 	//m_BoxMaterial->SetEmissive(Color4f(0.6f, 0.6f, 0.6f));
 
-	Mesh* marker = ResourceManager<Mesh>::Instance().GetByName("marker");
+	Mesh* marker = ResourceManager<Mesh>::Instance().GetByName("marker.EMD");
 	
 	Material* matMarkerStart = ResourceManager<Material>::Instance().Create();
 	matMarkerStart->SetDiffuse(Color4f(0.0f, 1.0f, 0.0f));
 	matMarkerStart->SetEmissive(Color4f(0.0f, 0.5f, 0.0f));
-	matMarkerStart->SetTexture(renderer->GetTexture("blank"));
+	matMarkerStart->SetTexture(renderer->GetTexture("blank.bmp"));
 	Material* matMarkerGoal = ResourceManager<Material>::Instance().Create();
 	matMarkerGoal->SetDiffuse(Color4f(1.0f, 0.0f, 0.0f));
 	matMarkerGoal->SetEmissive(Color4f(0.5f, 0.0f, 0.0f));
-	matMarkerGoal->SetTexture(renderer->GetTexture("blank"));
+	matMarkerGoal->SetTexture(renderer->GetTexture("blank.bmp"));
 
 	m_MarkerStart = new MeshObject();
 	m_MarkerStart->SetMesh(marker);
 	m_MarkerStart->SetMaterial(matMarkerStart, 0);
-	LightingManager::Instance().AddLightableObject(m_MarkerStart);
+	m_MarkerStart->CreateLightableObject();
 	m_MarkerGoal = new MeshObject();
 	m_MarkerGoal->SetMesh(marker);
 	m_MarkerGoal->SetMaterial(matMarkerGoal, 0);
-	LightingManager::Instance().AddLightableObject(m_MarkerGoal);
+	m_MarkerGoal->CreateLightableObject();
 	m_Scene->AddObject(m_MarkerStart);
 	m_Scene->AddObject(m_MarkerGoal);
 
@@ -128,9 +133,9 @@ void GameGrid::OnKeyPressed(unsigned int key)
 		case MODE_REMOVE:
 			m_ModeName = "Remove";
 			break;
-		case MODE_SHOW_NEIGHBOUR:
-			m_ModeName = "Debug show neighbour";
-			break;
+		//case MODE_SHOW_NEIGHBOUR:
+		//	m_ModeName = "Debug show neighbour";
+		//	break;
 		case MODE_SET_START:
 			m_ModeName = "Set start point";
 			break;
@@ -190,103 +195,6 @@ void GameGrid::OnKeyPressed(unsigned int key)
 
 void GameGrid::OnMousePressed(unsigned int id)
 {
-	//switch(id)
-	//{
-	//case MB_Left:
-	//	switch (m_Mode)
-	//	{
-	//	case MODE_ADD:
-	//		{
-	//			Vector3f p;
-
-	//			if (GetIntersectionPoint(p))
-	//			{
-	//				int x = (int)ceil(p.x);
-	//				int z = (int)ceil(p.z);
-
-	//				x += WORLD_SIZE / 2 - 1;
-	//				z += WORLD_SIZE / 2 - 1;
-	//				AddBox(Point3(x, m_Layer, z));
-	//			}
-	//		}
-	//		break;
-	//	case MODE_REMOVE:
-	//		{
-	//			Vector3f p;
-
-	//			if (GetIntersectionPoint(p))
-	//			{
-	//				int x = (int)ceil(p.x);
-	//				int z = (int)ceil(p.z);
-
-	//				x += WORLD_SIZE / 2 - 1;
-	//				z += WORLD_SIZE / 2 - 1;
-	//				RemoveBox(Point3(x, m_Layer, z));
-	//			}
-	//		}
-	//		break;
-
-	//	case MODE_SHOW_NEIGHBOUR:
-	//		{
-	//			Vector3f p;
-
-	//			if (GetIntersectionPoint(p))
-	//			{
-	//				int x = (int)ceil(p.x);
-	//				int z = (int)ceil(p.z);
-
-	//				x += WORLD_SIZE / 2 - 1;
-	//				z += WORLD_SIZE / 2 - 1;
-	//				ShowNeighbour(Point3(x, m_Layer, z));
-	//			}
-	//		}
-	//		break;
-	//	case MODE_SET_START:
-	//		{
-	//			Vector3f p;
-
-	//			if (GetIntersectionPoint(p))
-	//			{
-	//				int x = (int)ceil(p.x);
-	//				int z = (int)ceil(p.z);
-
-	//				x += WORLD_SIZE / 2 - 1;
-	//				z += WORLD_SIZE / 2 - 1;
-	//				m_Start = Point3(x, m_Layer, z);
-	//				
-	//				p.x = ceil(p.x) - 0.5f;
-	//				p.z = ceil(p.z) - 0.5f;
-	//				m_MarkerStart->SetPosition(p + Vector3f(0.0f, 0.5f, 0.0f));
-	//			}
-	//		}
-	//		break;
-	//	case MODE_SET_GOAL:
-	//		{
-	//			Vector3f p;
-
-	//			if (GetIntersectionPoint(p))
-	//			{
-	//				int x = (int)ceil(p.x);
-	//				int z = (int)ceil(p.z);
-
-	//				x += WORLD_SIZE / 2 - 1;
-	//				z += WORLD_SIZE / 2 - 1;
-	//				m_Goal = Point3(x, m_Layer, z);
-
-	//				p.x = ceil(p.x) - 0.5f;
-	//				p.z = ceil(p.z) - 0.5f;
-	//				m_MarkerGoal->SetPosition(p + Vector3f(0.0f, 0.5f, 0.0f));
-	//			}
-	//		}
-	//		break;
-	//	default:
-	//		break;
-	//	}
-	//	break;
-
-	//default:
-	//	break;
-	//}
 }
 
 void GameGrid::OnResizeWindow(unsigned int width, unsigned int height)
@@ -340,36 +248,6 @@ void GameGrid::Update(unsigned long deltaTime)
 		m_Camera->RotateLocal(x, y);
 	}
 
-	// 按下鼠标左键进行射线检测
-	//if (Input::Instance().GetMouseButtonDown(MB_Left))
-	//{
-	//	RenderWindowParam* param = System::Instance().GetRenderWindowParameters();
-
-	//	unsigned int width = param->width;
-	//	unsigned int height = param->height;
-
-	//	float x = (float)Input::Instance().GetMouseAbsX() / width;
-	//	float y = (float)Input::Instance().GetMouseAbsY() / height;
-
-
-	//	Ray ray = m_Camera->GetCameratRay(x, y);
-	//	ray.distance = 100.0f;
-
-	//	Vector3f p;
-	//	float d;
-
-	//	bool result = m_BasePlane->RayPicking(ray, p, d);
-
-	//	if (result)
-	//	{
-	//		sprintf(buf, "Intersects: %f, %f, %f : %f", p.x, p.y, p.z, d);
-	//		//p.x = ceil(p.x) - 0.5f;
-	//		//p.z = ceil(p.z) - 0.5f;
-	//		m_IntersectionObject->SetPosition(p);
-	//	}
-
-	//}
-
 	if (Input::Instance().GetMouseButtonDown(MB_Left))
 	{
 		switch (m_Mode)
@@ -405,21 +283,21 @@ void GameGrid::Update(unsigned long deltaTime)
 			}
 			break;
 
-		case MODE_SHOW_NEIGHBOUR:
-			{
-				Vector3f p;
+		//case MODE_SHOW_NEIGHBOUR:
+		//	{
+		//		Vector3f p;
 
-				if (GetIntersectionPoint(p))
-				{
-					int x = (int)ceil(p.x);
-					int z = (int)ceil(p.z);
+		//		if (GetIntersectionPoint(p))
+		//		{
+		//			int x = (int)ceil(p.x);
+		//			int z = (int)ceil(p.z);
 
-					x += WORLD_SIZE / 2 - 1;
-					z += WORLD_SIZE / 2 - 1;
-					ShowNeighbour(Point3(x, m_Layer, z));
-				}
-			}
-			break;
+		//			x += WORLD_SIZE / 2 - 1;
+		//			z += WORLD_SIZE / 2 - 1;
+		//			ShowNeighbour(Point3(x, m_Layer, z));
+		//		}
+		//	}
+		//	break;
 		case MODE_SET_START:
 			{
 				Vector3f p;
@@ -496,6 +374,7 @@ void GameGrid::RenderScene()
 	m_Scene->RenderScene();
 }
 
+// 射线与基准平面求交
 bool GameGrid::GetIntersectionPoint(Vector3f& point)
 {
 	RenderWindowParam* param = System::Instance().GetRenderWindowParameters();
@@ -515,6 +394,7 @@ bool GameGrid::GetIntersectionPoint(Vector3f& point)
 	return (m_BasePlane->RayPicking(ray, point, normal, d));
 }
 
+// 添加一个盒子
 void GameGrid::AddBox(const Point3& pos)
 {
 	// 格子被占据，不添加
@@ -530,13 +410,14 @@ void GameGrid::AddBox(const Point3& pos)
 		obj->SetMaterial(m_BoxMaterial, 0);
 
 		m_Scene->AddObject(obj);
-		LightingManager::Instance().AddLightableObject(obj);
+		obj->CreateLightableObject();
 
 		grid->obj = obj;
 	}
 
 }
 
+// 删除一个盒子
 void GameGrid::RemoveBox(const Point3& pos)
 {
 	Vector3f p((float)pos.x - 0.5f - WORLD_SIZE / 2 + 1, (float)pos.y + 0.5f, (float)pos.z - 0.5f - WORLD_SIZE / 2 + 1);
@@ -544,13 +425,14 @@ void GameGrid::RemoveBox(const Point3& pos)
 	// 格子为空，不删除
 	if (m_World[pos.x][pos.y][pos.z].obj)
 	{
-		LightingManager::Instance().RemoveLightableObject(m_World[pos.x][pos.y][pos.z].obj);
+		//LightingManager::Instance().RemoveLightableObject(m_World[pos.x][pos.y][pos.z].obj);
 		m_Scene->RemoveObject(m_World[pos.x][pos.y][pos.z].obj);
 		m_World[pos.x][pos.y][pos.z].obj = NULL;
 	}
 
 }
 
+// 构建所有点的连接关系
 void GameGrid::BuildLinkingPath()
 {
 	for (int x=0; x<WORLD_SIZE; x++)
@@ -568,7 +450,7 @@ void GameGrid::BuildLinkingPath()
 			}
 }
 
-
+// 构建某一点的邻接关系
 void GameGrid::BuildNodePath(const Point3& pos)
 {
 	// 与12个邻接立方体间的关系
@@ -658,38 +540,34 @@ void GameGrid::BuildNodePath(const Point3& pos)
 	}
 }
 
+// 将一个位置添加为某个格子的邻接点
 void GameGrid::AddGridNeighbour(WorldGrid* grid, const Point3& pos, float len)
 {
 	if (m_World[pos.x][pos.y][pos.z].obj)
 		grid->AddNeighbour(pos, len);
 }
+//
+//void GameGrid::ShowNeighbour(const Point3& pos)
+//{
+//	for (int i=0; i<WORLD_SIZE; i++)
+//		for (int j=0; j<WORLD_SIZE; j++)
+//			for (int k=0; k<WORLD_SIZE; k++)
+//			{
+//				MeshObject* obj = m_World[i][j][k].obj;
+//				if (obj)
+//					obj->SetDebugRender(false);
+//			}
+//
+//	WorldGrid* grid = &m_World[pos.x][pos.y][pos.z];
+//	for (int i=0; i<grid->neighbourCount; i++)
+//	{
+//		MeshObject* obj = m_World[grid->neighbourPos[i].x][grid->neighbourPos[i].y][grid->neighbourPos[i].z].obj;
+//		if (obj)
+//			obj->SetDebugRender(true);
+//	}
+//}
 
-void GameGrid::ShowNeighbour(const Point3& pos)
-{
-	for (int i=0; i<WORLD_SIZE; i++)
-		for (int j=0; j<WORLD_SIZE; j++)
-			for (int k=0; k<WORLD_SIZE; k++)
-			{
-				MeshObject* obj = m_World[i][j][k].obj;
-				if (obj)
-					obj->SetDebugRender(false);
-			}
-
-	WorldGrid* grid = &m_World[pos.x][pos.y][pos.z];
-	for (int i=0; i<grid->neighbourCount; i++)
-	{
-		MeshObject* obj = m_World[grid->neighbourPos[i].x][grid->neighbourPos[i].y][grid->neighbourPos[i].z].obj;
-		if (obj)
-			obj->SetDebugRender(true);
-	}
-}
-
-bool WorldGridComparer(WorldGrid* lhs,WorldGrid* rhs)
-{
-	return lhs->priority < rhs->priority;
-}
-
-
+// 路径搜索算法
 void GameGrid::PathFinding(const Point3& start, const Point3& end)
 {
 	if (start==end)
@@ -715,7 +593,7 @@ void GameGrid::PathFinding(const Point3& start, const Point3& end)
 	while(pos != end)
 	{
 
-		NodeList::iterator iter = m_OpenList.begin();
+		OpenList::iterator iter = m_OpenList.begin();
 
 		if (iter != m_OpenList.end())
 		{
@@ -754,9 +632,9 @@ void GameGrid::PathFinding(const Point3& start, const Point3& end)
 			}
 		}
 
-		stable_sort(m_OpenList.begin(), m_OpenList.end(), WorldGridComparer);
+		//sort(m_OpenList.begin(), m_OpenList.end(), WorldGridComparer);
 
-		NodeList::iterator openIter = m_OpenList.begin();
+		OpenList::iterator openIter = m_OpenList.begin();
 		if (openIter!=m_OpenList.end())
 		{
 			pos = (*openIter)->pos;
@@ -767,7 +645,7 @@ void GameGrid::PathFinding(const Point3& start, const Point3& end)
 			break;
 	}
 
-	Mesh* sphere = ResourceManager<Mesh>::Instance().GetByName("sphere");
+	//Mesh* sphere = ResourceManager<Mesh>::Instance().GetByName("sphere");
 
 	for (WorldGrid* g=&m_World[pos.x][pos.y][pos.z]; parents.find(g)!=parents.end(); g=parents[g])
 	{
@@ -783,11 +661,13 @@ void GameGrid::PathFinding(const Point3& start, const Point3& end)
 	m_TestRun = true;
 }
 
+// 更新标志的移动位置
 void GameGrid::MarkerGo(unsigned long deltaTime)
 {
 #define MOVEMENT_INTERVAL 500
 	if (m_TestRun)
 	{
+		// 没有更多可以走的路径，停止
 		PathList::iterator iter = m_Path.begin();
 		if (iter==m_Path.end())
 		{
@@ -806,6 +686,7 @@ void GameGrid::MarkerGo(unsigned long deltaTime)
 			}
 			else
 			{
+				// 在当前点和下一点之间进行位置上的插值
 				float aspect = (float)m_TimeToRun / MOVEMENT_INTERVAL;
 
 				Vector3f new_pos = (*iter)->obj->WorldTransform().GetPosition();
@@ -817,12 +698,14 @@ void GameGrid::MarkerGo(unsigned long deltaTime)
 	}
 }
 
+// 将场景保存到文件
 bool GameGrid::SaveScene(const String &filename)
 {
 	ofstream fout(filename.Data());
 	if (!fout.is_open())
 		return false;
 
+	// 在x、y、z方向上依次遍历
 	for (int x=0; x<WORLD_SIZE; x++)
 		for (int y=0; y<WORLD_SIZE; y++)
 			for (int z=0; z<WORLD_SIZE; z++)
@@ -838,6 +721,7 @@ bool GameGrid::SaveScene(const String &filename)
 	return true;
 }
 
+// 从文件载入场景
 bool GameGrid::LoadScene(const String &filename)
 {
 	ifstream fin(filename.Data());

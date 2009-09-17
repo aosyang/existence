@@ -2,8 +2,7 @@
 #include "Engine.h"
 
 BspObject::BspObject()
-: BaseSceneObject(),
-  m_Mesh(NULL),
+: m_Mesh(NULL),
   m_Bsp(NULL)
 {
 	
@@ -14,15 +13,9 @@ BspObject::~BspObject()
 	SAFE_DELETE(m_Bsp)
 }
 
-void BspObject::Render()
+void BspObject::RenderSingleObject()
 {
-	// BspObjects don't use dynamic lights... for now.
-	int maxLightNum = renderer->GetMaxLightsNumber();
-
-	for (int i=0; i<maxLightNum; i++)
-	{
-		renderer->SetupLight(i, NULL);
-	}
+	RenderableObjectBase::RenderSingleObject();
 
 	for (int i=0; i<m_Mesh->GetElementsNum(); i++)
 	{
@@ -30,33 +23,44 @@ void BspObject::Render()
 
 		renderer->RenderVertexBuffer(elem->m_VertexBuffer, m_Mesh->GetMaterial(i), m_WorldTransform);
 	}
-
-	BaseSceneObject::Render();
 }
 
-void BspObject::DebugRender()
+bool BspObject::IntersectsRay(const Ray& ray, CollisionResult& info)
 {
-	BaseSceneObject::DebugRender();
-}
+	CollisionResult local_info;
 
-bool BspObject::IntersectsRay(const Ray& ray, CollisionInfo& info)
-{
-	Vector3f localPoint;
-	Ray localRay = m_WorldTransform.GetInverseMatrix() * ray;
-	BspTriangle* triangle;
-
-	bool result = m_Bsp->Intersects(localRay, &localPoint, &triangle);
-
-	if (result)
+	// 先对碰撞盒进行判断
+	if (RenderableObjectBase::IntersectsRay(ray, local_info))
 	{
-		info.point = m_WorldTransform * localPoint;
-		info.normal = m_WorldTransform * triangle->normal;
-		info.squaredDistance = (localRay.origin - localPoint).SquaredLength();
-		info.obj = this;
+		// 如果射线从solid空间射出，认定直接碰撞
+		if (IsPointInSolid(ray.origin))
+		{
+			info.distance = 0.0f;
+			info.normal = -ray.direction;
+			info.obj = this;
+			info.point = ray.origin;
+
+			return true;
+		}
+
+		Vector3f point;
+		BspTriangle* tri;
+
+		// 进行精确BSP碰撞
+		if (Intersects(ray, &point, &tri))
+		{
+			info.distance = (point - ray.origin).Length();
+			info.normal = tri->normal;
+			info.obj = this;
+			info.point = point;
+
+			return true;
+		}
 	}
 
-	return result;
+	return false;
 }
+
 
 void BspObject::SetMesh(Mesh* mesh)
 {

@@ -9,28 +9,25 @@
 #ifndef _MESHOBJECT_H
 #define _MESHOBJECT_H
 
-#include "BaseLightableObject.h"
+#include "RenderableObjectBase.h"
 #include "Mesh.h"
 #include "Material.h"
 
 class Mesh;
 
-class MeshObject : public BaseLightableObject
+class MeshObject : public RenderableObjectBase
 {
 public:
 	MeshObject();
 	~MeshObject();
 
-	// ----- Overwrite ISceneObject
+	// ----- Overwrite SceneObject
 
-	void Update(unsigned long deltaTime);
-	void Render();
-	void DebugRender();
+	const String GetTypeName() const { return "MeshObject"; }
 
-	// ----- Overwrite BaseSceneObject
+	// ----- Overwrite IRenderableObject
 
-	int GetCollisionType() const { return COLLISION_TYPE_MESH; }
-	bool IntersectsRay(const Ray& ray, CollisionInfo& info);
+	void RenderSingleObject();
 
 	// ----- MeshObject Methods
 
@@ -44,12 +41,13 @@ public:
 	inline Material* GetMaterial(int index) const { return m_Materials[index]; }
 	inline void SetMaterial(Material* mat, int index) { m_Materials[index] = mat; }
 
-	void SetFrustumCulling(bool cull) { m_FrustumCulling = cull; }
-	bool GetFrustumCulling() const { return m_FrustumCulling; }
+	//void SetFrustumCulling(bool cull) { m_FrustumCulling = cull; }
+	//bool GetFrustumCulling() const { return m_FrustumCulling; }
 
 	bool RayPicking(const Ray& ray, Vector3f& point, Vector3f& normal, float& d, bool infiniteLength = false);
+
+	//bool RayPickingTriangle(const Ray& ray);
 protected:
-	bool IsCulled(const RenderView& view);
 
 
 private:
@@ -58,7 +56,7 @@ private:
 	int			m_SubMeshCount;
 	Material**	m_Materials;
 
-	bool		m_FrustumCulling;
+	//bool		m_FrustumCulling;
 };
 
 #endif

@@ -45,7 +45,7 @@ void GameFps::StartGame()
 
 	m_Scene = new SceneGraph;
 	//m_Scene->SetAmbientColor(Color4f(0.7f, 0.7f, 0.7f));
-	m_Scene->SetAmbientColor(Color4f(1.f, 1.f, 1.f));
+	renderer->SetAmbientColor(Color4f(1.f, 1.f, 1.f));
 
 	renderer->SetClearColor(Color4f(0.0f, 0.5f, 0.5f));
 
@@ -56,7 +56,7 @@ void GameFps::StartGame()
 	// 摄像机作为收听者
 	m_AudioListener = new AudioListener();
 	m_Scene->AddObject(m_AudioListener);
-	m_Camera->AttachChildObject(m_AudioListener, false);
+	//m_Camera->AttachChildObject(m_AudioListener, false);
 
 	// 设置全局的方向光照
 	m_Sun = new Light();
@@ -73,7 +73,7 @@ void GameFps::StartGame()
 
 	m_UIControl = EGUIManager::Instance().CreateImageUIControl();
 
-	ITexture* no_mat = renderer->GetTexture("Brick");
+	ITexture* no_mat = renderer->GetTexture("Brick.jpg");
 	unsigned char color[32 * 32 * 3] = { 0x0 };
 
 	for (int i=0; i<32*32; i++)
@@ -86,22 +86,22 @@ void GameFps::StartGame()
 	no_mat->ModifyRectData(32, 32, 32, 32, &color);
 	//unsigned int bpp = no_mat->GetBpp();
 
-	Mesh* bspScene = ResourceManager<Mesh>::Instance().GetByName("scene");
+	Mesh* bspScene = ResourceManager<Mesh>::Instance().GetByName("scene.EMD");
 
 	//BuildBspTreeFromMesh(&bsp, bspScene);
 
 	m_ViewGun = new MeshObject();
-	m_ViewGun->SetMesh(ResourceManager<Mesh>::Instance().GetByName("mp5"));
-	LightingManager::Instance().AddLightableObject(m_ViewGun);
+	m_ViewGun->SetMesh(ResourceManager<Mesh>::Instance().GetByName("mp5.EMD"));
+	m_ViewGun->CreateLightableObject();
 
-	Material* matFlare = ResourceManager<Material>::Instance().Create("flare");
-	if (matFlare)
-	{
-		matFlare->SetTexture(renderer->GetTexture("flare"));
-		matFlare->GetTextureRenderState()->srcBlendFactor = BLEND_FACTOR_ONE;
-		matFlare->GetTextureRenderState()->dstBlendFactor = BLEND_FACTOR_ONE;
-		matFlare->SetDepthWriting(false);
-	}
+	Material* matFlare = ResourceManager<Material>::Instance().GetByName("flare");
+	//if (matFlare)
+	//{
+	//	matFlare->SetTexture(renderer->GetTexture("flare"));
+	//	matFlare->GetTextureRenderState()->srcBlendFactor = BLEND_FACTOR_ONE;
+	//	matFlare->GetTextureRenderState()->dstBlendFactor = BLEND_FACTOR_ONE;
+	//	matFlare->SetDepthWriting(false);
+	//}
 	//matFlare->SaveToFile("flare.emt");
 
 	Image cubeMap[6];
@@ -144,7 +144,7 @@ void GameFps::StartGame()
 	//}
 
 	m_Sky = new DistantViewObject();
-	m_Sky->SetMesh(ResourceManager<Mesh>::Instance().GetByName("skybox"));
+	m_Sky->SetMesh(ResourceManager<Mesh>::Instance().GetByName("skybox.EMD"));
 	//m_Sky->SetOffsetScale(Vector3f(0.1f, 0.1f, 0.1f));
 	//m_Sky->SetOffsetScale(Vector3f(1.f, 1.f, 1.f));
 	m_Scene->AddObject(m_Sky);
@@ -176,16 +176,16 @@ void GameFps::StartGame()
 	//matSphere->GetTextureRenderState(1)->texture = renderer->GetTexture("Brick");
 
 	MeshObject* sphere = new MeshObject();
-	sphere->SetMesh(ResourceManager<Mesh>::Instance().GetByName("sphere"));
+	sphere->SetMesh(ResourceManager<Mesh>::Instance().GetByName("sphere.EMD"));
 	sphere->SetMaterial(matSphere, 0);
 	m_Scene->AddObject(sphere);
 	sphere->SetPosition(Vector3f(0.0f, 30.0f, 0.0f));
 
-	LightingManager::Instance().AddLightableObject(sphere);
+	sphere->CreateLightableObject();
 
 
 	m_ViewGunFlare = new MeshObject();
-	m_ViewGunFlare->SetMesh(ResourceManager<Mesh>::Instance().GetByName("gunflare"));
+	m_ViewGunFlare->SetMesh(ResourceManager<Mesh>::Instance().GetByName("gunflare.EMD"));
 	m_ViewGunFlare->SetVisible(false);
 
 	// TODO: AddObject和AttachChildObject二者只需要一个？
@@ -357,15 +357,15 @@ void GameFps::Update(unsigned long deltaTime)
 	forward += -0.1f * deltaTime / 10.0f * boost * Input::Instance().GetJoyStickAbs(2) / 0x7FFF;
 	right += 0.1f * deltaTime / 10.0f * boost * Input::Instance().GetJoyStickAbs(3) / 0x7FFF;
 
-	if (toggleCollision && toggleGravity)
-	{
-		Vector3f rg = m_Camera->WorldTransform().GetRightVector();
-		Vector3f fw = CrossProduct(Vector3f(0.0f, 1.0f, 0.0f), rg);
-		Vector3f transVec = fw * forward + rg * right;
+	//if (toggleCollision && toggleGravity)
+	//{
+	//	Vector3f rg = m_Camera->WorldTransform().GetRightVector();
+	//	Vector3f fw = CrossProduct(Vector3f(0.0f, 1.0f, 0.0f), rg);
+	//	Vector3f transVec = fw * forward + rg * right;
 
-		m_Camera->TranslateLocal(transVec);
-	}
-	else
+	//	m_Camera->TranslateLocal(transVec);
+	//}
+	//else
 		m_Camera->MoveLocal(forward, right, 0.0f);
 
 	if (Input::Instance().GetKeyDown(KC_ESCAPE))
@@ -438,7 +438,7 @@ void GameFps::Update(unsigned long deltaTime)
 			if (m_Shells[i].vel.SquaredLength()<0.0001f) m_Shells[i].needUpdate = false;
 
 			// 反弹后重新给一个旋转速度，但要根据当前速度衰减
-			m_Shells[i].yawSpeed = Math::Random(-0.5f, 0.5f) * sqrt(m_Shells[i].vel.SquaredLength());
+			m_Shells[i].yawSpeed = Math::Random(-0.5f, 0.5f) * m_Shells[i].vel.Length();
 
 			//// 旋转速度
 			//if (m_Shells[i].vel.SquaredLength()<0.01f)
@@ -545,11 +545,12 @@ void GameFps::Update(unsigned long deltaTime)
 	//m_BspScene->SetRotation(Matrix3::BuildRollRotationMatrix(angle));
 	//angle += (float)deltaTime / 10000.0f;
 
+	unsigned int count = Engine::Instance().GetRenderBatchCount();
 
 	// 显示FPS
 	unsigned int fps = Engine::Instance().GetFPS();
 
-	sprintf(buf, "FPS: %d\npushed: %d", fps, pushed);
+	sprintf(buf, "FPS: %d\npushed: %d\nBatch count: %d", fps, pushed, count);
 	m_UIFps->SetText(buf);
 
 	// 更新光照
@@ -581,7 +582,6 @@ void GameFps::RenderScene()
 	m_ScreenQuadScene->RenderScene();
 #endif
 
-
 	if (toggleWireframe)
 	{
 		renderer->BeginRender();
@@ -610,7 +610,7 @@ void GameFps::FireWeapon(unsigned long deltaTime)
 	if (timeToFire<100) return;
 	
 	timeToFire = 0;
-	IAudioBuffer* fire = Engine::Instance().AudioSystem()->GetAudioBuffer("fire1");
+	IAudioBuffer* fire = Engine::Instance().AudioSystem()->GetAudioBuffer("fire1.wav");
 	if (fire)
 	{
 		Engine::Instance().AudioSystem()->CreateSourceInstance(fire, m_Camera->WorldTransform().GetPosition());
@@ -666,10 +666,10 @@ void GameFps::EjectShell(const Vector3f& pos, const Vector3f& dir)
 	if (!m_Shells[shellIndex].obj)
 	{
 		m_Shells[shellIndex].obj = new MeshObject();
-		m_Shells[shellIndex].obj->SetMesh(ResourceManager<Mesh>::Instance().GetByName("shell"));
+		m_Shells[shellIndex].obj->SetMesh(ResourceManager<Mesh>::Instance().GetByName("shell.EMD"));
 		m_Scene->AddObject(m_Shells[shellIndex].obj);
 
-		LightingManager::Instance().AddLightableObject(m_Shells[shellIndex].obj);
+		m_Shells[shellIndex].obj->CreateLightableObject();
 	}
 
 	m_Shells[shellIndex].obj->SetPosition(pos);

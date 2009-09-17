@@ -9,8 +9,7 @@
 #define _LIGHTINGMANAGER_H
 
 #include "Singleton.h"
-#include "Light.h"
-#include "BaseLightableObject.h"
+#include "LightableObject.h"
 
 //#include <vector>
 //#include <list>
@@ -18,7 +17,9 @@
 
 using namespace std;
 
-typedef set<BaseLightableObject*>			LightableObjectList;
+class Light;
+
+typedef set<LightableObject*>				LightableObjectList;
 typedef set<Light*>							LightList;
 
 // 静态光照与动态对象
@@ -38,8 +39,8 @@ class LightingManager : public Singleton<LightingManager>
 {
 	friend class Singleton<LightingManager>;
 public:
-	void AddLightableObject(BaseLightableObject* lightableObj);
-	void RemoveLightableObject(BaseLightableObject* lightableObj);
+	void AddLightableObject(LightableObject* lightableObj);
+	void RemoveLightableObject(LightableObject* lightableObj);
 
 	void AddLight(Light* light);
 

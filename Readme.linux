@@ -1,0 +1,7 @@
+apt-get install libfreeimage-dev libopenal-dev libalut-dev
+
+需要下载1.2.0版本的OIS
+http://sourceforge.net/projects/wgois/files/Source%20Release/1.2/ois_1.2.0.tar.gz/download
+
+提示无法找到libOIS-1.2.0.so
+尝试sudo ldconfig

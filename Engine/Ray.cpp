@@ -20,7 +20,7 @@ Ray::Ray(const Vector3f& begin, const Vector3f& end)
 	direction = end - begin;
 	direction.normalize();
 
-	distance = sqrt((end - begin).SquaredLength());
+	distance = (end - begin).Length();
 }
 
 Ray::Ray(const Vector3f& origin, const Vector3f& direction, float distance)

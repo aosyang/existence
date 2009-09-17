@@ -27,7 +27,7 @@ public:
 
 	void BindTexture();
 
-	int GetTarget() const { return GL_TEXTURE_CUBE_MAP; }
+	TextureType GetTextureType() const { return TEXTURE_TYPE_CUBE; }
 
 private:
 	GLCubeTexture();

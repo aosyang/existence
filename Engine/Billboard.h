@@ -8,25 +8,26 @@
 #ifndef _BILLBOARD_H
 #define _BILLBOARD_H
 
-#include "BaseLightableObject.h"
+#include "RenderableObjectBase.h"
 #include "Material.h"
 #include "IVertexBuffer.h"
 
-class Billboard : public BaseLightableObject
+class Billboard : public RenderableObjectBase
 {
 public:
 	Billboard();
 	~Billboard();
 
-	// ----- Overwrite ISceneObject
+	// ----- Overwrite IObject
 
 	void Update(unsigned long deltaTime);
-	void Render();
-	//void DebugRender();
 
-	// ----- Overwrite BaseSceneObject
+	const String GetTypeName() const { return "Billboard"; }
 
-	//int GetCollisionType() const { return COLLISION_TYPE_BILLBOARD; }
+	// ----- Overwrite IRenderableObject
+
+	void RenderSingleObject();
+
 	// ----- Billboard Methods
 
 	// ²ÄÖÊ

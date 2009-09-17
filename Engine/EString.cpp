@@ -1,6 +1,15 @@
+//-----------------------------------------------------------------------------------
+/// EString.cpp ×Ö·û´®ÀàÊµÏÖ
+///
+/// File Encoding : GB2312
+///
+/// Copyright (c) 2009 by Mwolf
+//-----------------------------------------------------------------------------------
 #include "EString.h"
 #include <stdarg.h>
 #include <stdlib.h>
+
+size_t String::npos = std::string::npos;
 
 String::String()
 {}
@@ -60,6 +69,21 @@ const String String::operator+=(const String& rhs)
 	return *this;
 }
 
+const char& String::operator[](size_t pos) const
+{
+	return m_String[pos];
+}
+
+char& String::operator[](size_t pos)
+{
+	return m_String[pos];
+}
+
+size_t String::Find(const String& str, size_t pos) const
+{
+	return m_String.find(str.m_String, pos);
+}
+
 size_t String::FindFirstNotOf(const String& str) const
 {
 	return m_String.find_first_not_of(str.m_String);
@@ -85,6 +109,35 @@ String String::Substr(size_t begin, size_t len) const
 	if (len)
 		return String(m_String.substr(begin, len));
 	return String(m_String.substr(begin));
+}
+
+String& String::Replace(size_t pos, size_t len, const String& str)
+{
+	m_String.replace(pos, len, str.m_String);
+
+	return *this;
+}
+
+size_t String::Size() const
+{
+	return m_String.size();
+}
+
+void String::Trim()
+{
+	size_t header, tail;
+	header = this->FindFirstNotOf(" \t\r");
+	tail = this->FindLastNotOf(" \t\r");
+	*this = this->Substr(header, tail - header + 1);
+}
+
+void String::ToLowerCase()
+{
+	for (size_t n=0; n<m_String.size(); n++)
+	{
+		if (m_String[n]>='A' && m_String[n]<='Z')
+			m_String[n] += 'a' - 'A';
+	}
 }
 
 int String::Format(const char* format, ...)
@@ -124,5 +177,5 @@ bool String::ToBool() const
 
 float String::ToFloat() const
 {
-	return atof(m_String.c_str());
+	return (float)atof(m_String.c_str());
 }

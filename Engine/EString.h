@@ -1,3 +1,10 @@
+//-----------------------------------------------------------------------------------
+/// EString.h 字符串类
+///
+/// File Encoding : GB2312
+///
+/// Copyright (c) 2009 by Mwolf
+//-----------------------------------------------------------------------------------
 #ifndef _ESTRING_H
 #define _ESTRING_H
 
@@ -22,6 +29,11 @@ public:
 	const String operator+(const String& rhs) const;
 	const String operator+=(const String& rhs);
 
+	const char& operator[](size_t pos) const;
+	char& operator[](size_t pos);
+
+	size_t Find(const String& str, size_t pos = 0) const;
+
 	size_t FindFirstNotOf(const String& str) const;
 	size_t FindLastNotOf(const String& str) const;
 	size_t FindFirstOf(const String& str) const;
@@ -29,6 +41,17 @@ public:
 
 	String Substr(size_t begin, size_t len=0) const;
 
+	String& Replace(size_t pos, size_t len, const String& str);
+
+	// 返回字串的长度
+	size_t Size() const;
+
+	// 去除字串首尾多余的空格、制表符、换行符
+	void Trim();
+
+	void ToLowerCase();
+
+	// 字串格式化
 	int Format(const char* format, ...);
 
 	const char* Data() const;
@@ -37,6 +60,8 @@ public:
 	int ToInt() const;
 	bool ToBool() const;
 	float ToFloat() const;
+
+	static size_t npos;
 private:
 	std::string		m_String;
 };

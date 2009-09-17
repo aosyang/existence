@@ -21,7 +21,7 @@ LightingManager::LightingManager()
 /// \remarks
 /// 没有添加到管理器的物体不会受到光照影响
 //-----------------------------------------------------------------------------------
-void LightingManager::AddLightableObject(BaseLightableObject* lightableObj)
+void LightingManager::AddLightableObject(LightableObject* lightableObj)
 {
 	if (m_LightableObjects.find(lightableObj)==m_LightableObjects.end())
 		m_LightableObjects.insert(lightableObj);
@@ -36,7 +36,7 @@ void LightingManager::AddLightableObject(BaseLightableObject* lightableObj)
 /// 
 /// 物体将不会再受到光照影响
 //-----------------------------------------------------------------------------------
-void LightingManager::RemoveLightableObject(BaseLightableObject* lightableObj)
+void LightingManager::RemoveLightableObject(LightableObject* lightableObj)
 {
 	LightableObjectList::iterator iter;
 	if ((iter = m_LightableObjects.find(lightableObj))!=m_LightableObjects.end())
@@ -175,9 +175,9 @@ void LightingManager::Update()
 			iter_light++)
 		{
 			Vector3f light_pos = (*iter_light)->WorldTransform().GetPosition();
-			Vector3f obj_pos = (*iter_obj)->WorldTransform().GetPosition();
+			Vector3f obj_pos = (*iter_obj)->GetRenderableObject()->WorldTransform().GetPosition();
 
-			float squaredRadius = (*iter_light)->GetRange() + (*iter_obj)->GetBoundingRadius();
+			float squaredRadius = (*iter_light)->GetRange() + (*iter_obj)->GetRenderableObject()->GetBoundingRadius();
 			squaredRadius *= squaredRadius;
 			if ((light_pos - obj_pos).SquaredLength() < squaredRadius)
 			{

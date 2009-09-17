@@ -28,7 +28,7 @@ void CheckCgError()
 }
 
 
-extern "C" __declspec(dllexport) void CreateGpuPlugin()
+extern "C" DLLEXPORT void CreateGpuPlugin()
 {
 	g_CgContext = cgCreateContext();
 	CheckCgError();
@@ -47,12 +47,12 @@ extern "C" __declspec(dllexport) void CreateGpuPlugin()
 
 }
 
-extern "C" __declspec(dllexport) void DestroyGpuPlugin()
+extern "C" DLLEXPORT void DestroyGpuPlugin()
 {
     cgDestroyContext(g_CgContext);
 }
 
-extern "C" __declspec(dllexport) IGpuProgram* LoadGpuProgram(const String& filename, const String& entry, GpuProgramType type)
+extern "C" DLLEXPORT IGpuProgram* LoadGpuProgram(const String& filename, const String& entry, GpuProgramType type)
 {
 	CGprofile* profile;
 	switch(type)
@@ -79,7 +79,7 @@ extern "C" __declspec(dllexport) IGpuProgram* LoadGpuProgram(const String& filen
 bool	g_VPEnabled = false;
 bool	g_FPEnabled = false;
 
-extern "C" __declspec(dllexport) void BindGpuProgram(IGpuProgram* program, GpuProgramType type)
+extern "C" DLLEXPORT void BindGpuProgram(IGpuProgram* program, GpuProgramType type)
 {
 	cgGLBindProgram(static_cast<CgGLProgram*>(program)->m_CGProgram);
 	CheckCgError();
@@ -103,7 +103,7 @@ extern "C" __declspec(dllexport) void BindGpuProgram(IGpuProgram* program, GpuPr
 	CheckCgError();
 }
 
-extern "C" __declspec(dllexport) void UnbindGpuProgram(GpuProgramType type)
+extern "C" DLLEXPORT void UnbindGpuProgram(GpuProgramType type)
 {
 	switch(type)
 	{

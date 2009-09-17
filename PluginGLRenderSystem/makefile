@@ -1,12 +1,12 @@
 CC = gcc
 XX = g++
 AR = ar
-LD = ld
+LD = g++
 
 CFLAGS = -Wall -O -g -D_LINUX
 LDFLAGS = -shared -fPIC
 INCLUDE = -I ../extra/include/ -I ../Engine/
-LIBS = -L../lib -lEngine -ldl -lGL -lGLU -lXxf86vm -lfreetype -lOIS -lfreeimage 
+LIBS = -L../bin/libs -lEngine -ldl -lGL -lGLU -lXxf86vm -lfreetype -lOIS -lfreeimage 
 LIBPATH = ../bin/plugins
 TARGET = $(LIBPATH)/PluginGLRenderSystem.so
 
@@ -18,7 +18,7 @@ SOURCES = $(wildcard *.c *.cpp)
 OBJS = $(patsubst %.c, %.o, $(patsubst %.cpp, %.o, $(SOURCES)))
 
 $(TARGET): $(OBJS)
-	$(XX) $(LDFLAGS) -o $(TARGET) $(OBJS) $(LIBS)
+	$(LD) $(LDFLAGS) -o $(TARGET) $(OBJS) $(LIBS)
 	
 clean:
 	rm -rf *.o $(TARGET)

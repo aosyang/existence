@@ -14,8 +14,7 @@ Vector3f nearPointWorld;
 Vector3f farPointWorld;
 
 Camera::Camera()
-: BaseSceneObject(),
-  m_Pitch(0.0f), m_Heading(0.0f),
+: m_Pitch(0.0f), m_Heading(0.0f),
   m_FOVy(45.0f), m_NearClippingDistance(1.0f), m_FarClippingDistance(100.0f),
   m_RestrictPitch(true), m_PitchMax(90.0f), m_PitchMin(-90.0f),
   m_MatrixOutOfData(true)
@@ -35,7 +34,7 @@ Camera::Camera()
 void Camera::Update(unsigned long deltaTime)
 {
 	// 注：摄像机对象必须先更新自身矩阵，否则计算的视截体和视矩阵将是上一帧的位置
-	BaseSceneObject::Update(deltaTime);
+	SceneObject::Update(deltaTime);
 
 	// 如果视矩阵发生过改变，更新之
 	if (m_MatrixOutOfData)
@@ -46,57 +45,20 @@ void Camera::Update(unsigned long deltaTime)
 	}
 
 }
-
-void Camera::Render()
-{
-	BaseSceneObject::Render();
-}
-
-void Camera::DebugRender()
-{
-	BaseSceneObject::DebugRender();
-
-	// 使用最小和最大角坐标确定一个立方体
-	Vector3f vMin = Vector3f(-1.0f, -1.0f, -1.0f);
-	Vector3f vMax = Vector3f(1.0f, 1.0f, 1.0f);
-
-	//Matrix4 matProjInv = m_Frustum.ProjectionMatrix().GetInverseMatrix();
-	//Matrix4 matViewInv = m_ViewMatrix.GetInverseMatrix();
-	Matrix4 matViewProjInv = (m_Frustum.ProjectionMatrix() * m_ViewMatrix).GetInverseMatrix();
-
-	renderer->RenderBox(vMin, vMax, Color4f(1.0f, 1.0f, 1.0f), /*m_WorldTransform * */matViewProjInv);
-
-	//Vector3f p1 = matViewInv * matProjInv * Vector3f(-1.0f, -1.0f, 1.0f);
-	//Vector3f p2 = matViewInv * matProjInv * Vector3f(-1.0f, 1.0f, 1.0f);
-	//Vector3f p3 = matViewInv * matProjInv * Vector3f(1.0f, 1.0f, 1.0f);
-	//Vector3f p4 = matViewInv * matProjInv * Vector3f(1.0f, -1.0f, 1.0f);
-
-	//renderer->RenderLine(p1, p2);
-	//renderer->RenderLine(p2, p3);
-	//renderer->RenderLine(p3, p4);
-	//renderer->RenderLine(p4, p1);
-
-	//renderer->RenderBox(nearPointWorld, farPointWorld, matViewProjInv);
-
-	renderer->RenderLine(nearPointWorld, farPointWorld);
-}
 //
-//void Camera::PrepareRenderObjects(SceneObjectList& objects, const RenderView& view)
+//void Camera::DebugRender()
 //{
-//	// Do nothing here, cameras don't even need rendering...
-//	objects.insert(this);
+//	BaseSceneObject::DebugRender();
+//
+//	// 使用最小和最大角坐标确定一个立方体
+//	Vector3f vMin = Vector3f(-1.0f, -1.0f, -1.0f);
+//	Vector3f vMax = Vector3f(1.0f, 1.0f, 1.0f);
+//
+//	Matrix4 matViewProjInv = (m_Frustum.ProjectionMatrix() * m_ViewMatrix).GetInverseMatrix();
+//
+//	renderer->RenderBox(vMin, vMax, Color4f(1.0f, 1.0f, 1.0f), /*m_WorldTransform * */matViewProjInv);
+//	renderer->RenderLine(nearPointWorld, farPointWorld);
 //}
-//
-//bool Camera::IntersectsRay(const Ray& ray, CollisionInfo& info)
-//{
-//	if (type & COLLISION_TYPE_CAMERA)
-//	{
-//		return BaseSceneObject::IntersectsRay(ray, info, type);
-//	}
-//
-//	return false;
-//}
-//
 
 //-----------------------------------------------------------------------------------
 /// \brief
@@ -161,10 +123,7 @@ void Camera::RotateLocal(float headingAmount, float pitchAmount)
 		m_Pitch += pitchAmount;
 
 		if (m_RestrictPitch)
-		{
-			m_Pitch = min(m_Pitch, m_PitchMax);
-			m_Pitch = max(m_Pitch, m_PitchMin);
-		}
+			m_Pitch = Math::Clamp(m_PitchMin, m_PitchMax, m_Pitch);
 
 		//m_PitchMatrix = Matrix3::BuildPitchRotationMatrix(DEG_TO_RAD(m_Pitch));
 	}

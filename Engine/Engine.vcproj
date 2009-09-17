@@ -329,14 +329,6 @@
 				RelativePath=".\Material.h"
 				>
 			</File>
-			<File
-				RelativePath=".\VertexData.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\VertexData.h"
-				>
-			</File>
 		</Filter>
 		<Filter
 			Name="Engine"
@@ -446,14 +438,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\BaseSceneObject.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\BaseSceneObject.h"
-				>
-			</File>
-			<File
 				RelativePath=".\Billboard.cpp"
 				>
 			</File>
@@ -486,6 +470,43 @@
 				>
 			</File>
 			<File
+				RelativePath=".\GameObjectBase.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\GameObjectBase.h"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\IObject.h"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\IRenderableObject.h"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
 				RelativePath=".\ISceneObject.h"
 				>
 			</File>
@@ -498,11 +519,49 @@
 				>
 			</File>
 			<File
+				RelativePath=".\MovableObjectBase.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\MovableObjectBase.h"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\RenderableObjectBase.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\RenderableObjectBase.h"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
 				RelativePath=".\SceneGraph.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\SceneGraph.h"
+				>
+			</File>
+			<File
+				RelativePath=".\SceneObject.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\SceneObject.h"
 				>
 			</File>
 			<File
@@ -562,14 +621,6 @@
 			Name="Lighting"
 			>
 			<File
-				RelativePath=".\BaseLightableObject.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\BaseLightableObject.h"
-				>
-			</File>
-			<File
 				RelativePath=".\ILight.h"
 				>
 			</File>
@@ -579,6 +630,14 @@
 			</File>
 			<File
 				RelativePath=".\Light.h"
+				>
+			</File>
+			<File
+				RelativePath=".\LightableObject.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\LightableObject.h"
 				>
 			</File>
 			<File
@@ -664,6 +723,13 @@
 			<File
 				RelativePath=".\Particle.h"
 				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\ParticleEmitter.cpp"
@@ -672,6 +738,13 @@
 			<File
 				RelativePath=".\ParticleEmitter.h"
 				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\ParticlePool.cpp"
@@ -680,6 +753,13 @@
 			<File
 				RelativePath=".\ParticlePool.h"
 				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
 			</File>
 		</Filter>
 		<Filter
@@ -751,6 +831,34 @@
 			</File>
 			<File
 				RelativePath=".\tinyxml\tinyxmlparser.cpp"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="Collision"
+			>
+			<File
+				RelativePath=".\Collision.h"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="FileSystem"
+			>
+			<File
+				RelativePath=".\FileEnumerator.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\FileEnumerator.h"
+				>
+			</File>
+			<File
+				RelativePath=".\FileSystem.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\FileSystem.h"
 				>
 			</File>
 		</Filter>

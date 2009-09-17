@@ -36,5 +36,23 @@ namespace Debug
 
 #endif // #if defined __PLATFORM_WIN32
 	}
+
+	void FatalError(const String& title, const String& msg, const String& file, const String& line)
+	{
+		String errorMsg = msg;
+		errorMsg += "\nIn file ";
+		errorMsg += file;
+		errorMsg += "\nLine ";
+		errorMsg += line;
+
+		Log.Error(errorMsg);
+#if defined __PLATFORM_WIN32
+		MessageBoxA(NULL, errorMsg.Data(), title.Data(), MB_OK|MB_ICONERROR);
+#elif defined __PLATFORM_LINUX
+		printf("%s %s", title.Data(), errorMsg.Data());
+#endif
+		assert(0);
+	}
+
 }
 

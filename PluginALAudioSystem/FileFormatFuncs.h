@@ -11,8 +11,8 @@
 
 
 #include "EString.h"
-#include <al/al.h>
-#include <al/alut.h>
+#include <AL/al.h>
+#include <AL/alut.h>
 #include <vorbis/vorbisfile.h>
 
 #include <vector>

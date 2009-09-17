@@ -10,8 +10,7 @@
 #include "Engine.h"
 
 Decal::Decal()
-: BaseLightableObject(),
-  m_Material(NULL)
+: m_Material(NULL)
 {
 	m_VertexBuffer = renderer->BuildVertexBuffer();
 	SetSize(1.0f);
@@ -23,16 +22,11 @@ Decal::~Decal()
 }
 
 
-void Decal::Render()
+void Decal::RenderSingleObject()
 {
-	renderer->RenderVertexBuffer(m_VertexBuffer, m_Material, m_WorldTransform);
-	BaseSceneObject::Render();
-}
+	RenderableObjectBase::RenderSingleObject();
 
-bool Decal::IntersectsRay(const Ray& ray, CollisionInfo& info)
-{
-	// Do not collide with decal,  for now...
-	return false;
+	renderer->RenderVertexBuffer(m_VertexBuffer, m_Material, m_WorldTransform);
 }
 
 void Decal::SetDirection(const Vector3f normal)

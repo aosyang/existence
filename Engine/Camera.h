@@ -12,7 +12,7 @@
 #include "Vector3f.h"
 #include "Matrix4.h"
 
-#include "BaseSceneObject.h"
+#include "SceneObject.h"
 #include "Frustum.h"
 #include "Ray.h"
 
@@ -28,31 +28,29 @@
 /// \see
 /// Separate items with the '|' character.
 //-----------------------------------------------------------------------------------
-class Camera : public BaseSceneObject
+class Camera : public SceneObject
 {
 public:
 	Camera();
 
-	// ----- Overwrite ISceneObject
+	// ----- Overwrite IObject
 
 	void Update(unsigned long deltaTime);
-	void Render();
-	void DebugRender();
+	//void DebugRender();
+
+	const String GetTypeName() const { return "Camera"; }
 
 	// ----- Overwrite BaseSceneObject
 
-	int GetCollisionType() const { return COLLISION_TYPE_CAMERA; }
-	//void PrepareRenderObjects(SceneObjectList& objects, const RenderView& view);
-	//bool IntersectsRay(const Ray& ray, CollisionInfo& info);
 	void SetPosition(const Vector3f& pos)
 	{
-		BaseSceneObject::SetPosition(pos);
+		SceneObject::SetPosition(pos);
 		m_MatrixOutOfData = true;
 	}
 
 	void SetRotation(const Quaternion& rot)
 	{
-		BaseSceneObject::SetRotation(rot);
+		SceneObject::SetRotation(rot);
 		m_MatrixOutOfData = true;
 	}
 

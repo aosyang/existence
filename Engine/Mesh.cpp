@@ -73,8 +73,12 @@ Mesh* Mesh::LoadMeshFromFile(const String& filename)
 		switch (ver)
 		{
 		case 10:
-			Log << "Loading mesh version 0.10.\n";
-			LoadMesh_010(mesh, fin);
+			Log << "Mesh version 0.10.\n";
+			if (!LoadMesh_010(mesh, fin))
+			{
+				delete mesh;
+				return NULL;
+			}
 			break;
 		default:
 			// unsupported version
@@ -217,7 +221,8 @@ bool LoadMesh_010(Mesh* mesh, ifstream& fin)
 				break;
 			}
 		default:
-			AssertFatal(0, "LoadMesh_010() : Invalid lump from file.");
+			Log.Warning("LoadMesh_010(): Invalid lump from file.");
+			return false;
 			break;
 		}
 

@@ -10,20 +10,19 @@
 #define _LIGHT_H
 
 #include "ILight.h"
-#include "BaseSceneObject.h"
+#include "SceneObject.h"
 #include "Color4f.h"
 
-class Light : public BaseSceneObject, public ILight
+class SceneObject;
+
+class Light : public SceneObject, public ILight
 {
 public:
 	Light();
-	// ----- Overwrite ISceneObject
-	void Render();
-	void DebugRender();
 
-	// ----- Overwrite BaseSceneObject
+	// ----- Overwrite SceneObject
 
-	//void PrepareRenderObjects(SceneObjectList& objects, const RenderView& view);
+	const String GetTypeName() const { return "Light"; }
 
 	// ----- Overwrite ILight
 	void SetAmbientColor(const Color4f& color) { m_Ambient = color; }

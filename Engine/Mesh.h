@@ -30,11 +30,7 @@ class BspTree;
 class MeshElement;
 class Mesh;
 
-#if defined __PLATFORM_WIN32
-ResourceManager<Mesh>;
-#elif defined __PLATFORM_LINUX
-template class ResourceManager<Mesh>;
-#endif
+DECLARE_RESOURCEMANAGER(Mesh);
 
 enum EMDL_LUMP
 {
@@ -56,7 +52,6 @@ enum EMDL_LUMP
 //-----------------------------------------------------------------------------------
 class Mesh
 {
-	//friend class Shape;			// TODO: Remove this
 	friend class MeshObject;
 	friend class ResourceManager<Mesh>;
 

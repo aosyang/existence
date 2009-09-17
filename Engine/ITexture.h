@@ -67,6 +67,12 @@ enum TextureEnvMode
 	ENV_MODE_ADD,
 };
 
+enum TextureType
+{
+	TEXTURE_TYPE_2D,
+	TEXTURE_TYPE_CUBE,
+};
+
 class ITexture;
 
 // Œ∆¿Ì‰÷»æ◊¥Ã¨
@@ -140,8 +146,7 @@ public:
 
 	virtual String GetName() const = 0;
 
-	// for gl only
-	virtual int GetTarget() const = 0;
+	virtual TextureType GetTextureType() const = 0;
 
 	// Œ∆¿Ìπ˝¬À
 };

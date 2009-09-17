@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="gb2312" standalone="yes" ?>
+<Material name="smoke">
+    <Lighting>false</Lighting>
+    <DepthWriting>false</DepthWriting>
+    <TextureRenderState>
+        <Texture>smoke.png</Texture>
+        <WrapType>2</WrapType>
+        <MinFilterType>3</MinFilterType>
+        <MagFilterType>1</MagFilterType>
+        <TextureGenMode>0</TextureGenMode>
+        <Blending>true</Blending>
+        <TextureBlendFactorSrc>4</TextureBlendFactorSrc>
+        <TextureBlendFactorDst>5</TextureBlendFactorDst>
+        <TextureEnvMode>0</TextureEnvMode>
+    </TextureRenderState>
+</Material>

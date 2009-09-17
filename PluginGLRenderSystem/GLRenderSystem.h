@@ -71,6 +71,8 @@ public:
 	bool Initialize(RenderWindowParam* windowParam);
 	void Shutdown();
 
+	const String GetFeatureString() const;
+
 	void SetClearColor(const Color4f& color);
 
 	void SetViewport(int left, int bottom, unsigned int width, unsigned int height);

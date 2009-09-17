@@ -63,15 +63,24 @@ public:
 
 };
 
+class WorldGridComparer : public less<WorldGrid>
+{
+public:
+	bool operator()(WorldGrid* const lhs, WorldGrid* const rhs) const
+	{
+		return lhs->priority < rhs->priority;
+	}
+};
 
 typedef set<WorldGrid*>		NodeList;
+typedef set<WorldGrid*, WorldGridComparer>	OpenList;
 typedef list<WorldGrid*>	PathList;
 
 enum OperationMode
 {
 	MODE_ADD,
 	MODE_REMOVE,
-	MODE_SHOW_NEIGHBOUR,
+	//MODE_SHOW_NEIGHBOUR,
 	MODE_SET_START,
 	MODE_SET_GOAL,
 	NUM_MODE,
@@ -106,7 +115,7 @@ public:
 	void BuildLinkingPath();
 	void BuildNodePath(const Point3& pos);
 	void AddGridNeighbour(WorldGrid*, const Point3& pos, float len);
-	void ShowNeighbour(const Point3& pos);
+	//void ShowNeighbour(const Point3& pos);
 	void PathFinding(const Point3& start, const Point3& end);
 
 	void MarkerGo(unsigned long deltaTime);
@@ -145,7 +154,7 @@ private:
 	Point3			m_Start;
 	Point3			m_Goal;
 
-	NodeList		m_OpenList;
+	OpenList		m_OpenList;
 	NodeList		m_CloseList;
 
 	PathList		m_Path;

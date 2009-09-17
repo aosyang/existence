@@ -44,6 +44,11 @@ D3D9Renderer::~D3D9Renderer()
 {
 }
 
+void D3D9Renderer::SetGpuPluginName(const String& filename)
+{
+
+}
+
 bool D3D9Renderer::Initialize(RenderWindowParam* windowParam)
 {
 	m_hWnd = windowParam->handle;
@@ -82,9 +87,19 @@ void D3D9Renderer::Shutdown()
 	if (m_Direct3D) m_Direct3D->Release();
 }
 
+const String D3D9Renderer::GetFeatureString() const
+{
+	return String();
+}
+
 void D3D9Renderer::SetClearColor(const Color4f& color)
 {
 	m_ClearColor = COLOR4F_TO_D3DCOLOR(color);
+}
+
+void D3D9Renderer::SetViewport(int left, int bottom, unsigned int width, unsigned int height)
+{
+
 }
 
 void D3D9Renderer::ResizeRenderWindow(unsigned int width, unsigned int height)
@@ -96,9 +111,6 @@ void D3D9Renderer::ResizeRenderWindow(unsigned int width, unsigned int height)
 	}
 
 	if (m_WindowHeight == 0) m_WindowHeight = 1;
-
-	// TODO: Resize D3D viewport here...
-	//glViewport(0, 0, m_WindowWidth, m_WindowHeight);	//Reset The Current Viewport
 
 }
 void D3D9Renderer::SetProjectionMode(ProjectionMatrixMode mode)
@@ -285,12 +297,16 @@ ITexture* D3D9Renderer::BuildTexture(const String& textureName, unsigned int wid
 
 	// TODO 这里有问题
 	WORD* pDst = (WORD*)rect.pBits;   
-	int DPitch = rect.Pitch>>1;   
+	int DPitch = rect.Pitch >> 1;   
 
 	for (int y=0; y<height; ++y){   
 		for (int x=0; x<width; ++x)   
 		{     
-			pDst[y*DPitch + x] = data[y*width + x];   
+			pDst[y*DPitch + x] = data[y*width + x];
+			//if (y>(height/2))
+			//	pDst[y*DPitch + x] = 0x00;
+			//else
+			//	pDst[y*DPitch + x] = 0xFF;
 		}   
 	}   
 
@@ -317,6 +333,16 @@ ITexture* D3D9Renderer::GetTexture(const String& textureName)
 	if ((iter = m_TextureList.find(textureName)) != m_TextureList.end())
 		return iter->second;
 
+	return NULL;
+}
+
+IGpuProgram* D3D9Renderer::LoadGpuProgram(const String& filename, const String& entry, GpuProgramType type)
+{
+	return NULL;
+}
+
+IGpuProgram* D3D9Renderer::GetGpuProgram(const String& filename, const String& entry, GpuProgramType type)
+{
 	return NULL;
 }
 
@@ -420,7 +446,21 @@ void D3D9Renderer::SetupMaterial(Material* material)
 
 		ToggleDepthTest(material->GetDepthTest());
 
-		//m_D3DDevice->SetTexture(0, static_cast<D3D9Texture*>(material->GetTextureRenderState(0)->texture)->GetD3DTexture());
+		texRenderState* rs = material->GetTextureRenderState(0);
+		if (rs && rs->texture)
+		{
+			IDirect3DTexture9* d3dtex = static_cast<D3D9Texture*>(rs->texture)->GetD3DTexture();
+			m_D3DDevice->SetTexture(0, d3dtex);
+		}
+		else
+			m_D3DDevice->SetTexture(0, g_NullTexture);
+	}
+	else
+	{
+		m_D3DDevice->SetRenderState(D3DRS_LIGHTING, FALSE);
+		ToggleDepthWriting(true);
+		ToggleDepthTest(true);
+		m_D3DDevice->SetTexture(0, g_NullTexture);
 	}
 }
 

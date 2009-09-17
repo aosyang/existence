@@ -12,8 +12,8 @@
 #include "IAudioBuffer.h"
 #include "ALAudioSource.h"
 
-#include <al/al.h>
-#include <al/alc.h>
+#include <AL/al.h>
+#include <AL/alc.h>
 
 class ALAudioBuffer : public IAudioBuffer
 {

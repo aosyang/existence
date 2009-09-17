@@ -1,12 +1,13 @@
 #include "Existence.h"
 
-#include "particleGame.h"
+#include "ParticleGame.h"
 
 
-int WINAPI WinMain(	HINSTANCE hInstance,
-				   HINSTANCE hPrevInstance,
-				   LPSTR	lpCmdLine,
-				   int		nCmdShow)
+//int WINAPI WinMain(	HINSTANCE hInstance,
+//				   HINSTANCE hPrevInstance,
+//				   LPSTR	lpCmdLine,
+//				   int		nCmdShow)
+int main()
 {
 	Debug::EnableBreakOnAlloc();
 

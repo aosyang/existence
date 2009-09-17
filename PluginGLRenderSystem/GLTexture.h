@@ -34,7 +34,7 @@ public:
 
 	void BindTexture();
 
-	int GetTarget() const { return GL_TEXTURE_2D; }
+	TextureType GetTextureType() const { return TEXTURE_TYPE_2D; }
 
 	// ----- GLTexture Methods
 

@@ -10,25 +10,27 @@
 #define _BSPOBJECT_H
 
 #include "BspTree.h"
-#include "BaseSceneObject.h"
+#include "RenderableObjectBase.h"
 
-class BspObject : public BaseSceneObject
+class BspObject : public RenderableObjectBase
 {
 public:
 	BspObject();
 	~BspObject();
 
-	// ----- Overwrite ISceneObject
+	// ----- Overwrite SceneObject
 
-	void Render();
-	void DebugRender();
+	const String GetTypeName() const { return "BspObject"; }
 
-	// ----- Overwrite BaseSceneObject
+	// ----- Overwrite IRenderableObject
 
-	int GetCollisionType() const { return COLLISION_TYPE_BSP; }
-	bool IntersectsRay(const Ray& ray, CollisionInfo& info);
+	void RenderSingleObject();
 
-	// BspObject Methods
+	// ----- Overwrite SceneObject
+
+	bool IntersectsRay(const Ray& ray, CollisionResult& info);
+
+	// ----- BspObject Methods
 
 	// 指定用于生成bsp结构的mesh
 	void SetMesh(Mesh* mesh);

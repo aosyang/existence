@@ -48,6 +48,7 @@ void ALAudioSystem::Shutdown()
 	}
 
 	m_Sources.clear();
+	alutExit();
 }
 
 bool ALAudioSystem::LoadAudioBufferFromFile(const String& bufferName, const String& filename)

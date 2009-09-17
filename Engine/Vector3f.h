@@ -62,6 +62,9 @@ public:
 
 	inline float SquaredLength() const { return x * x + y * y + z * z; }
 
+	// 获取向量长度。慎用，速度慢。仅做比较时候优先考虑SquaredLength
+	inline float Length() const { return sqrt(SquaredLength()); }
+
 	inline const float* GetArray() const { return &x; }
 
 	void normalize()

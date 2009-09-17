@@ -3,7 +3,7 @@
 
 #include "Vector3f.h"
 #include "AABB.h"
-#include "BaseSceneObject.h"
+#include "SceneObject.h"
 #include "QuadTreeNode.h"
 
 class QuadTreeNode;

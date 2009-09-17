@@ -8,42 +8,37 @@
 
 #ifndef _SCENEROOTOBJECT_H
 #define _SCENEROOTOBJECT_H
-
-#include "ISceneObject.h"
-#include "BaseSceneObject.h"
-#include "Ray.h"
-
-#include <set>
-#include <vector>
-
-using namespace std;
-
-class BaseSceneObject;
-
-class SceneRootObject : public ISceneObject
-{
-public:
-	~SceneRootObject() {}
-
-	// ----- Overwrite ISceneObject
-
-	void Update(unsigned long deltaTime);
-	void Render();
-	void DebugRender() {}
-
-	// ----- SceneRootObject Methods
-
-	// 收集渲染对象，准备渲染
-	void CollectRenderObjects(const RenderView& view);
-
-	void AttachChildObject(BaseSceneObject* object);
-	bool DetachChildObject(BaseSceneObject* object);
-
-	void CollectRayPickingSceneObject(const Ray& ray, ObjectsCollisionInfos& baseSceneObjects, int type, int collisionGroup);
-private:
-
-	ChildrenSceneObjectsSet	m_ChildrenObjects;
-	SceneObjectList  m_RenderObjects;
-};
+//
+//#include "ISceneObject.h"
+//#include "SceneObject.h"
+//#include "Ray.h"
+//
+//#include <set>
+//#include <vector>
+//
+//using namespace std;
+//
+//class SceneRootObject : public SceneObject
+//{
+//public:
+//	~SceneRootObject() {}
+//
+//	// ----- Overwrite IObject
+//
+//	void Update(unsigned long deltaTime);
+//	void Render();
+//	void DebugRender() {}
+//
+//	// ----- SceneRootObject Methods
+//
+//	void AttachChildObject(BaseSceneObject* object);
+//	bool DetachChildObject(BaseSceneObject* object);
+//
+//	//void CollectRayPickingSceneObject(const Ray& ray, ObjectsCollisionInfos& baseSceneObjects, int type, int collisionGroup);
+//private:
+//
+//	//ChildrenSceneObjectsSet	m_ChildrenObjects;
+//	//SceneObjectList  m_RenderObjects;
+//};
 
 #endif

@@ -9,24 +9,21 @@
 #ifndef _AUDIOSOURCEOBJECT_H
 #define _AUDIOSOURCEOBJECT_H
 
-#include "BaseSceneObject.h"
+#include "SceneObject.h"
 #include "IAudioSource.h"
 #include "EString.h"
 
-class AudioSourceObject : public BaseSceneObject
+class AudioSourceObject : public SceneObject
 {
 public:
 	AudioSourceObject();
 	~AudioSourceObject();
 
-	// ----- Overwrite ISceneObject
+	// ----- Overwrite IObject
 
 	void Update(unsigned long deltaTime);
-	void DebugRender();
 
-	// ----- Overwrite BaseSceneObject
-
-	bool IntersectsRay(const Ray& ray, CollisionInfo& info);
+	const String GetTypeName() const { return "AudioSourceObject"; }
 
 	// ----- AudioSourceObject Methods
 

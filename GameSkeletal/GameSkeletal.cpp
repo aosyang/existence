@@ -17,7 +17,7 @@ static Skeletal skel;
 void GameSkeletal::StartGame()
 {
 	m_Scene = new SceneGraph;
-	m_Scene->SetAmbientColor(Color4f(1.f, 1.f, 1.f));
+	renderer->SetAmbientColor(Color4f(1.f, 1.f, 1.f));
 
 	renderer->SetClearColor(Color4f(0.0f, 0.5f, 0.5f));
 
@@ -28,7 +28,7 @@ void GameSkeletal::StartGame()
 	m_Scene->AddObject(m_Camera);
 
 	m_Sky = new DistantViewObject();
-	m_Sky->SetMesh(ResourceManager<Mesh>::Instance().GetByName("skybox"));
+	m_Sky->SetMesh(ResourceManager<Mesh>::Instance().GetByName("skybox.EMD"));
 	m_Scene->AddObject(m_Sky);
 
 	skel.LoadFromFile("E:/testout.txt");

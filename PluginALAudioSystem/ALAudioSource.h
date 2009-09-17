@@ -10,8 +10,8 @@
 
 #include "IAudioSystem.h"
 
-#include <al/al.h>
-#include <al/alc.h>
+#include <AL/al.h>
+#include <AL/alc.h>
 
 // TODO: 目前ALAudioSource是不允许被直接delete的，必须由ALAudioSystem负责卸载
 

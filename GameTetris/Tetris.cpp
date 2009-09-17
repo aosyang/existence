@@ -1,19 +1,15 @@
 #include "Existence.h"
 
-#include <windows.h>
-
 #include "TetrisGame.h"
 
-#include <crtdbg.h>
-
-//extern RendererCreator s_RendererCreator;
-
-//IAudioSystem* Engine::Instance().AudioSystem() = 0;
-
+#if defined __PLATFORM_WIN32
 int WINAPI WinMain(	HINSTANCE hInstance,
 				   HINSTANCE hPrevInstance,
 				   LPSTR	lpCmdLine,
 				   int		nCmdShow)
+#elif defined __PLATFORM_LINUX
+int main()
+#endif
 {
 	Debug::EnableBreakOnAlloc();
 

@@ -11,6 +11,10 @@
 #include "Singleton.h"
 #include "Platform.h"
 
+#include <map>
+
+using namespace std;
+
 #if defined __PLATFORM_LINUX
 namespace X11	// 防止X11的类型名与FreeType冲突
 {
@@ -21,13 +25,17 @@ namespace X11	// 防止X11的类型名与FreeType冲突
 }
 #endif	// #if defined __PLATFORM_LINUX
 
+typedef bool(*FileLoadFuncPtr)(const String&, const String&);
+
 class System : public Singleton<System>
 {
 public:
 	System();
 
+	// 从配置文件中载入所需资源
 	void LoadResources(const String& filename);
 
+	// 创建渲染窗口
 	bool CreateRenderWindow(const String& title,
 							unsigned int width,
 							unsigned int height,
@@ -41,6 +49,7 @@ public:
 	void SetWindowTitle(const String& title);
 	void ResizeWindow(unsigned int width, unsigned int height);
 
+	// 鼠标光标控制
 	void ToggleMouseCursor(bool toggle);
 	void SetMouseCursorPos(int x, int y);
 	void CenterMouseCursor();
@@ -68,17 +77,17 @@ public:
 	RenderWindowParam* GetRenderWindowParameters() { return &m_RenderWindowParam; }
 
 private:
-	void LoadAudios(ConfigFileKeys* list);
-	void LoadTextures(ConfigFileKeys* list);
-	void LoadMaterials(ConfigFileKeys* list);
-	void LoadFonts(ConfigFileKeys* list);
-	void LoadMeshes(ConfigFileKeys* list);
+	// 注册指定扩展名的读取函数
+	void RegisterExtensionLoader(const String& ext, FileLoadFuncPtr func);
 
 private:
 	RenderWindowParam	m_RenderWindowParam;
 
 	bool				m_FullScreen;
 	String				m_TitleName;
+
+	typedef map<const String, FileLoadFuncPtr>	FileLoaders;
+	FileLoaders			m_FileLoaders;
 };
 
 #endif

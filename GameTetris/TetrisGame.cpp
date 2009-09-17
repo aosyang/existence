@@ -7,6 +7,8 @@
 //-----------------------------------------------------------------------------------
 #include "TetrisGame.h"
 #include "Block.h"
+#include <algorithm>
+#include <functional>
 
 TetrisGame::TetrisGame()
 : m_Scene(NULL),
@@ -241,7 +243,7 @@ void TetrisGame::MoveDown()
 		CheckAndRemove();
 	}
 
-	IAudioBuffer* buffer = Engine::Instance().AudioSystem()->GetAudioBuffer("move");
+	IAudioBuffer* buffer = Engine::Instance().AudioSystem()->GetAudioBuffer("move.wav");
 	Engine::Instance().AudioSystem()->CreateSourceInstance(buffer, Vector3f(0.0f, 0.0f, 0.0f));
 }
 
@@ -261,7 +263,7 @@ void TetrisGame::MoveLeft()
 	//m_Tetromino->SetPosition(x, y);
 	m_Tetromino->MoveLeft();
 
-	IAudioBuffer* buffer = Engine::Instance().AudioSystem()->GetAudioBuffer("move");
+	IAudioBuffer* buffer = Engine::Instance().AudioSystem()->GetAudioBuffer("move.wav");
 	Engine::Instance().AudioSystem()->CreateSourceInstance(buffer, Vector3f(0.0f, 0.0f, 0.0f));
 }
 
@@ -281,7 +283,7 @@ void TetrisGame::MoveRight()
 	//m_Tetromino->SetPosition(x, y);
 	m_Tetromino->MoveRight();
 
-	IAudioBuffer* buffer = Engine::Instance().AudioSystem()->GetAudioBuffer("move");
+	IAudioBuffer* buffer = Engine::Instance().AudioSystem()->GetAudioBuffer("move.wav");
 	Engine::Instance().AudioSystem()->CreateSourceInstance(buffer, Vector3f(0.0f, 0.0f, 0.0f));
 }
 
@@ -336,7 +338,7 @@ void TetrisGame::CheckAndRemove()
 
 	if (remove)
 	{
-		IAudioBuffer* buffer = Engine::Instance().AudioSystem()->GetAudioBuffer("remove");
+		IAudioBuffer* buffer = Engine::Instance().AudioSystem()->GetAudioBuffer("remove.wav");
 		Engine::Instance().AudioSystem()->CreateSourceInstance(buffer, Vector3f(0.0f, 0.0f, 0.0f));
 	}
 }
@@ -346,7 +348,9 @@ void TetrisGame::RemoveLine(int line)
 	// …æ≥˝’‚“ª––
 	for (int x=0; x<10; x++)
 	{
-		list<Block*>::iterator iter = find(Tetromino::s_BlocksInGame.begin(), Tetromino::s_BlocksInGame.end(), m_BlockList[x][line]);
+		//list<Block*>::iterator iter = find(Tetromino::s_BlocksInGame.begin(), Tetromino::s_BlocksInGame.end(), m_BlockList[x][line]);
+		list<Block*>::iterator iter = find_if(Tetromino::s_BlocksInGame.begin(), Tetromino::s_BlocksInGame.end(), bind2nd(equal_to<Block*>(),(m_BlockList[x][line])));
+		
 		if (iter != Tetromino::s_BlocksInGame.end())
 			Tetromino::s_BlocksInGame.erase(iter);
 		delete m_BlockList[x][line];

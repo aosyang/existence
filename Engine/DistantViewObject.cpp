@@ -10,8 +10,7 @@
 #include "Engine.h"
 
 DistantViewObject::DistantViewObject()
-: BaseSceneObject(),
-  m_OffsetScale(0.0f, 0.0f, 0.0f)
+: m_OffsetScale(0.0f, 0.0f, 0.0f)
 {
 	// render very first
 	m_RenderOrder = 70;
@@ -21,13 +20,10 @@ DistantViewObject::~DistantViewObject()
 {
 }
 
-void DistantViewObject::Update(unsigned long deltaTime)
+void DistantViewObject::RenderSingleObject()
 {
-	BaseSceneObject::Update(deltaTime);
-}
+	RenderableObjectBase::RenderSingleObject();
 
-void DistantViewObject::Render()
-{
 	// 将渲染时使用的变换矩阵进行hack
 	Matrix4 invViewMatrix = renderer->ViewMatrix().GetInverseMatrix();
 	Matrix4 distviewMatrix = m_WorldTransform;
@@ -39,32 +35,16 @@ void DistantViewObject::Render()
 
 	distviewMatrix.SetPosition(invViewMatrix.GetPosition() - offset);
 
-	int maxLightNum = renderer->GetMaxLightsNumber();
-
-	for (int i=0; i<maxLightNum; i++)
-	{
-		renderer->SetupLight(i, NULL);
-	}
-
-
 	for (int i=0; i<m_Mesh->GetElementsNum(); i++)
 	{
 		MeshElement* elem = m_Mesh->GetElement(i);
 		renderer->RenderVertexBuffer(elem->m_VertexBuffer, m_Mesh->GetMaterial(i), distviewMatrix);
 	}
 	renderer->ClearBuffer(false);
-
-	BaseSceneObject::Render();
 }
 
-void DistantViewObject::DebugRender()
+bool DistantViewObject::IsCulled(Frustum* frustum)
 {
-	// nothing to do
-}
-
-bool DistantViewObject::IntersectsRay(const Ray& ray, CollisionInfo& info)
-{
-	// never get cought by a ray
 	return false;
 }
 
@@ -72,29 +52,4 @@ void DistantViewObject::SetMesh(Mesh* mesh)
 {
 	AssertFatal(mesh, "DistantViewObject::SetMesh() : Mesh cannot be null!");
 	m_Mesh = mesh;
-
-	//// NOTE: 这个方法会改变纹理原先的属性
-	//for (int i=0; i<m_Mesh->GetMaterialsNum(); i++)
-	//{
-	//	Material* mat = m_Mesh->GetMaterial(i);
-	//	if (!mat) continue;
-	//	mat->SetDepthWriting(false);
-	//	mat->SetLighting(false);
-
-	//	// TODO: 某些显卡不支持这个方法
-	//	mat->GetTextureRenderState()->wrapType = WRAP_TYPE_CLAMP_TO_EDGE;
-	//	//mat->GetTextureRenderState()->magFilterType = FILTER_TYPE_NEAREST;
-	//}
-}
-
-bool DistantViewObject::RayPicking(const Ray& ray, Vector3f& point, Vector3f& normal, float& d, bool infiniteLength)
-{
-	// forget it...
-	return false;
-}
-
-bool DistantViewObject::IsCulled(const RenderView& view)
-{
-	// 阻止视截体裁减
-	return !m_Visible;
 }

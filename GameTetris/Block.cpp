@@ -14,14 +14,14 @@ Block::Block()
 
 	// 添加至渲染对象列表
 	reinterpret_cast<TetrisGame*>(Engine::Instance().GetGame())->GetScene()->AddObject(&m_Shape);
-	LightingManager::Instance().AddLightableObject(&m_Shape);
-	m_Shape.SetFrustumCulling(false);
+	m_Shape.CreateLightableObject();
+	//m_Shape.SetFrustumCulling(false);
 	//renderer->AddRenderObject(&m_Shape);
 }
 
 Block::~Block()
 {
-	LightingManager::Instance().RemoveLightableObject(&m_Shape);
+	m_Shape.DestroyLightableObject();
 	reinterpret_cast<TetrisGame*>(Engine::Instance().GetGame())->GetScene()->RemoveObject(&m_Shape, false);
 	//static_cast<TetrisGame*>(Engine::Instance().GetGame())->GetScene()->AddObject(&m_Shape);
 	//renderer->RemoveRenderObject(&m_Shape);
@@ -56,7 +56,7 @@ void Block::InitializeData()
 	// 指定方块材质
 
 	//Block::s_BlockTexture = TextureManager::Instance().GetTexture("block_surface");
-	Block::s_BlockTexture = renderer->GetTexture("block_surface");
+	Block::s_BlockTexture = renderer->GetTexture("blank.bmp");
 
 	for (int i=0; i<MAX_SHAPE_TYPE_NUM + 1; i++)
 	{

@@ -10,8 +10,7 @@
 #include "Engine.h"
 
 Billboard::Billboard()
-: BaseLightableObject(),
-  m_Material(NULL),
+: m_Material(NULL),
   m_Radius(10.0f),
   m_ZRotataion(0.0f),
   m_ZOffset(0.0f),
@@ -60,14 +59,16 @@ void Billboard::Update(unsigned long deltaTime)
 {
 	UpdateVertexData();
 
-	BaseSceneObject::Update(deltaTime);
+	RenderableObjectBase::Update(deltaTime);
 
 	//float n = renderer->GetFrustum()->SphereInFrustum(m_WorldTransform.GetPosition(), 1.0f) / 10.0f;
 	//SetColor(Color4f(1.0f, 1.0f, 1.0f, max(n, 0.0f)));
 }
 
-void Billboard::Render()
+void Billboard::RenderSingleObject()
 {
+	RenderableObjectBase::RenderSingleObject();
+
 	Matrix4 invViewMatrix = renderer->ViewMatrix().GetInverseMatrix();
 	Matrix4 billboardingMat = m_WorldTransform;
 	//Matrix3 identityRotMatrix;
@@ -75,8 +76,6 @@ void Billboard::Render()
 	billboardingMat.SetRotation(invViewMatrix.GetRotationMatrix());
 
 	renderer->RenderVertexBuffer(m_VertexBuffer, m_Material, billboardingMat);
-	BaseSceneObject::Render();
-
 }
 
 void Billboard::SetColor(const Color4f& color)

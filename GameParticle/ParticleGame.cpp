@@ -1,4 +1,4 @@
-#include "particleGame.h"
+#include "ParticleGame.h"
 
 particleGame::particleGame()
 : m_Scene(NULL),
@@ -62,7 +62,7 @@ void particleGame::StartGame()
 {
 	m_Scene = new SceneGraph;
 
-	m_Scene->SetAmbientColor(Color4f(0.7f, 0.7f, 0.7f));
+	renderer->SetAmbientColor(Color4f(0.7f, 0.7f, 0.7f));
 
 	m_Camera = new Camera();
 	m_Camera->SetPosition(Vector3f(1.0f, 0.0f, 5.0f));
@@ -168,14 +168,14 @@ void particleGame::StartGame()
 
 void particleGame::Shutdown()
 {
-	ResourceManager<Material>::ResourceMap::iterator iter;
-	ResourceManager<Material>::ResourceMap map = ResourceManager<Material>::Instance().GetResourceMap();
-	for (iter=ResourceManager<Material>::Instance().GetResourceMap().begin();
-		 iter!=ResourceManager<Material>::Instance().GetResourceMap().end();
-		 iter++)
-	{
-		iter->second->SaveToFile(iter->first + ".emt");
-	}
+	//ResourceManager<Material>::ResourceMap::iterator iter;
+	//ResourceManager<Material>::ResourceMap map = ResourceManager<Material>::Instance().GetResourceMap();
+	//for (iter=ResourceManager<Material>::Instance().GetResourceMap().begin();
+	//	 iter!=ResourceManager<Material>::Instance().GetResourceMap().end();
+	//	 iter++)
+	//{
+	//	iter->second->SaveToFile(iter->first + ".emt");
+	//}
 
 
 	SAFE_DELETE(m_Scene);

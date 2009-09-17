@@ -8,43 +8,74 @@
 #include "SceneGraph.h"
 #include "Engine.h"
 #include "Frustum.h"
+#include "LightingManager.h"
 #include "ShadowManager.h"
+#include <algorithm>
+
+bool RenderableObjectBaseComparer(RenderableObjectBase* lhs, RenderableObjectBase* rhs)
+{
+	// TODO: 对可渲染物体的排序要从材质是否透明、与镜头距离等方向来比较
+	return lhs->GetRenderOrder() < rhs->GetRenderOrder();
+}
 
 SceneGraph::SceneGraph()
-: m_RootObject(NULL),
-  m_ProcessingUpdate(false),
-  //m_Camera(NULL),
-  m_Ambient(0.2f, 0.2f, 0.2f, 0.1f)
+: //m_RootObject(NULL),
+  m_ProcessingUpdate(false)
 {
 	// 创建用于管理其他对象的根对象
-	m_RootObject = new SceneRootObject();
+	//m_RootObject = new SceneRootObject();
 }
 
 SceneGraph::~SceneGraph()
 {
-	set<BaseSceneObject*>::iterator iter;
-	for (iter=m_AutoDeleteList.begin(); iter!=m_AutoDeleteList.end(); iter++)
+	SceneObjectSet::iterator iter;
+
+	// 首先调用每个需要销毁的对象的destroy方法
+	// 注：不要在访问列表过程中删除对象，否则会造成迭代器失效
+	// TODO: Destroy方法中删除对象是否会造成迭代器失效？
+
+	//for (iter=m_AutoDeleteList.begin(); iter!=m_AutoDeleteList.end(); iter++)
+	//{
+	//	(*iter)->Destroy();
+	//}
+
+	//for (iter=m_AutoDeleteList.begin(); iter!=m_AutoDeleteList.end(); iter++)
+	//{
+	//	delete (*iter);
+	//}
+
+	iter=m_AutoDeleteList.begin();
+	while (iter!=m_AutoDeleteList.end())
 	{
+		(*iter)->Destroy();
 		delete (*iter);
+		
+		m_AutoDeleteList.erase(iter);
+
+		iter=m_AutoDeleteList.begin();
 	}
 
-	SAFE_DELETE(m_RootObject)
+	//SAFE_DELETE(m_RootObject)
 }
 
-void SceneGraph::AddObject(BaseSceneObject* object, bool autoDelete)
+void SceneGraph::AddObject(SceneObject* object, bool autoDelete)
 {
 	//m_SceneObjects.push_back(object);
 
-	m_RootObject->AttachChildObject(object);
-	object->m_Scene = this;
+	//m_RootObject->AttachChildObject(object);
+	//object->m_Scene = this;
+
+	m_SceneObjects.insert(object);
 
 	if (autoDelete)
 	{
 		m_AutoDeleteList.insert(object);
 	}
+
+	object->SetSceneGraphRecursively(this);
 }
 
-void SceneGraph::RemoveObject(BaseSceneObject* object, bool deleteObj)
+void SceneGraph::RemoveObject(SceneObject* object, bool deleteObj)
 {
 	// TODO: 这个方法删除有子对象的对象时候会怎样？
 
@@ -58,39 +89,28 @@ void SceneGraph::RemoveObject(BaseSceneObject* object, bool deleteObj)
 	}
 	else	// 否则直接删除对象
 	{
-		RemoveObjectInternal(object, deleteObj);
+		RemoveSceneObjectInternal(object, deleteObj);
 	}
 }
-//
-//void SceneGraph::SetCamera(Camera* camera, bool useCameraFrustum)
-//{
-//	m_Camera = camera; 
-//
-//	//NotifyUpdatingProjectionMatrix();
-//
-//	// This hacks: 测试一下frustum的工作情况
-//	//renderer->ProjectionMatrix() = frustum.BuildPrespectiveProjMatrix();
-//	if (useCameraFrustum)
-//	{
-//		camera->UpdateFrustum();
-//		SetFrustum(camera->GetFrustum());
-//	}
-//}
-//
-//void SceneGraph::NotifyUpdatingProjectionMatrix()
-//{
-//	renderer->ProjectionMatrix() = m_Camera->GetProjMatrix();
-//}
 
 void SceneGraph::UpdateScene(unsigned long deltaTime)
 {
 	m_ProcessingUpdate = true;
 	// 通过根对象更新每个子对象
-	m_RootObject->Update(deltaTime);
+	//m_RootObject->Update(deltaTime);
+
+	SceneObjectSet::iterator iter;
+	for (iter=m_SceneObjects.begin(); iter!=m_SceneObjects.end(); iter++)
+	{
+		//if (!(*iter)->IsUpdated())
+			(*iter)->Update(deltaTime);
+	}
 
 	m_ProcessingUpdate = false;
 
 	ProcessRemove();
+
+	LightingManager::Instance().Update();
 }
 
 // 设置渲染视点信息
@@ -107,7 +127,21 @@ void SceneGraph::RenderScene()
 	//ShadowManager::Instance().RenderLightViewScene(m_RootObject);
 
 	// 渲染场景
-	m_RootObject->CollectRenderObjects(m_RenderView);
+
+	RenderableObjectList renderList;
+
+	SceneObjectSet::iterator iter;
+	for (iter=m_SceneObjects.begin(); iter!=m_SceneObjects.end(); iter++)
+	{
+		(*iter)->CollectRenderableObject(renderList, m_RenderView.frustum);
+	}
+
+	Engine::Instance().SetRenderBatchCount(renderList.size());
+
+	// 对所有对象进行排序
+	sort(renderList.begin(), renderList.end(), RenderableObjectBaseComparer);
+
+	//m_RootObject->CollectRenderObjects(m_RenderView);
 	renderer->SetProjectionMode(PROJECTION_MODE_PERSPECTIVE);
 	renderer->ClearBuffer(
 #if defined __PLATFORM_LINUX	// 为何在glx下面清除深度缓冲会崩溃？
@@ -115,43 +149,68 @@ void SceneGraph::RenderScene()
 #endif
 						 );
 	renderer->BeginRender();
-	m_RootObject->Render();
-	renderer->EndRender();
+	//m_RootObject->Render();
+	RenderableObjectList::iterator renderIter;
 
-}
-
-void SceneGraph::CollectRayPickingSceneObject(const Ray& ray, ObjectsCollisionInfos& baseSceneObjects, int type, int collisionGroup)
-{
-	m_RootObject->CollectRayPickingSceneObject(ray, baseSceneObjects, type, collisionGroup);
-}
-
-//-----------------------------------------------------------------------------------
-/// \brief
-/// 设置环境光颜色
-/// 
-/// \param color
-/// 颜色值
-/// 
-/// 环境光颜色会影响没有直接光照的多边形
-//-----------------------------------------------------------------------------------
-void SceneGraph::SetAmbientColor(const Color4f color)
-{
-	m_Ambient = color;
-	renderer->SetAmbientColor(color);
-}
-
-void SceneGraph::RemoveObjectInternal(BaseSceneObject* object, bool deleteObj)
-{
-	if (m_RootObject->DetachChildObject(object))
+	for (renderIter=renderList.begin(); renderIter!=renderList.end(); renderIter++)
 	{
-		// 从自动删除列表中删除对象
-		set<BaseSceneObject*>::iterator iter = m_AutoDeleteList.find(object);
-		if (iter!=m_AutoDeleteList.end())
-			m_AutoDeleteList.erase(iter);
-
-		if (deleteObj)
-			delete object;
+		(*renderIter)->RenderSingleObject();
 	}
+
+	renderer->EndRender();
+}
+
+void SceneGraph::RayPickingSceneObject(const Ray& ray, ObjectsCollisionInfos& sceneObjects, int type, int collisionGroup)
+{
+	SceneObjectSet::iterator iter;
+	for (iter=m_SceneObjects.begin(); iter!=m_SceneObjects.end(); iter++)
+	{
+		(*iter)->RayPickingSceneObject(ray, sceneObjects, type, collisionGroup);
+	}
+}
+
+void SceneGraph::DumpToLog()
+{
+	Log.MsgLn("----------- Begin dumping SceneGraph");
+	SceneObjectSet::iterator iter;
+	for (iter=m_SceneObjects.begin();
+		 iter!=m_SceneObjects.end();
+		 iter++)
+	{
+		(*iter)->DumpToLogRecursively(0);
+	}
+	Log.MsgLn("----------- End dumping SceneGraph");
+}
+
+void SceneGraph::RemoveSceneObjectInternal(SceneObject* object, bool deleteObj)
+{
+	//if (m_RootObject->DetachChildObject(object))
+	//{
+
+	SceneObjectSet::iterator soiter = m_SceneObjects.find(object);
+	if (soiter!=m_SceneObjects.end())
+	{
+		m_SceneObjects.erase(soiter);
+	}
+
+	// 从自动删除列表中删除对象
+	SceneObjectSet::iterator iter = m_AutoDeleteList.find(object);
+	if (iter!=m_AutoDeleteList.end())
+	{
+		m_AutoDeleteList.erase(iter);
+	}
+
+	if (deleteObj)
+	{
+		object->Destroy();
+
+		// TODO: 这里递归设定场景图会导致崩溃，为何？
+		//object->SetSceneGraphRecursively(NULL);
+		object->SetSceneGraph(NULL);
+		delete object;
+	}
+
+	//}
 }
 
 void SceneGraph::ProcessRemove()
@@ -159,7 +218,7 @@ void SceneGraph::ProcessRemove()
 	vector<RemoveListElement>::iterator remove_iter;
 	for (remove_iter=m_RemoveList.begin(); remove_iter!=m_RemoveList.end(); remove_iter++)
 	{
-		RemoveObjectInternal(remove_iter->obj, remove_iter->deleteObj);
+		RemoveSceneObjectInternal(remove_iter->obj, remove_iter->deleteObj);
 	}
 
 	m_RemoveList.clear();

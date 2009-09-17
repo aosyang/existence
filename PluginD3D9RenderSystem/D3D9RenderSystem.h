@@ -31,10 +31,16 @@ public:
 	void SetActive(bool active) { m_Active = active; }
 	bool GetActive() { return m_Active; }
 
+	void SetGpuPluginName(const String& filename);
+
 	bool Initialize(RenderWindowParam* windowParam);
 	void Shutdown();
 
+	const String GetFeatureString() const;
+
 	void SetClearColor(const Color4f& color);
+
+	void SetViewport(int left, int bottom, unsigned int width, unsigned int height);
 
 	//void SetViewMatrix(const Matrix4& mat) { m_ViewMatrix = mat; }
 	Matrix4& ViewMatrix() { return m_ViewMatrix; }
@@ -79,6 +85,14 @@ public:
 	ITexture* BuildDepthTexture(const String& textureName, unsigned int width, unsigned int height) { return NULL; }
 
 	ITexture* GetTexture(const String& textureName);
+
+	// Shaders
+
+	// 读取一个Shader
+	IGpuProgram* LoadGpuProgram(const String& filename, const String& entry, GpuProgramType type);
+
+	// 获取一个已有Shader
+	IGpuProgram* GetGpuProgram(const String& filename, const String& entry, GpuProgramType type);
 
 	int GetMaxLightsNumber();
 

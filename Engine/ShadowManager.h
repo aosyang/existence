@@ -20,8 +20,8 @@ public:
 	void SetLight(Light* light) { m_Light = light; }
 	Light* GetLight() { return m_Light; }
 
-	void RenderLightViewScene(SceneRootObject* rootObj);
-	void RenderUntexturedScene(SceneRootObject* rootObj);
+	//void RenderLightViewScene(SceneRootObject* rootObj);
+	//void RenderUntexturedScene(SceneRootObject* rootObj);
 
 private:
 	ShadowManager();

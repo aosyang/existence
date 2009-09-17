@@ -1,21 +1,20 @@
 //-----------------------------------------------------------------------------------
-/// BaseLightableObject.cpp 可照亮对象基类
+/// LightableObject.cpp 可照亮对象基类
 /// 
 /// File Encoding : GB2312
 /// 
 /// Copyright (c) 2009 by Mwolf
 //-----------------------------------------------------------------------------------
 
-#include "BaseLightableObject.h"
+#include "LightableObject.h"
 #include "Engine.h"
 
-BaseLightableObject::BaseLightableObject()
-: BaseSceneObject(),
-  m_Moved(true)
+LightableObject::LightableObject()
+: m_Moved(true)
 {
 }
 
-void BaseLightableObject::AddLight(Light* light)
+void LightableObject::AddLight(Light* light)
 {
 	// TODO: 判断最大受影响光源数量
 
@@ -25,13 +24,13 @@ void BaseLightableObject::AddLight(Light* light)
 	m_Lights.push_back(light);
 }
 
-void BaseLightableObject::ClearLights()
+void LightableObject::ClearLights()
 {
 	m_Lights.clear();
 }
 
 // 设置渲染器的灯光状态
-void BaseLightableObject::SetupLights()
+void LightableObject::SetupLights()
 {
 	int maxLightNum = renderer->GetMaxLightsNumber();
 

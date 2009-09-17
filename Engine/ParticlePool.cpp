@@ -35,8 +35,7 @@ bool ParticleComparer(Particle lhs, Particle rhs)
 }
 
 ParticlePool::ParticlePool()
-: BaseSceneObject(),
-  m_Material(NULL),
+: m_Material(NULL),
   m_PoolCapability(100),
   m_ActiveParticleCount(0),
   m_SortByZOrder(true),
@@ -56,12 +55,18 @@ ParticlePool::ParticlePool()
 
 ParticlePool::~ParticlePool()
 {
+}
+
+void ParticlePool::Destroy()
+{
+	RenderableObjectBase::Destroy();
+
 	delete m_VertexBuffer;
 }
 
 void ParticlePool::Update(unsigned long deltaTime)
 {
-	BaseSceneObject::Update(deltaTime);
+	RenderableObjectBase::Update(deltaTime);
 
 	int activeCount = 0;
 
@@ -84,25 +89,25 @@ void ParticlePool::Update(unsigned long deltaTime)
 	m_ActiveParticleCount = activeCount;
 
 	// 发射器如果已经销毁，当粒子池为空的时候销毁
-	if (!m_ActiveParticleCount && !m_Emitter && m_VanishOnEmpty)
-		m_Scene->RemoveObject(this);
+	//if (!m_ActiveParticleCount && !m_Emitter && m_VanishOnEmpty)
+	//	m_Scene->RemoveObject(this);
 }
 
-void ParticlePool::Render()
+void ParticlePool::RenderSingleObject()
 {
+	RenderableObjectBase::RenderSingleObject();
+
 	matView = renderer->ViewMatrix();
 	matViewInv = renderer->ViewMatrix().GetInverseMatrix();
 
 	// 排序
-	stable_sort(m_Particles.begin(), m_Particles.end(), ParticleComparer);
+	sort(m_Particles.begin(), m_Particles.end(), ParticleComparer);
 
 	// 构造顶点数据
 	BuildVertexData();
 
 	// TODO: 这样的粒子池不能够进行渲染，否则粒子方向会发生错误
 	renderer->RenderVertexBuffer(m_VertexBuffer, m_Material, m_WorldTransform);
-	
-	BaseSceneObject::Render();
 }
 
 void ParticlePool::BuildVertexData()

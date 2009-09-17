@@ -17,17 +17,10 @@ AudioListener::~AudioListener() {}
 
 void AudioListener::Update(unsigned long deltaTime)
 {
-	BaseSceneObject::Update(deltaTime);
+	SceneObject::Update(deltaTime);
 
 	// 更新收听者速度信息
 	Vector3f vel = (m_WorldTransform.GetPosition() - m_OldPosition) * 1000.0f / (float)deltaTime * m_VelocityFactor;
 	m_OldPosition = m_WorldTransform.GetPosition();
 	Engine::Instance().AudioSystem()->SetListenerTransform(this->WorldTransform(), vel);
-}
-
-void AudioListener::DebugRender() {}
-
-bool AudioListener::IntersectsRay(const Ray& ray, CollisionInfo& info)
-{
-	return false;
 }

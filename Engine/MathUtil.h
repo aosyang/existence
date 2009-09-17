@@ -77,7 +77,7 @@ namespace Math
 	// 给出一个指定闭区间上的随机数
 	template <typename T> inline T Random(const T& min, const T& max)
 	{
-		return min + (max - min) * (float)rand()/RAND_MAX;
+		return static_cast<T>(min + (max - min) * (float)rand()/RAND_MAX);
 	}
 }
 

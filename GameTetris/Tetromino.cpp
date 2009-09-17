@@ -34,7 +34,7 @@ list<Block*> Tetromino::s_BlocksInGame;
 Tetromino::Tetromino()
 : /*m_PosX(0), m_PosY(0), */m_Position(0, 0), m_RotType(ROT_0)
 {
-	m_ShapeType = Math::Random(0, (int)MAX_SHAPE_TYPE_NUM);
+	m_ShapeType = Math::Random<int>(0, MAX_SHAPE_TYPE_NUM);
 	for (int i=0; i<4; i++)
 	{
 		m_Blocks[i] = 0;
@@ -193,7 +193,7 @@ bool Tetromino::Apply()
 	BuildShape();
 	SetPosition(4, 19);
 
-	IAudioBuffer* buffer = Engine::Instance().AudioSystem()->GetAudioBuffer("down");
+	IAudioBuffer* buffer = Engine::Instance().AudioSystem()->GetAudioBuffer("down.wav");
 	Engine::Instance().AudioSystem()->CreateSourceInstance(buffer, Vector3f(0.0f, 0.0f, 0.0f));
 
 	// GameOverµÄÅÐ¶¨

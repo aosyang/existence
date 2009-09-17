@@ -26,22 +26,19 @@ namespace Debug
 	/// 这个方法会读取运行路径下的debugalloc.cfg文件，并设置内存分配断点
 	//-----------------------------------------------------------------------------------
 	void EnableBreakOnAlloc();
+
+	void FatalError(const String& title, const String& msg, const String& file, const String& line);
+
+	static String	_DEBUG_MSG;
 }
 
-#if defined __PLATFORM_WIN32
-//#define AssertFatal(expression, msg) assert(expression && msg)
 #define AssertFatal(expression, msg) if ((expression)==0) { \
-		Log.Error(msg"\nExpression : "#expression); \
-		MessageBoxA(NULL, msg"\nExpression : "#expression , "Fatal error!",MB_OK|MB_ICONERROR); \
-		assert(0); \
-	}
-#elif defined __PLATFORM_LINUX
-#define AssertFatal(expression, msg) if ((expression)==0) { \
-		Log.Error(msg"\nExpression : "#expression); \
-		printf("!! Faltal error !! "#expression"\n"); \
-		assert(0); \
-	}
-#endif
+	Debug::_DEBUG_MSG = ""; \
+	Debug::_DEBUG_MSG += msg; \
+	Debug::_DEBUG_MSG += "\nExpression : "; \
+	Debug::_DEBUG_MSG += #expression; \
+	Debug::FatalError("Fatal error!", Debug::_DEBUG_MSG, __FILE__, __LINE__); \
+}
 
 #endif
 

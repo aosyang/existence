@@ -9,24 +9,27 @@
 #ifndef _DISTANTVIEWOBJECT_H
 #define _DISTANTVIEWOBJECT_H
 
-#include "BaseSceneObject.h"
+#include "RenderableObjectBase.h"
 #include "Mesh.h"
 
-class DistantViewObject : public BaseSceneObject
+class DistantViewObject : public RenderableObjectBase
 {
 public:
 	DistantViewObject();
 	~DistantViewObject();
 
-	// ----- Overwrite ISceneObject
+	// ----- Overwrite SceneObject
 
-	void Update(unsigned long deltaTime);
-	void Render();
-	void DebugRender();
+	const String GetTypeName() const { return "DistantViewObject"; }
 
-	// ----- Overwrite BaseSceneObject
 
-	bool IntersectsRay(const Ray& ray, CollisionInfo& info);
+	// ----- Overwrite IRenderableObject
+
+	void RenderSingleObject();
+
+	// ----- Overwrite MovableObjectBase
+
+	bool IsCulled(Frustum* frustum);
 
 	// ----- DistantViewObject Methods
 
@@ -36,12 +39,6 @@ public:
 	// 模型位移比例
 	inline void SetOffsetScale(const Vector3f& scale) { m_OffsetScale = scale; }
 	inline Vector3f GetOffsetScale() const { return m_OffsetScale; }
-
-	bool RayPicking(const Ray& ray, Vector3f& point, Vector3f& normal, float& d, bool infiniteLength = false);
-protected:
-	// ----- Overwrite BaseSceneObject
-
-	bool IsCulled(const RenderView& view);
 
 private:
 	Mesh*		m_Mesh;
