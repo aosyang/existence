@@ -34,12 +34,7 @@ list<Block*> Tetromino::s_BlocksInGame;
 Tetromino::Tetromino()
 : /*m_PosX(0), m_PosY(0), */m_Position(0, 0), m_RotType(ROT_0)
 {
-	m_ShapeType = Math::Random<int>(0, MAX_SHAPE_TYPE_NUM);
-	for (int i=0; i<4; i++)
-	{
-		m_Blocks[i] = 0;
-	}
-	//memset(m_Blocks, 0, sizeof(Block*) * 4);
+	BuildShape();
 }
 
 Tetromino::~Tetromino()
@@ -63,6 +58,8 @@ void Tetromino::SetPosition(int x, int y)
 
 void Tetromino::BuildShape()
 {
+	m_ShapeType = GetNextShape();
+
 	for (int i=0; i<4; i++)
 	{
 		m_Blocks[i] = new Block();
@@ -72,7 +69,37 @@ void Tetromino::BuildShape()
 	}
 
 	UpdatePos();
+	SetPosition(4, 19);
 }
+
+unsigned char Tetromino::GetNextShape()
+{
+	// TODO: 产生随机序列，防止重复
+
+	static int index = MAX_SHAPE_TYPE_NUM - 1;
+	static int seq[MAX_SHAPE_TYPE_NUM];
+
+	index++;
+
+	if (index >= MAX_SHAPE_TYPE_NUM)	
+	{
+		// 重新生成一批序列
+		for (int i=0; i<MAX_SHAPE_TYPE_NUM; i++)
+			seq[i] = i;
+
+		for (int i=0; i<MAX_SHAPE_TYPE_NUM; i++)
+		{
+			int s = Math::Random<int>(0, MAX_SHAPE_TYPE_NUM);
+			if (s==i) continue;
+			swap(seq[s], seq[i]);
+		}
+
+		index = 0;
+	}
+
+	return seq[index];
+}
+
 
 bool Tetromino::MoveDown()
 {
@@ -82,7 +109,13 @@ bool Tetromino::MoveDown()
 	if (!TryPosition(Point2D(x, y), m_RotType))
 	{
 		// 向下移动失败则视作接触，开始下一个方块的下落
-		Apply();
+		if (!Apply())
+		{
+			// Game over
+			s_Game->SetGameState(GAME_STATE_OVER);
+			s_Game->GameOver();
+			return true;
+		}
 		return false;
 	}
 
@@ -167,7 +200,7 @@ bool Tetromino::TryPosition(Point2D pos, int rot_type)
 	return true;
 }
 
-// 固定在这里
+// 固定在当前位置
 bool Tetromino::Apply()
 {
 	for (int i=0; i<4; i++)
@@ -182,16 +215,8 @@ bool Tetromino::Apply()
 		s_Game->m_BlockList[pos.x][pos.y] = m_Blocks[i];
 	}
 
-	//m_ShapeType++;
-	//while (m_ShapeType >= MAX_SHAPE_TYPE_NUM)
-	//	m_ShapeType-=MAX_SHAPE_TYPE_NUM;
-
-	//m_ShapeType = Math::Repeat(0, (int)MAX_SHAPE_TYPE_NUM, m_ShapeType+1);
-	m_ShapeType = Math::Random(0, (int)MAX_SHAPE_TYPE_NUM);
-
 	// TODO: 创建新的Block之前需要将旧的Block保存起来，方便退出程序时进行删除
 	BuildShape();
-	SetPosition(4, 19);
 
 	IAudioBuffer* buffer = Engine::Instance().AudioSystem()->GetAudioBuffer("down.wav");
 	Engine::Instance().AudioSystem()->CreateSourceInstance(buffer, Vector3f(0.0f, 0.0f, 0.0f));

@@ -12,10 +12,14 @@
 
 TetrisGame::TetrisGame()
 : m_Scene(NULL),
+  m_Tetromino(NULL),
   m_Sun(NULL),
   m_CanMove(true), m_Time(0), m_TimeToFall(0),
-  m_Camera(NULL)
+  m_Camera(NULL),
+  m_HighScore(0),
+  m_GameState(GAME_STATE_PLAYING)
 {
+	// 清除记录方块的列表
 	memset(m_BlockList, 0, sizeof(Block*) * 10 * 20);
 }
 
@@ -27,7 +31,8 @@ void TetrisGame::StartGame()
 	Tetromino::s_Game = this;
 
 	m_Camera = new Camera();
-	m_Camera->SetPosition(Vector3f(11.0f, 11.0f, 30.0f));
+	//m_Camera->SetPosition(Vector3f(11.0f, 11.0f, 30.0f));
+	m_Camera->SetPosition(Vector3f(0.0f, 11.0f, 30.0f));
 
 	m_Scene->AddObject(m_Camera);
 
@@ -37,6 +42,17 @@ void TetrisGame::StartGame()
 	sunDir.normalize();
 	m_Sun->SetDirection(sunDir);
 	LightingManager::Instance().AddGlobalLight(m_Sun);
+
+	m_UIScore = EGUIManager::Instance().CreateTextUIControl();
+	m_UIScore->SetWidth(640);
+	m_UIScore->SetLeft(50);
+	m_UIScore->SetTop(50);
+
+	m_GameOverText = EGUIManager::Instance().CreateTextUIControl();
+	m_GameOverText->SetWidth(640);
+	m_GameOverText->SetLeft(50);
+	m_GameOverText->SetTop(120);
+	m_GameOverText->SetText("Game Over!!\nPress Enter to restart");
 
 	// 创建边框
 
@@ -70,12 +86,7 @@ void TetrisGame::StartGame()
 		m_Boundary.push_back(b);
 	}
 
-	m_Tetromino = new Tetromino();
-	m_Tetromino->BuildShape();
-	m_Tetromino->SetPosition(4, 19);
-	//m_BlockList.push_back(m_Block);
-	m_Time = 0;
-	m_TimeToFall = 0;
+	Restart();
 }
 
 void TetrisGame::Shutdown()
@@ -85,7 +96,7 @@ void TetrisGame::Shutdown()
 		delete *iter;
 	}
 
-	delete m_Tetromino;
+	SAFE_DELETE(m_Tetromino);
 
 	Tetromino::ClearBlocksInGame();
 
@@ -95,6 +106,32 @@ void TetrisGame::Shutdown()
 	Block::ReleaseData();
 
 	delete m_Scene;
+}
+
+void TetrisGame::Restart()
+{
+	m_Score = 0;
+
+	Tetromino::ClearBlocksInGame();
+	m_GameState = GAME_STATE_PLAYING;
+
+	if (m_Tetromino) SAFE_DELETE(m_Tetromino);
+	m_Tetromino = new Tetromino();
+
+	for (int i=0; i<10; i++)
+		for (int j=0; j<20; j++)
+			m_BlockList[i][j] = NULL;
+
+	//m_BlockList.push_back(m_Block);
+	m_Time = 0;
+	m_TimeToFall = 0;
+
+	m_GameOverText->SetVisible(false);
+}
+
+void TetrisGame::GameOver()
+{
+	m_GameOverText->SetVisible(true);
 }
 
 bool TetrisGame::OnNotifyQuitting()
@@ -107,7 +144,12 @@ void TetrisGame::OnKeyPressed(unsigned int key)
 	switch (key)
 	{
 	case KC_SPACE:
-		Rotate();
+		if (m_GameState==GAME_STATE_PLAYING)
+			Rotate();
+		break;
+	case KC_RETURN:
+		if (m_GameState==GAME_STATE_OVER)
+			Restart();
 		break;
 	case KC_F:
 		bool debugRender = Engine::Instance().GetDebugRender();
@@ -123,69 +165,85 @@ void TetrisGame::OnKeyReleased(unsigned int key)
 
 void TetrisGame::Update(unsigned long deltaTime)
 {
-	float boost;
-
-	if (Input::Instance().GetKeyDown(KC_LSHIFT))
-		boost = 4.0f;
-	else
-		boost = 1.0f;
-
-	float forward = 0.0f;
-	float right = 0.0f;
-
-	if (Input::Instance().GetKeyDown(KC_W))
-		forward += 0.1f * deltaTime / 10.0f * boost;
-	if (Input::Instance().GetKeyDown(KC_S))
-		forward += -0.1f * deltaTime / 10.0f * boost;
-	if (Input::Instance().GetKeyDown(KC_A))
-		right += -0.1f * deltaTime / 10.0f * boost;
-	if (Input::Instance().GetKeyDown(KC_D))
-		right += 0.1f * deltaTime / 10.0f * boost;
-
-	m_Camera->MoveLocal(forward, right, 0.0f);
-
-	// 按住鼠标右键调整视角
-	if (Input::Instance().GetMouseButtonDown(MB_Right))
+	switch (m_GameState)
 	{
-		float x = -(float)Input::Instance().GetMouseRelX() / 5.0f;
-		float y = -(float)Input::Instance().GetMouseRelY() / 5.0f;
-
-		m_Camera->RotateLocal(x, y);
-	}
-
-	//if (Input::Instance().GetKeyDown(KC_UP))
-	//	MoveUp();
-	if (Input::Instance().GetKeyDown(KC_DOWN))
-		MoveDown();
-	if (Input::Instance().GetKeyDown(KC_LEFT))
-		MoveLeft();
-	if (Input::Instance().GetKeyDown(KC_RIGHT))
-		MoveRight();
-	//if (Input::Instance().GetKeyDown(KC_SPACE))
-	//	Rotate();
-
-
-	// 重复按键时间间隔
-	m_Time += deltaTime;
-
-	if (m_Time >= 100)
-	{
-		m_Time = 0;
-		m_CanMove = true;
-	}
-
-	// 下落时间
-	m_TimeToFall += deltaTime;
-	if (m_TimeToFall >= 1000)
-	{
-		m_TimeToFall = 0;
-		if (!m_Tetromino->MoveDown())
+	case GAME_STATE_PLAYING:
 		{
-			CheckAndRemove();
+			float boost;
+
+			if (Input::Instance().GetKeyDown(KC_LSHIFT))
+				boost = 4.0f;
+			else
+				boost = 1.0f;
+
+			float forward = 0.0f;
+			float right = 0.0f;
+
+			if (Input::Instance().GetKeyDown(KC_W))
+				forward += 0.1f * deltaTime / 10.0f * boost;
+			if (Input::Instance().GetKeyDown(KC_S))
+				forward += -0.1f * deltaTime / 10.0f * boost;
+			if (Input::Instance().GetKeyDown(KC_A))
+				right += -0.1f * deltaTime / 10.0f * boost;
+			if (Input::Instance().GetKeyDown(KC_D))
+				right += 0.1f * deltaTime / 10.0f * boost;
+
+			m_Camera->MoveLocal(forward, right, 0.0f);
+
+			// 按住鼠标右键调整视角
+			if (Input::Instance().GetMouseButtonDown(MB_Right))
+			{
+				float x = -(float)Input::Instance().GetMouseRelX() / 5.0f;
+				float y = -(float)Input::Instance().GetMouseRelY() / 5.0f;
+
+				m_Camera->RotateLocal(x, y);
+			}
+
+			//if (Input::Instance().GetKeyDown(KC_UP))
+			//	MoveUp();
+			if (Input::Instance().GetKeyDown(KC_DOWN))
+				MoveDown();
+			if (Input::Instance().GetKeyDown(KC_LEFT))
+				MoveLeft();
+			if (Input::Instance().GetKeyDown(KC_RIGHT))
+				MoveRight();
+			//if (Input::Instance().GetKeyDown(KC_SPACE))
+			//	Rotate();
+
+
+			// 重复按键时间间隔
+			m_Time += deltaTime;
+
+			if (m_Time >= 100)
+			{
+				m_Time = 0;
+				m_CanMove = true;
+			}
+
+			// 下落时间
+			m_TimeToFall += deltaTime;
+			if (m_TimeToFall >= 1000)
+			//if (m_TimeToFall >= 100)
+			{
+				m_TimeToFall = 0;
+				if (!m_Tetromino->MoveDown())
+				{
+					CheckAndRemove();
+				}
+			}
+
+			//renderer->SetViewMatrix(m_Camera->GetViewMatrix());
+
+			String score;
+			score.Format("High Score: %d\n\nScore: %d", m_HighScore, m_Score);
+			m_UIScore->SetText(score);
+		}
+		break;
+	case GAME_STATE_OVER:
+		{
+
 		}
 	}
-
-	//renderer->SetViewMatrix(m_Camera->GetViewMatrix());
 
 	m_Scene->UpdateScene(deltaTime);
 	LightingManager::Instance().Update();
@@ -312,9 +370,18 @@ void TetrisGame::Rotate()
 //	m_Tetromino->Apply(m_BlockList);
 //}
 
+void TetrisGame::AddScore(int score)
+{
+	m_Score += score;
+	if (m_Score>m_HighScore)
+		m_HighScore = m_Score;
+}
+
 void TetrisGame::CheckAndRemove()
 {
 	bool remove(false);
+
+	int multipyCount = 0;
 
 	// 自上而下检查，否则下沉一行以后还需要再多检查一次
 	for (int y=19; y>=0; y--)
@@ -332,6 +399,8 @@ void TetrisGame::CheckAndRemove()
 		{
 			RemoveLine(y);
 			remove = true;
+			AddScore(100 + multipyCount * 50);
+			multipyCount++;
 		}
 		
 	}

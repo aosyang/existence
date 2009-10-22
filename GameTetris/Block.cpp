@@ -50,6 +50,7 @@ void Block::InitializeData()
 	if (s_DataInitialized)
 		return;
 
+	// 创建方块的模型
 	s_BlockMesh = ResourceManager<Mesh>::Instance().Create();
 	s_BlockMesh->CreateBox(1.0f);
 
@@ -58,6 +59,7 @@ void Block::InitializeData()
 	//Block::s_BlockTexture = TextureManager::Instance().GetTexture("block_surface");
 	Block::s_BlockTexture = renderer->GetTexture("blank.bmp");
 
+	// 生成不同形状用的材质
 	for (int i=0; i<MAX_SHAPE_TYPE_NUM + 1; i++)
 	{
 		Block::s_BlockMaterial[i] = ResourceManager<Material>::Instance().Create();

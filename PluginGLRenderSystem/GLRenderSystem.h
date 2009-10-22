@@ -153,7 +153,7 @@ protected:
 
 	GLint GetFilterType(int type);
 	GLint GetBlendFactor(int factor);
-	GLint GetEnvMode(int mode);
+	GLint GetTextureEnvironmentMode(int mode);
 	void SetupMaterial(Material* material);
 	void SetupMaterialWhite();
 

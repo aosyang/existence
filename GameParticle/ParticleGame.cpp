@@ -64,13 +64,11 @@ void particleGame::StartGame()
 
 	renderer->SetAmbientColor(Color4f(0.7f, 0.7f, 0.7f));
 
-	m_Camera = new Camera();
+	m_Camera = static_cast<Camera*>(m_Scene->CreateSceneObject("Camera"));
 	m_Camera->SetPosition(Vector3f(1.0f, 0.0f, 5.0f));
 	m_Camera->SetFarClippingDistance(1000.0f);
-	m_Scene->AddObject(m_Camera);
 
-	m_AudioListener = new AudioListener();
-	m_Scene->AddObject(m_AudioListener);
+	m_AudioListener = static_cast<AudioListener*>(m_Scene->CreateSceneObject("AudioListener"));
 	m_Camera->AttachChildObject(m_AudioListener, false);
 
 	m_MatSmoke = ResourceManager<Material>::Instance().GetByName("smoke");
@@ -88,13 +86,11 @@ void particleGame::StartGame()
 	//Mesh* mesh = ResourceManager<Mesh>::Instance().GetByName("marcus");
 	Mesh* mesh = ResourceManager<Mesh>::Instance().Create();
 	mesh->CreateBox(1.0f);
-	MeshObject* obj = new MeshObject();
+	MeshObject* obj = static_cast<MeshObject*>(m_Scene->CreateSceneObject("MeshObject"));
 	obj->SetMesh(mesh);
-	m_Scene->AddObject(obj);
 
-	ParticlePool* pool = new ParticlePool;
+	ParticlePool* pool = static_cast<ParticlePool*>(m_Scene->CreateSceneObject("ParticlePool"));
 	pool->SetMaterial(m_MatSmoke);
-	m_Scene->AddObject(pool);
 
 	for (int i=0; i<50; i++)
 	{
@@ -125,15 +121,14 @@ void particleGame::StartGame()
 	////matFlare->GetTextureRenderState(0)->envMode = ENV_MODE_ADD;
 
 	// π‚‘Œ
-	bb = new Billboard();
+	bb = static_cast<Billboard*>(m_Scene->CreateSceneObject("Billboard"));
 	bb->SetMaterial(matFlare);
 	bb->SetScale(10.0f);
 	bb->SetScreenSpaceScale(10.0f, 1.0f);
 	bb->SetColor(Color4f(1.0f, 0.5f, 0.0f, 1.0f));
 	bb->SetRenderOrder(120);
-	m_Scene->AddObject(bb);
 
-	emitter = new ParticleEmitter();
+	emitter = static_cast<ParticleEmitter*>(m_Scene->CreateSceneObject("ParticleEmitter"));
 	emitter->SetInterval(50);
 	emitter->SetMaterial(m_MatSmoke);
 	emitter->SetEmitterShape(EMITTER_SHAPE_BOX);
@@ -141,7 +136,6 @@ void particleGame::StartGame()
 	emitter->SetParticleInitStateFunc(ParticleState);
 	emitter->SetPosition(Vector3f(0.0f, 150.0f, 0.0f));
 	emitter->SetParticleBehaviorFunc(&ParticleUpdate);
-	m_Scene->AddObject(emitter);
 	//m_Camera->AttachChildObject(emitter, true);
 	emitter->AttachChildObject(bb);
 
@@ -329,8 +323,7 @@ void particleGame::RenderScene()
 void Emitparticle(const Vector3f& pos, SceneGraph* scene, particlePool& pool)
 {
 	particle particle;
-	particle.bb = new Billboard();
-	scene->AddObject(particle.bb);
+	particle.bb = static_cast<Billboard*>(scene->CreateSceneObject("Billboard"));
 	particle.bb->SetPosition(pos);
 	particle.bb->SetMaterial(m_MatSmoke);
 	particle.bb->SetColor(Color4f(1.0f, 0.5f, 0.5f, 1.0f));

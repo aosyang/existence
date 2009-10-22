@@ -19,9 +19,6 @@ public:
 	void SetPosition(int x, int y);
 	inline void GetPosition(int* x, int* y) { *x = m_Position.x; *y = m_Position.y; }
 
-	// 构造一个Tetromino
-	void BuildShape();
-
 	// 尝试向指定方向移动，无法移动则返回false
 	bool MoveDown();
 	bool MoveLeft();
@@ -41,6 +38,11 @@ public:
 	static list<Block*>		s_BlocksInGame;
 
 private:
+	// 构造一个Tetromino
+	void BuildShape();
+
+	unsigned char GetNextShape();
+
 	void UpdatePos();
 
 	// 获得旋转后的偏移坐标(顺时针方向)

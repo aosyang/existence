@@ -15,6 +15,13 @@
 
 using namespace std;
 
+enum GameState
+{
+	GAME_STATE_TITLE,
+	GAME_STATE_PLAYING,
+	GAME_STATE_OVER,
+};
+
 class Block;
 
 class TetrisGame : public IGame
@@ -25,6 +32,9 @@ public:
 
 	void StartGame();
 	void Shutdown();
+
+	void Restart();
+	void GameOver();
 
 	bool OnNotifyQuitting();
 
@@ -43,6 +53,10 @@ public:
 	void MoveRight();
 
 	void Rotate();
+
+	inline void SetGameState(GameState state) { m_GameState = state; }
+
+	void AddScore(int score);
 
 	//void CreateBlock();
 
@@ -78,6 +92,14 @@ private:
 	unsigned long	m_TimeToFall;
 
 	Camera*			m_Camera;
+
+	int				m_Score;
+	int				m_HighScore;
+	TextUIControl*	m_UIScore;
+
+	GameState		m_GameState;
+
+	TextUIControl*	m_GameOverText;
 };
 
 #endif

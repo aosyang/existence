@@ -1,0 +1,44 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 9.00
+# Visual Studio 2005
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GameFps", "GameFps.vcproj", "{87DF7561-9EEC-4A8B-9388-25B526EF7001}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GameParticle", "GameParticle.vcproj", "{73A364FB-50CD-4250-A853-9FCCEBA39B03}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GameSkeletal", "GameSkeletal.vcproj", "{3BDA2313-9010-4C74-A6A2-35E0B4AB82F1}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GameTetris", "GameTetris.vcproj", "{6B9FA3CD-9CF4-4A1C-AEB0-07449AFFDB75}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GRID", "GRID.vcproj", "{FAD821F9-3426-4312-9FF2-6CD93DB5274B}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{87DF7561-9EEC-4A8B-9388-25B526EF7001}.Debug|Win32.ActiveCfg = Debug|Win32
+		{87DF7561-9EEC-4A8B-9388-25B526EF7001}.Debug|Win32.Build.0 = Debug|Win32
+		{87DF7561-9EEC-4A8B-9388-25B526EF7001}.Release|Win32.ActiveCfg = Release|Win32
+		{87DF7561-9EEC-4A8B-9388-25B526EF7001}.Release|Win32.Build.0 = Release|Win32
+		{73A364FB-50CD-4250-A853-9FCCEBA39B03}.Debug|Win32.ActiveCfg = Debug|Win32
+		{73A364FB-50CD-4250-A853-9FCCEBA39B03}.Debug|Win32.Build.0 = Debug|Win32
+		{73A364FB-50CD-4250-A853-9FCCEBA39B03}.Release|Win32.ActiveCfg = Release|Win32
+		{73A364FB-50CD-4250-A853-9FCCEBA39B03}.Release|Win32.Build.0 = Release|Win32
+		{3BDA2313-9010-4C74-A6A2-35E0B4AB82F1}.Debug|Win32.ActiveCfg = Debug|Win32
+		{3BDA2313-9010-4C74-A6A2-35E0B4AB82F1}.Debug|Win32.Build.0 = Debug|Win32
+		{3BDA2313-9010-4C74-A6A2-35E0B4AB82F1}.Release|Win32.ActiveCfg = Release|Win32
+		{3BDA2313-9010-4C74-A6A2-35E0B4AB82F1}.Release|Win32.Build.0 = Release|Win32
+		{6B9FA3CD-9CF4-4A1C-AEB0-07449AFFDB75}.Debug|Win32.ActiveCfg = Debug|Win32
+		{6B9FA3CD-9CF4-4A1C-AEB0-07449AFFDB75}.Debug|Win32.Build.0 = Debug|Win32
+		{6B9FA3CD-9CF4-4A1C-AEB0-07449AFFDB75}.Release|Win32.ActiveCfg = Release|Win32
+		{6B9FA3CD-9CF4-4A1C-AEB0-07449AFFDB75}.Release|Win32.Build.0 = Release|Win32
+		{FAD821F9-3426-4312-9FF2-6CD93DB5274B}.Debug|Win32.ActiveCfg = Debug|Win32
+		{FAD821F9-3426-4312-9FF2-6CD93DB5274B}.Debug|Win32.Build.0 = Debug|Win32
+		{FAD821F9-3426-4312-9FF2-6CD93DB5274B}.Release|Win32.ActiveCfg = Release|Win32
+		{FAD821F9-3426-4312-9FF2-6CD93DB5274B}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

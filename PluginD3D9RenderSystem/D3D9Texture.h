@@ -20,7 +20,7 @@ public:
 
 	void BindTexture();
 
-	int GetTarget() const { return 0; }
+	TextureType GetTextureType() const { return TEXTURE_TYPE_2D; }
 
 	// ----- D3D9Texture Methods
 

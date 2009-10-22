@@ -169,6 +169,9 @@ bool GLRenderer::Initialize(RenderWindowParam* windowParam)
 	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
 	glDepthFunc(GL_LEQUAL);								// The Type Of Depth Testing To Do
 
+	//glLineWidth(5.0f);
+	//glEnable(GL_POLYGON_OFFSET_LINE);
+
 	// 雾相关代码
 	//GLfloat fogColor[4] = {0.5, 0.5, 0.5, 0.5}; //set the for color to grey
 	//glEnable (GL_FOG); //enable the fog
@@ -1040,7 +1043,7 @@ void GLRenderer::BindTextureRenderState(const texRenderState_t& texState)
 
 	// TODO: 给一个单独的状态设置
 	glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
-	glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB, GetEnvMode(texState.envMode));
+	glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB, GetTextureEnvironmentMode(texState.envMode));
 }
 
 void GLRenderer::BindGpuProgram(IGpuProgram* program, GpuProgramType type)
@@ -1117,7 +1120,7 @@ GLint GLRenderer::GetBlendFactor(int factor)
 	return BLEND_FACTOR_ZERO;
 }
 
-GLint GLRenderer::GetEnvMode(int mode)
+GLint GLRenderer::GetTextureEnvironmentMode(int mode)
 {
 	switch (mode)
 	{
