@@ -15,23 +15,26 @@ using namespace std;
 
 #include "FreeImage/freeimage.h"
 
-class Image
+namespace Gen
 {
-public:
-	Image();
-	~Image();
+	class Image
+	{
+	public:
+		Image();
+		~Image();
 
-	bool LoadFromFile(const String& filename);
+		bool LoadFromFile(const String& filename);
 
-	inline unsigned int GetWidth() { return m_Width; }
-	inline unsigned int GetHeight() { return m_Height; }
-	inline unsigned int GetBPP() { return m_BitPerPixel; }
-	unsigned char* GetData();
+		inline unsigned int GetWidth() { return m_Width; }
+		inline unsigned int GetHeight() { return m_Height; }
+		inline unsigned int GetBPP() { return m_BitPerPixel; }
+		unsigned char* GetData();
 
-private:
-	unsigned int	m_Width, m_Height;
-	unsigned int	m_BitPerPixel;
-	FIBITMAP*		m_Bitmap;
-};
+	private:
+		unsigned int	m_Width, m_Height;
+		unsigned int	m_BitPerPixel;
+		FIBITMAP*		m_Bitmap;
+	};
+}
 
 #endif

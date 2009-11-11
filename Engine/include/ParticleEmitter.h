@@ -12,66 +12,64 @@
 #include "SceneObject.h"
 #include "ParticlePool.h"
 
-enum ParticleEmitterShape
+namespace Gen
 {
-	EMITTER_SHAPE_POINT,
-	EMITTER_SHAPE_BOX,
-};
+	enum ParticleEmitterShape
+	{
+		EMITTER_SHAPE_POINT,
+		EMITTER_SHAPE_BOX,
+	};
 
-class ParticleEmitter;
+	class ParticleEmitter;
 
-typedef void(*ParticleInitStateFunc)(Particle*, ParticleEmitter*);
+	typedef void(*ParticleInitStateFunc)(Particle*, ParticleEmitter*);
 
-void DefaultParticleState(Particle* particle, ParticleEmitter* emitter);
+	void DefaultParticleState(Particle* particle, ParticleEmitter* emitter);
 
-class ParticleEmitter : public SceneObject
-{
-	DECLARE_FACTORY(ParticleEmitter);
-public:
-	ParticleEmitter();
-	~ParticleEmitter();
+	class ParticleEmitter : public SceneObject
+	{
+		DECLARE_FACTORY(ParticleEmitter);
+	public:
+		// ----- Overwrite IObject
 
-	// ----- Overwrite IObject
+		void Destroy();
 
-	void Destroy();
+		void Update(unsigned long deltaTime);
 
-	void Update(unsigned long deltaTime);
+		// ----- SceneObject methods
+		void CollectRenderableObject(RenderableObjectList& renderableObjs, Frustum* frustum);
 
-	const String GetTypeName() const { return "ParticleEmitter"; }
+		// ----- ParticleEmitter Methods
+		void SetEmitterShape(ParticleEmitterShape shape) { m_EmitterShape = shape; }
+		ParticleEmitterShape GetEmitterShape() const { return m_EmitterShape; }
 
-	// ----- SceneObject methods
-	void CollectRenderableObject(RenderableObjectList& renderableObjs, Frustum* frustum);
+		void SetBoxRange(const Vector3f& vMin, const Vector3f& vMax) { m_BoxMin = vMin; m_BoxMax = vMax; }
 
-	// ----- ParticleEmitter Methods
-	void SetEmitterShape(ParticleEmitterShape shape) { m_EmitterShape = shape; }
-	ParticleEmitterShape GetEmitterShape() const { return m_EmitterShape; }
+		void SetInterval(long interval) { m_Interval = interval; }
+		long GetInverval() const { return m_Interval; }
 
-	void SetBoxRange(const Vector3f& vMin, const Vector3f& vMax) { m_BoxMin = vMin; m_BoxMax = vMax; }
 
-	void SetInterval(long interval) { m_Interval = interval; }
-	long GetInverval() const { return m_Interval; }
+		void SetMaterial(Material* material);
+		inline Material* GetMaterial() { return m_Material; }
 
-	
-	void SetMaterial(Material* material);
-	inline Material* GetMaterial() { return m_Material; }
+		void SetParticleInitStateFunc(const ParticleInitStateFunc func) { m_ParticleInitState = func; }
+		void SetParticleBehaviorFunc(const ParticleUpdateFunc func) { m_ParticleBehaviorFunc = func; }
+	private:
+		ParticleEmitterShape	m_EmitterShape;
+		ParticlePool*			m_ParticlePool;
 
-	void SetParticleInitStateFunc(const ParticleInitStateFunc func) { m_ParticleInitState = func; }
-	void SetParticleBehaviorFunc(const ParticleUpdateFunc func) { m_ParticleBehaviorFunc = func; }
-private:
-	ParticleEmitterShape	m_EmitterShape;
-	ParticlePool*			m_ParticlePool;
+		Material*				m_Material;
 
-	Material*				m_Material;
+		Vector3f				m_BoxMin;
+		Vector3f				m_BoxMax;
 
-	Vector3f				m_BoxMin;
-	Vector3f				m_BoxMax;
-	
-	long					m_Interval;
-	unsigned int			m_TimeSinceLastUpdate;
+		long					m_Interval;
+		unsigned int			m_TimeSinceLastUpdate;
 
-	ParticleInitStateFunc	m_ParticleInitState;
-	ParticleUpdateFunc		m_ParticleBehaviorFunc;
-};
+		ParticleInitStateFunc	m_ParticleInitState;
+		ParticleUpdateFunc		m_ParticleBehaviorFunc;
+	};
+}
 
 #endif
 

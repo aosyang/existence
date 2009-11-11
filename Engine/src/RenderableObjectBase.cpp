@@ -10,70 +10,73 @@
 #include "LightableObject.h"
 #include "Engine.h"
 
-RenderableObjectBase::RenderableObjectBase()
-: m_Visible(true),
-  m_RenderOrder(100),
-  m_LightableObject(NULL)
+namespace Gen
 {
-}
-
-RenderableObjectBase::~RenderableObjectBase()
-{
-}
-
-void RenderableObjectBase::Destroy()
-{
-	DestroyLightableObject();
-}
-
-void RenderableObjectBase::RenderSingleObject()
-{
-	// 如果为这个对象指定了光照物体，设置光照状态并进行渲染
-	if (m_LightableObject)
+	RenderableObjectBase::RenderableObjectBase()
+		: m_Visible(true),
+		m_RenderOrder(100),
+		m_LightableObject(NULL)
 	{
-		m_LightableObject->SetupLights();
 	}
-	else	// 否则关闭所有光照状态
-	{
-		// Disable all lights
-		int maxLightNum = renderer->GetMaxLightsNumber();
 
-		for (int i=0; i<maxLightNum; i++)
+	RenderableObjectBase::~RenderableObjectBase()
+	{
+	}
+
+	void RenderableObjectBase::Destroy()
+	{
+		DestroyLightableObject();
+	}
+
+	void RenderableObjectBase::RenderSingleObject()
+	{
+		// 如果为这个对象指定了光照物体，设置光照状态并进行渲染
+		if (m_LightableObject)
 		{
-			renderer->SetupLight(i, NULL);
+			m_LightableObject->SetupLights();
+		}
+		else	// 否则关闭所有光照状态
+		{
+			// Disable all lights
+			int maxLightNum = renderer->GetMaxLightsNumber();
+
+			for (int i=0; i<maxLightNum; i++)
+			{
+				renderer->SetupLight(i, NULL);
+			}
 		}
 	}
-}
 
-void RenderableObjectBase::SetRenderOrder(unsigned int order)
-{
-	m_RenderOrder = order;
-}
-
-
-void RenderableObjectBase::CollectRenderableObject(RenderableObjectList& renderableObjs, Frustum* frustum)
-{
-	if (!IsCulled(frustum))
+	void RenderableObjectBase::SetRenderOrder(unsigned int order)
 	{
-		renderableObjs.push_back(this);
-
-		SceneObject::CollectRenderableObject(renderableObjs, frustum);
+		m_RenderOrder = order;
 	}
-}
 
-void RenderableObjectBase::CreateLightableObject()
-{
-	m_LightableObject = new LightableObject();
-	m_LightableObject->SetRenderableObject(this);
-	LightingManager::Instance().AddLightableObject(m_LightableObject);
-}
 
-void RenderableObjectBase::DestroyLightableObject()
-{
-	if (m_LightableObject)
+	void RenderableObjectBase::CollectRenderableObject(RenderableObjectList& renderableObjs, Frustum* frustum)
 	{
-		LightingManager::Instance().RemoveLightableObject(m_LightableObject);
+		if (!IsCulled(frustum))
+		{
+			renderableObjs.push_back(this);
 
-		SAFE_DELETE(m_LightableObject);
+			SceneObject::CollectRenderableObject(renderableObjs, frustum);
+		}
+	}
+
+	void RenderableObjectBase::CreateLightableObject()
+	{
+		m_LightableObject = new LightableObject();
+		m_LightableObject->SetRenderableObject(this);
+		LightingManager::Instance().AddLightableObject(m_LightableObject);
+	}
+
+	void RenderableObjectBase::DestroyLightableObject()
+	{
+		if (m_LightableObject)
+		{
+			LightingManager::Instance().RemoveLightableObject(m_LightableObject);
+
+			SAFE_DELETE(m_LightableObject);
+		}
 	}
 }

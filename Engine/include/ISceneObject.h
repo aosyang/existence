@@ -11,23 +11,26 @@
 
 #include "Matrix4.h"
 
-class ISceneObject
+namespace Gen
 {
-public:
-	virtual ~ISceneObject() {}
+	class ISceneObject
+	{
+	public:
+		virtual ~ISceneObject() {}
 
-	virtual void Update(unsigned long deltaTime) = 0;
-	virtual void Render() = 0;
-	virtual void DebugRender() = 0;
+		virtual void Update(unsigned long deltaTime) = 0;
+		virtual void Render() = 0;
+		virtual void DebugRender() = 0;
 
-	//virtual void AttachChildObject(ISceneObject* child, bool keepWorldTransform) = 0;
+		//virtual void AttachChildObject(ISceneObject* child, bool keepWorldTransform) = 0;
 
-	//virtual Matrix4& Transform() = 0;
-	//virtual Matrix4& WorldTransform() = 0;
+		//virtual Matrix4& Transform() = 0;
+		//virtual Matrix4& WorldTransform() = 0;
 
-//protected:
-//	virtual void SetParentObject(ISceneObject* parent) = 0;
-};
+		//protected:
+		//	virtual void SetParentObject(ISceneObject* parent) = 0;
+	};
+}
 
 #endif
 

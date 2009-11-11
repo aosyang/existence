@@ -20,27 +20,30 @@
 #include "EString.h"
 #include "FileSystem.h"
 
-struct FileInfo
+namespace Gen
 {
-	String	filename;
-	bool	isDirectory;
-};
+	struct FileInfo
+	{
+		String	filename;
+		bool	isDirectory;
+	};
 
-class FileEnumerator
-{
-public:
-	FileEnumerator();
-	~FileEnumerator();
+	class FileEnumerator
+	{
+	public:
+		FileEnumerator();
+		~FileEnumerator();
 
-	bool EnumerateFirstFileInDir(const String& dirname, FileInfo& info);
-	bool EnumerateNextFileInDir(FileInfo& info);
+		bool EnumerateFirstFileInDir(const String& dirname, FileInfo& info);
+		bool EnumerateNextFileInDir(FileInfo& info);
 
-protected:
+	protected:
 #if defined __PLATFORM_WIN32
-	HANDLE	m_FileHandle;			// 文件查找句柄
+		HANDLE	m_FileHandle;			// 文件查找句柄
 #elif defined __PLATFORM_LINUX
-	DIR*	m_Directory;			// 文件夹句柄
+		DIR*	m_Directory;			// 文件夹句柄
 #endif	// #if defined __PLATFORM_WIN32
-};
+	};
+}
 
 #endif

@@ -12,63 +12,62 @@
 #include "Material.h"
 #include "IVertexBuffer.h"
 
-class Billboard : public RenderableObjectBase
+namespace Gen
 {
-	DECLARE_FACTORY(Billboard);
-public:
-	Billboard();
-	~Billboard();
+	class Billboard : public RenderableObjectBase
+	{
+		DECLARE_FACTORY(Billboard);
+	public:
 
-	// ----- Overwrite IObject
+		// ----- Overwrite IObject
 
-	void Update(unsigned long deltaTime);
+		void Update(unsigned long deltaTime);
 
-	const String GetTypeName() const { return "Billboard"; }
+		// ----- Overwrite IRenderableObject
 
-	// ----- Overwrite IRenderableObject
+		void RenderSingleObject();
 
-	void RenderSingleObject();
+		// ----- Billboard Methods
 
-	// ----- Billboard Methods
+		// 材质
+		inline Material* GetMaterial() const { return m_Material; }
+		inline void SetMaterial(Material* mat) { m_Material = mat; }
 
-	// 材质
-	inline Material* GetMaterial() const { return m_Material; }
-	inline void SetMaterial(Material* mat) { m_Material = mat; }
+		void SetColor(const Color4f& color);
 
-	void SetColor(const Color4f& color);
+		// 指定公告板的Z方向旋转量(视点方向看去的旋转)
+		void SetZRotation(float rad_angle);
 
-	// 指定公告板的Z方向旋转量(视点方向看去的旋转)
-	void SetZRotation(float rad_angle);
+		// 指定Z方向与原点的偏移(防止中心被其他物体挡住)
+		// TODO FIXME: 偏移会随视点方向变换而移动
+		void SetZOffset(float offset);
 
-	// 指定Z方向与原点的偏移(防止中心被其他物体挡住)
-	// TODO FIXME: 偏移会随视点方向变换而移动
-	void SetZOffset(float offset);
+		// 指定公告板的尺寸
+		void SetScale(float scale);
 
-	// 指定公告板的尺寸
-	void SetScale(float scale);
+		// 指定公告板屏幕空间缩放
+		void SetScreenSpaceScale(float scale_x, float scale_y);
 
-	// 指定公告板屏幕空间缩放
-	void SetScreenSpaceScale(float scale_x, float scale_y);
+		void UpdateVertexData();
 
-	void UpdateVertexData();
+	protected:
+		Material*	m_Material;
+		float		m_Radius;
 
-protected:
-	Material*	m_Material;
-	float		m_Radius;
+		//unsigned int	m_FaceArray[3 * 2];
+		//float			m_VertexArray[3 * 4];
+		//float			m_NormalArray[3 * 4];
+		//float			m_TexCoordArray[2 * 4];
 
-	//unsigned int	m_FaceArray[3 * 2];
-	//float			m_VertexArray[3 * 4];
-	//float			m_NormalArray[3 * 4];
-	//float			m_TexCoordArray[2 * 4];
+		IVertexBuffer*	m_VertexBuffer;
 
-	IVertexBuffer*	m_VertexBuffer;
+		float			m_ZRotataion;
+		float			m_ZOffset;
+		float			m_Scale;
+		float			m_Scale_x, m_Scale_y;
 
-	float			m_ZRotataion;
-	float			m_ZOffset;
-	float			m_Scale;
-	float			m_Scale_x, m_Scale_y;
-
-	bool			m_NeedUpdateVertexData;
-};
+		bool			m_NeedUpdateVertexData;
+	};
+}
 
 #endif

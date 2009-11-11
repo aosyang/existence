@@ -4,12 +4,24 @@ Microsoft Visual Studio Solution File, Format Version 10.00
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Engine", "Engine.vcproj", "{30B74D54-128F-4522-814A-48DA3753B503}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PluginALAudioSystem", "PluginALAudioSystem.vcproj", "{B57911AE-8CC9-4294-BA27-666A2F8D0534}"
+	ProjectSection(ProjectDependencies) = postProject
+		{30B74D54-128F-4522-814A-48DA3753B503} = {30B74D54-128F-4522-814A-48DA3753B503}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PluginGLRenderSystem", "PluginGLRenderSystem.vcproj", "{D2F4ECA8-8FF5-40A9-A041-A3BB4AF53FC4}"
+	ProjectSection(ProjectDependencies) = postProject
+		{30B74D54-128F-4522-814A-48DA3753B503} = {30B74D54-128F-4522-814A-48DA3753B503}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PluginD3D9RenderSystem", "PluginD3D9RenderSystem.vcproj", "{57D0C978-5EC6-403C-8BDF-BF13C2D1D246}"
+	ProjectSection(ProjectDependencies) = postProject
+		{30B74D54-128F-4522-814A-48DA3753B503} = {30B74D54-128F-4522-814A-48DA3753B503}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PluginCgGL", "PluginCgGL.vcproj", "{A473E4A4-0D49-42AB-96E9-69BD861D863E}"
+	ProjectSection(ProjectDependencies) = postProject
+		{30B74D54-128F-4522-814A-48DA3753B503} = {30B74D54-128F-4522-814A-48DA3753B503}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

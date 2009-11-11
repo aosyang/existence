@@ -3,6 +3,7 @@
 //
 
 #include "Existence.h"
+using namespace Gen;
 
 #include "GameGrid.h"
 

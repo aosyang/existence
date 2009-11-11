@@ -31,11 +31,11 @@ public:
 	bool Apply();
 
 	// 供Tetromino访问的静态成员
-	static TetrisGame*		s_Game;
+	static TetrisGame*		m_sGame;
 
 	static void ClearBlocksInGame();
 
-	static list<Block*>		s_BlocksInGame;
+	static list<Block*>		m_sBlocksInGame;
 
 private:
 	// 构造一个Tetromino

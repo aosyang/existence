@@ -12,43 +12,42 @@
 #include "BspTree.h"
 #include "RenderableObjectBase.h"
 
-class BspObject : public RenderableObjectBase
+namespace Gen
 {
-	DECLARE_FACTORY(BspObject);
-public:
-	BspObject();
-	~BspObject();
+	class BspObject : public RenderableObjectBase
+	{
+		DECLARE_FACTORY(BspObject);
+	public:
+		// ----- Overwrite IRenderableObject
 
-	// ----- Overwrite SceneObject
+		void RenderSingleObject();
 
-	const String GetTypeName() const { return "BspObject"; }
+		// ----- Overwrite SceneObject
 
-	// ----- Overwrite IRenderableObject
+		bool IntersectsRay(const Ray& ray, CollisionResult& info);
+		bool OnSave(SceneSerializerNode* node);
+		void OnRestore(SceneSerializerNode* node);
 
-	void RenderSingleObject();
+		// ----- BspObject Methods
 
-	// ----- Overwrite SceneObject
+		// 指定用于生成bsp结构的mesh
+		void SetMesh(IMesh* mesh);
 
-	bool IntersectsRay(const Ray& ray, CollisionResult& info);
+		// 使用球体进行碰撞，newpos将返回一个合法的位置
+		bool PushSphere(const Vector3f& pos, Vector3f& newpos, float radius);
+		void TraverseTree(
+			vector< BspTriangle* >* polyList,
+			const Vector3f& loc );
+		bool Intersects(const Ray& ray, Vector3f* point, BspTriangle** triangle = NULL);
 
-	// ----- BspObject Methods
+		bool IsPointInSolid(const Vector3f& point);
 
-	// 指定用于生成bsp结构的mesh
-	void SetMesh(Mesh* mesh);
+	private:
+		IMesh*		m_Mesh;
 
-	// 使用球体进行碰撞，newpos将返回一个合法的位置
-	bool PushSphere(const Vector3f& pos, Vector3f& newpos, float radius);
-	void TraverseTree(
-		vector< BspTriangle* >* polyList,
-		const Vector3f& loc );
-	bool Intersects(const Ray& ray, Vector3f* point, BspTriangle** triangle = NULL);
-
-	bool IsPointInSolid(const Vector3f& point);
-
-private:
-	Mesh*		m_Mesh;
-
-	BspTree*	m_Bsp;
-};
+		BspTree*	m_Bsp;
+	};
+}
 
 #endif
+

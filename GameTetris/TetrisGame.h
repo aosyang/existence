@@ -9,6 +9,7 @@
 #define _TETRIS_H
 
 #include "Existence.h"
+using namespace Gen;
 
 #include "Tetromino.h"
 #include <vector>

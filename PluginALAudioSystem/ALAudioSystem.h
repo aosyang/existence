@@ -24,42 +24,45 @@
 
 using namespace std;
 
-// TODO: 
-//   1、以Buffer作为资源，可以创建多个不同的Source
-//   2、Source管理机制，在通道耗尽时能够根据音量大小及优先级等信息决定删除哪些音源
-
-class ALAudioSystem : public IAudioSystem
+namespace Gen
 {
-public:
-	ALAudioSystem();
-	~ALAudioSystem();
+	// TODO: 
+	//   1、以Buffer作为资源，可以创建多个不同的Source
+	//   2、Source管理机制，在通道耗尽时能够根据音量大小及优先级等信息决定删除哪些音源
 
-	bool Initialize();
-	void Shutdown();
+	class ALAudioSystem : public IAudioSystem
+	{
+	public:
+		ALAudioSystem();
+		~ALAudioSystem();
 
-	bool LoadAudioBufferFromFile(const String& bufferName, const String& filename);
+		bool Initialize();
+		void Shutdown();
 
-	IAudioBuffer* GetAudioBuffer(const String& bufferName);
+		bool LoadAudioBufferFromFile(const String& bufferName, const String& filename);
 
-	void SetListenerTransform(const Matrix4& transform, const Vector3f& velocity);
+		IAudioBuffer* GetAudioBuffer(const String& bufferName);
 
-	IAudioSource* CreateSourceInstance(IAudioBuffer* buffer, const Vector3f& position, bool autoRemove);
+		void SetListenerTransform(const Matrix4& transform, const Vector3f& velocity);
 
-	void RemoveSource(IAudioSource* source);
+		IAudioSource* CreateSourceInstance(IAudioBuffer* buffer, const Vector3f& position, bool autoRemove);
 
-	void Update();
-private:
-	typedef map<const String, ALAudioBuffer*>	ALAudioBufferList;
-	ALAudioBufferList							m_Buffers;
+		void RemoveSource(IAudioSource* source);
 
-	typedef set<ALAudioSource*>				ALAudioSourceList;
-	ALAudioSourceList						m_Sources;
+		void Update();
+	private:
+		typedef map<const String, ALAudioBuffer*>	ALAudioBufferList;
+		ALAudioBufferList							m_Buffers;
 
-	typedef IAudioFileFormat* (*CreateFileFormatFunc)(const String& filename);
-	map<const String, CreateFileFormatFunc>			m_FileFormatCreator;
-};
+		typedef set<ALAudioSource*>				ALAudioSourceList;
+		ALAudioSourceList						m_Sources;
 
-extern "C" DLLEXPORT IAudioSystem* CreateAudioSystem();
+		typedef IAudioFileFormat* (*CreateFileFormatFunc)(const String& filename);
+		map<const String, CreateFileFormatFunc>			m_FileFormatCreator;
+	};
+
+	extern "C" DLLEXPORT IAudioSystem* CreateAudioSystem();
+}
 
 #endif
 

@@ -21,83 +21,89 @@
 
 using namespace std;
 
-struct RemoveListElement
+namespace Gen
 {
-	SceneObject* obj;
-	bool	deleteObj;
-};
+	struct RemoveListElement
+	{
+		SceneObject* obj;
+		bool	deleteObj;
+		bool	recursive;
+	};
 
-struct RenderView
-{
-	Vector3f position;
-	Matrix4 viewMatrix;
-	Matrix4 projMatrix;
-	Frustum* frustum;
-};
+	struct RenderView
+	{
+		Vector3f position;
+		Matrix4 viewMatrix;
+		Matrix4 projMatrix;
+		Frustum* frustum;
+	};
 
-class SceneSerializer;
+	class SceneSerializer;
 
-//-----------------------------------------------------------------------------------
-/// \brief
-/// 用于渲染及更新场景对象的场景图
-/// 
-/// 每个对象被添加到场景图之后由场景图负责更新及渲染
-//-----------------------------------------------------------------------------------
-class SceneGraph
-{
-	// 场景序列化需要对场景图的完全访问权限
-	friend class SceneSerializer;
-public:
-	SceneGraph();
-	~SceneGraph();
+	//-----------------------------------------------------------------------------------
+	/// \brief
+	/// 用于渲染及更新场景对象的场景图
+	/// 
+	/// 每个对象被添加到场景图之后由场景图负责更新及渲染
+	//-----------------------------------------------------------------------------------
+	class SceneGraph
+	{
+		// 场景序列化需要对场景图的完全访问权限
+		friend class SceneSerializer;
+	public:
+		SceneGraph();
+		~SceneGraph();
 
-	// 添加对象
-	void AddObject(SceneObject* object, bool autoDelete=true);
+	private:
+		// 添加对象
+		void AddObject(SceneObject* object, bool autoDelete=true);
 
-	// 删除对象
-	void RemoveObject(SceneObject* object, bool deleteObj=true);
+	public:
+		// 删除对象
+		void RemoveObject(SceneObject* object, bool deleteObj=true, bool recursive=false);
 
-	SceneObject* CreateSceneObject(const String& className);
+		SceneObject* CreateSceneObject(const String& className);
 
-	// Update & Render
-	void UpdateScene(unsigned long deltaTime);
+		// Update & Render
+		void UpdateScene(unsigned long deltaTime);
 
-	void SetupRenderView(const RenderView& view);
-	void RenderScene();
+		void SetupRenderView(const RenderView& view);
+		void RenderScene();
 
-	// 对场景进行射线检测
-	// TODO: 这个type目前完全没有用途
-	void RayPickingSceneObject(const Ray& ray, ObjectsCollisionInfos& sceneObjects, int type, int collisionGroup = COLLISION_GROUP_ALL);
+		// 对场景进行射线检测
+		// TODO: 这个type目前完全没有用途
+		void RayPickingSceneObject(const Ray& ray, ObjectsCollisionInfos& sceneObjects, int type, int collisionGroup = COLLISION_GROUP_ALL);
 
-	bool PushSphere(const Vector3f& pos, Vector3f& newpos, float radius);
+		bool PushSphere(const Vector3f& pos, Vector3f& newpos, float radius);
 
-	// 将场景结构输出到log
-	void DumpToLog();
+		// 将场景结构输出到log
+		void DumpToLog();
 
-private:
+	private:
 
-	void RemoveSceneObjectInternal(SceneObject* object, bool deleteObj);
+		void RemoveSceneObjectInternal(SceneObject* object, bool deleteObj, bool recursive);
 
-	// 执行真正的删除工作，在每帧更新后进行
-	void ProcessRemove();
+		// 执行真正的删除工作，在每帧更新后进行
+		void ProcessRemove();
 
-private:
-	//typedef vector<ISceneObject*> SceneObjects;
-	//SceneObjects	m_SceneObjects;
+	private:
+		//typedef vector<ISceneObject*> SceneObjects;
+		//SceneObjects	m_SceneObjects;
 
-	//SceneRootObject*			m_RootObject;		///< 场景对象根对象
+		//SceneRootObject*			m_RootObject;		///< 场景对象根对象
 
-	SceneObjectSet				m_SceneObjects;
-	SceneObjectSet				m_AutoDeleteList;
-	vector<RemoveListElement>	m_RemoveList;		///< 删除列表，记录了这一帧更新后需要删除的对象
+		SceneObjectSet				m_SceneObjects;
+		SceneObjectSet				m_AutoDeleteList;
+		vector<RemoveListElement>	m_RemoveList;		///< 删除列表，记录了这一帧更新后需要删除的对象
 
-	//RenderableObjectSet			m_RenderableObjects;
+		//RenderableObjectSet			m_RenderableObjects;
 
-	bool						m_ProcessingUpdate;	///< 当前是否正在更新场景的状态标识
+		bool						m_ProcessingUpdate;	///< 当前是否正在更新场景的状态标识
 
-	RenderView					m_RenderView;
+		RenderView					m_RenderView;
 
-	SceneObjectFactory			m_ObjectFactory;
-};
+		SceneObjectFactory			m_ObjectFactory;
+	};
+}
 
 #endif

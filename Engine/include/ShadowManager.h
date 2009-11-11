@@ -13,20 +13,23 @@
 #include "Light.h"
 #include "SceneRootObject.h"
 
-class ShadowManager : public Singleton<ShadowManager>
+namespace Gen
 {
-	friend class Singleton<ShadowManager>;
-public:
-	void SetLight(Light* light) { m_Light = light; }
-	Light* GetLight() { return m_Light; }
+	class ShadowManager : public Singleton<ShadowManager>
+	{
+		friend class Singleton<ShadowManager>;
+	public:
+		void SetLight(Light* light) { m_Light = light; }
+		Light* GetLight() { return m_Light; }
 
-	//void RenderLightViewScene(SceneRootObject* rootObj);
-	//void RenderUntexturedScene(SceneRootObject* rootObj);
+		//void RenderLightViewScene(SceneRootObject* rootObj);
+		//void RenderUntexturedScene(SceneRootObject* rootObj);
 
-private:
-	ShadowManager();
+	private:
+		ShadowManager();
 
-	Light*		m_Light;
-};
+		Light*		m_Light;
+	};
+}
 
 #endif

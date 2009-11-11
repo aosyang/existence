@@ -1,0 +1,5 @@
+设置环境变量$(EXSDK_DIR)，指定Existence引擎的路径
+如：D:\Devz\Existence
+项目通过该环境变量访问引擎
+
+$(MAX9_SDK)用于max9导出插件，指定3dsmax9 sdk的安装路径

@@ -4,30 +4,33 @@
 #include "ITexture.h"
 #include <d3dx9.h>
 
-class D3D9Texture : public BaseTexture
+namespace Gen
 {
-public:
-	D3D9Texture();
-	~D3D9Texture();
+	class D3D9Texture : public BaseTexture
+	{
+	public:
+		D3D9Texture();
+		~D3D9Texture();
 
-	// ----- ITexture Methods
+		// ----- ITexture Methods
 
-	void Create(unsigned int width, unsigned int height, unsigned int bpp, unsigned char* data);
-	void ModifyRectData(int xoffset, int yoffset, int width, int heigh, void* data);
+		void Create(unsigned int width, unsigned int height, unsigned int bpp, unsigned char* data);
+		void ModifyRectData(int xoffset, int yoffset, int width, int heigh, void* data);
 
-	void SetVertexProgram(const String& filename, const String& entry) {}
-	void SetFragmentProgram(const String& filename, const String& entry) {}
+		void SetVertexProgram(const String& filename, const String& entry) {}
+		void SetFragmentProgram(const String& filename, const String& entry) {}
 
-	void BindTexture();
+		void BindTexture();
 
-	TextureType GetTextureType() const { return TEXTURE_TYPE_2D; }
+		TextureType GetTextureType() const { return TEXTURE_TYPE_2D; }
 
-	// ----- D3D9Texture Methods
+		// ----- D3D9Texture Methods
 
-	void SetD3DTexture(IDirect3DTexture9* texture) { m_D3DTexture = texture; }
-	IDirect3DTexture9* GetD3DTexture() { return m_D3DTexture; }
-private:
-	IDirect3DTexture9*	m_D3DTexture;
-};
+		void SetD3DTexture(IDirect3DTexture9* texture) { m_D3DTexture = texture; }
+		IDirect3DTexture9* GetD3DTexture() { return m_D3DTexture; }
+	private:
+		IDirect3DTexture9*	m_D3DTexture;
+	};
+}
 
 #endif

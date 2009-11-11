@@ -1,0 +1,68 @@
+Existence引擎编码规范 v0.1
+
+所有命名采用规范英文表达
+
+变量
+全局或成员变量名，基本名称部分采取每个单词首字母大写
+使用“名词(词组)”或者“形容词+名词(词组)”的方式命名
+如：AccessTime、LastAvailablePosition
+
+全局变量前加上前缀g_
+如：g_SoundManager
+
+成员变量前加上前缀m_
+如：m_Velocity
+
+静态成员前用小写s修饰，加在全局及局部变量前缀之后
+如：m_sIndex
+
+局部变量名使用首字母小写名称，之后每个单词首字母大写
+如：timeToGo、actureResName
+避免使用无意义的名称如：a、b、c或者a1、a2
+如果上下文含义清晰时可以使用，如实现数学库的代码
+
+函数名称采取每个单词首字母大写
+基本名称使用“动词”或者“动宾短语”命名
+如：MakeParent()、Clear()
+
+无参数不加void，参数命名规范与局部变量命名规范相同
+如：int GetNextIndex()、bool AddObject(BaseObject* obj)
+
+类型
+类、结构体、枚举、typedef等类型的命名采取每个单词首字母大写
+单词之间没有间隔，使用“名词(词组)”命名
+如：typedef std::vector<SceneObject*> ObjectList;
+
+类名称每个单词首字母大写
+使用“名词(词组)”命名
+接口命名在名称前加上前缀I
+如：Mesh、IRenderer
+
+结构体名称参考“类型”命名规范
+结构体成员采取第一个单词首字母小写，其余首字母大写
+如：
+struct ObjectInfo
+{
+	Vector3f	position;
+	int		renderOrder;
+};
+
+宏定义
+为区别于函数，功能性宏定义采用全部字母大写，单词间使用下滑线“_”分割
+如：DECLARE_FACTORY(objName)
+宏定义的常量应当所有字母大写，单词间添加下划线分割
+如：#define PI 3.14159265f
+仅仅用于名称替换的宏定义可以采取符合所要替换的文本内容的规范进行命名
+如：#define CreateDevice CreateDeviceLinux
+
+枚举
+枚举类型名称命名参考“类型”一栏
+枚举值名称命名与宏定义常量形式相同，应当加上便于识别的前缀
+如：
+enum TextureGenMode
+{
+	GEN_MODE_TEXCOORD,
+	GEN_MODE_EYE_LINEAR,
+	GEN_MODE_SPHERE,
+	GEN_MODE_CUBE_MAP,
+};

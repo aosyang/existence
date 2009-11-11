@@ -14,161 +14,166 @@
 
 using namespace std;
 
-// 纹理环绕模式
-// 超出纹理边缘以后的采样方式
-enum TextureWrapType
+namespace Gen
 {
-	WRAP_TYPE_CLAMP,
-	WRAP_TYPE_REPEAT,
-	WRAP_TYPE_CLAMP_TO_EDGE,
-};
-
-// 纹理过滤模式
-// 纹理插值过滤的方法
-enum TextureFilterType
-{
-	FILTER_TYPE_NEAREST,
-	FILTER_TYPE_LINEAR,
-	FILTER_TYPE_NEAREST_MIPMAP_NEAREST,
-	FILTER_TYPE_LINEAR_MIPMAP_NEAREST,
-	FILTER_TYPE_NEAREST_MIPMAP_LINEAR,
-	FILTER_TYPE_LINEAR_MIPMAP_LINEAR,
-};
-
-// 纹理混合因子
-enum TextureBlendFactor
-{
-	BLEND_FACTOR_ZERO,
-	BLEND_FACTOR_ONE,
-	BLEND_FACTOR_SRC_COLOR,
-	BLEND_FACTOR_ONE_MINUS_SRC_COLOR,
-	BLEND_FACTOR_SRC_ALPHA,
-	BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
-	BLEND_FACTOR_DST_ALPHA,
-	BLEND_FACTOR_ONE_MINUS_DST_ALPHA,
-	BLEND_FACTOR_DST_COLOR,
-	BLEND_FACTOR_ONE_MINUS_DST_COLOR,
-	BLEND_FACTOR_SRC_ALPHA_SATURATE,
-};
-
-// 纹理生成模式
-enum TextureGenMode
-{
-	GEN_MODE_TEXCOORD,
-	GEN_MODE_EYE_LINEAR,
-	GEN_MODE_SPHERE,
-	GEN_MODE_CUBE_MAP,
-};
-
-enum TextureEnvMode
-{
-	ENV_MODE_MODULATE,
-	ENV_MODE_REPLACE,
-	ENV_MODE_ADD,
-};
-
-enum TextureType
-{
-	TEXTURE_TYPE_2D,
-	TEXTURE_TYPE_CUBE,
-};
-
-class ITexture;
-
-// 纹理渲染状态
-typedef struct texRenderState
-{
-	ITexture*			texture;			///< 纹理
-	TextureWrapType		wrapType;			///< 纹理环绕模式
-	TextureFilterType	minFilterType;		///< 纹理缩小过滤
-	TextureFilterType	magFilterType;		///< 纹理放大过滤
-
-	TextureGenMode		genMode;			///< 自动纹理坐标生成模式
-
-	// Eye coordinate
-	//bool				useEyeSpaceTex;
-	Matrix4				eyeSpaceMatrix;		///< 视点空间矩阵
-
-	// Blending
-	bool				useBlending;		///< 采用纹理混合
-	TextureBlendFactor	srcBlendFactor;		///< 源混合因子
-	TextureBlendFactor	dstBlendFactor;		///< 目标混合因子
-
-	TextureEnvMode		envMode;
-
-	texRenderState()
+	// 纹理环绕模式
+	// 超出纹理边缘以后的采样方式
+	enum TextureWrapType
 	{
-		InitValues();
-	}
+		WRAP_TYPE_CLAMP,
+		WRAP_TYPE_REPEAT,
+		WRAP_TYPE_CLAMP_TO_EDGE,
+	};
 
-	texRenderState(ITexture* tex)
+	// 纹理过滤模式
+	// 纹理插值过滤的方法
+	enum TextureFilterType
 	{
-		InitValues();
-		texture = tex;
-	}
+		FILTER_TYPE_NEAREST,
+		FILTER_TYPE_LINEAR,
+		FILTER_TYPE_NEAREST_MIPMAP_NEAREST,
+		FILTER_TYPE_LINEAR_MIPMAP_NEAREST,
+		FILTER_TYPE_NEAREST_MIPMAP_LINEAR,
+		FILTER_TYPE_LINEAR_MIPMAP_LINEAR,
+	};
 
-	// 初始化RenderState的初值
-	void InitValues()
+	// 纹理混合因子
+	enum TextureBlendFactor
 	{
-		texture = NULL;
-		wrapType = WRAP_TYPE_CLAMP_TO_EDGE;
-		minFilterType = FILTER_TYPE_LINEAR_MIPMAP_NEAREST;
-		magFilterType = FILTER_TYPE_LINEAR;
-		genMode = GEN_MODE_TEXCOORD;
-		//useEyeSpaceTex = false;
-		useBlending = true;
-		srcBlendFactor = BLEND_FACTOR_SRC_ALPHA;
-		dstBlendFactor = BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+		BLEND_FACTOR_ZERO,
+		BLEND_FACTOR_ONE,
+		BLEND_FACTOR_SRC_COLOR,
+		BLEND_FACTOR_ONE_MINUS_SRC_COLOR,
+		BLEND_FACTOR_SRC_ALPHA,
+		BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
+		BLEND_FACTOR_DST_ALPHA,
+		BLEND_FACTOR_ONE_MINUS_DST_ALPHA,
+		BLEND_FACTOR_DST_COLOR,
+		BLEND_FACTOR_ONE_MINUS_DST_COLOR,
+		BLEND_FACTOR_SRC_ALPHA_SATURATE,
+	};
 
-		envMode = ENV_MODE_MODULATE;
-	}
+	// 纹理生成模式
+	enum TextureGenMode
+	{
+		GEN_MODE_TEXCOORD,
+		GEN_MODE_EYE_LINEAR,
+		GEN_MODE_SPHERE,
+		GEN_MODE_CUBE_MAP,
+	};
 
-} texRenderState_t;
+	enum TextureEnvMode
+	{
+		ENV_MODE_MODULATE,
+		ENV_MODE_REPLACE,
+		ENV_MODE_ADD,
+	};
 
-class ITexture
-{
-public:
-	virtual ~ITexture() {}
+	enum TextureType
+	{
+		TEXTURE_TYPE_2D,
+		TEXTURE_TYPE_CUBE,
+	};
 
-	// 纹理修改相关
-	//virtual void Create(unsigned int width, unsigned int height, unsigned int bpp, unsigned char* data) = 0;
+	class ITexture;
 
-	// 修改纹理上指定的一个矩形区域数据
-	virtual void ModifyRectData(int xoffset, int yoffset, int width, int heigh, void* data) = 0;
+	// 纹理渲染状态
+	typedef struct TextureRenderStateType
+	{
+		ITexture*			texture;			///< 纹理
+		String				textureName;		///< 纹理名称		NOTE: 这个变量是为了记录只有纹理名称而没有数据的情况
 
-	// 使用一个纹理
-	virtual void BindTexture() = 0;
+		TextureWrapType		wrapType;			///< 纹理环绕模式
+		TextureFilterType	minFilterType;		///< 纹理缩小过滤
+		TextureFilterType	magFilterType;		///< 纹理放大过滤
 
-	// TODO: 添加纹理相关的方法，如获取纹理尺寸等
-	virtual unsigned int GetWidth() const = 0;
-	virtual unsigned int GetHeight() const = 0;
-	virtual unsigned int GetBpp() const = 0;
+		TextureGenMode		genMode;			///< 自动纹理坐标生成模式
 
-	virtual String GetName() const = 0;
+		// Eye coordinate
+		//bool				useEyeSpaceTex;
+		Matrix4				eyeSpaceMatrix;		///< 视点空间矩阵
 
-	virtual TextureType GetTextureType() const = 0;
+		// Blending
+		bool				useBlending;		///< 采用纹理混合
+		TextureBlendFactor	srcBlendFactor;		///< 源混合因子
+		TextureBlendFactor	dstBlendFactor;		///< 目标混合因子
 
-	// 纹理过滤
-};
+		TextureEnvMode		envMode;
 
-class BaseTexture : public ITexture
-{
-public:
-	~BaseTexture() {}
+		TextureRenderStateType()
+		{
+			InitValues();
+		}
 
-	unsigned int GetWidth() const { return m_Width; }
-	unsigned int GetHeight() const { return m_Height; }
-	unsigned int GetBpp() const { return m_Bpp; }
+		TextureRenderStateType(ITexture* tex)
+		{
+			InitValues();
+			texture = tex;
+		}
 
-	String GetName() const { return *m_Name; }
-	void SetName(const String* name) { m_Name = name; }
+		// 初始化RenderState的初值
+		void InitValues()
+		{
+			texture = NULL;
+			wrapType = WRAP_TYPE_CLAMP_TO_EDGE;
+			minFilterType = FILTER_TYPE_LINEAR_MIPMAP_NEAREST;
+			magFilterType = FILTER_TYPE_LINEAR;
+			genMode = GEN_MODE_TEXCOORD;
+			//useEyeSpaceTex = false;
+			useBlending = true;
+			srcBlendFactor = BLEND_FACTOR_SRC_ALPHA;
+			dstBlendFactor = BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
 
-protected:
-	const String*	m_Name;
+			envMode = ENV_MODE_MODULATE;
+		}
 
-	unsigned int	m_Width;
-	unsigned int	m_Height;
-	unsigned int	m_Bpp;
-};
+	} TextureRenderState;
+
+	class ITexture
+	{
+	public:
+		virtual ~ITexture() {}
+
+		// 纹理修改相关
+		//virtual void Create(unsigned int width, unsigned int height, unsigned int bpp, unsigned char* data) = 0;
+
+		// 修改纹理上指定的一个矩形区域数据
+		virtual void ModifyRectData(int xoffset, int yoffset, int width, int heigh, void* data) = 0;
+
+		// 使用一个纹理
+		virtual void BindTexture() = 0;
+
+		// TODO: 添加纹理相关的方法，如获取纹理尺寸等
+		virtual unsigned int GetWidth() const = 0;
+		virtual unsigned int GetHeight() const = 0;
+		virtual unsigned int GetBpp() const = 0;
+
+		virtual String GetName() const = 0;
+
+		virtual TextureType GetTextureType() const = 0;
+
+		// 纹理过滤
+	};
+
+	class BaseTexture : public ITexture
+	{
+	public:
+		~BaseTexture() {}
+
+		unsigned int GetWidth() const { return m_Width; }
+		unsigned int GetHeight() const { return m_Height; }
+		unsigned int GetBpp() const { return m_Bpp; }
+
+		String GetName() const { return *m_Name; }
+		void SetName(const String* name) { m_Name = name; }
+
+	protected:
+		const String*	m_Name;
+
+		unsigned int	m_Width;
+		unsigned int	m_Height;
+		unsigned int	m_Bpp;
+	};
+}
 
 #endif

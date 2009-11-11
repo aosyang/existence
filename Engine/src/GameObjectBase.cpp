@@ -7,13 +7,16 @@
 //-----------------------------------------------------------------------------------
 #include "GameObjectBase.h"
 
-GameObjectBase::GameObjectBase()
-: SceneObject()
+namespace Gen
 {
+	GameObjectBase::GameObjectBase()
+		: SceneObject()
+	{
+	}
+	//
+	//void GameObjectBase::CollectRenderableObject(RenderableObjectList& renderableObjs, Frustum* frustum)
+	//{
+	//	renderableObjs.push_back(m_Renderable);
+	//}
+	//
 }
-//
-//void GameObjectBase::CollectRenderableObject(RenderableObjectList& renderableObjs, Frustum* frustum)
-//{
-//	renderableObjs.push_back(m_Renderable);
-//}
-//

@@ -7,46 +7,59 @@
 //-----------------------------------------------------------------------------------
 
 #include "Light.h"
+#include "LightingManager.h"
 #include "Engine.h"
 
-Light::Light()
-: m_Ambient(0.0f, 0.0f, 0.0f, 1.0f),
-  m_Diffuse(1.0f, 1.0f, 1.0f, 1.0f),
-  m_Specular(1.0f, 1.0f, 1.0f, 1.0f),
-  m_Type(LIGHT_TYPE_POINT),
-  m_Direction(0.0f, 0.0f, -1.0f),
-  m_ConstantAttenuation(1.0f),
-  m_LinearAttenuation(0.0f),
-  m_QuadraticAttenuation(0.0f),
-  m_Range(10.0f)
+namespace Gen
 {
-}
+	Light::Light()
+		: m_Ambient(0.0f, 0.0f, 0.0f, 1.0f),
+		m_Diffuse(1.0f, 1.0f, 1.0f, 1.0f),
+		m_Specular(1.0f, 1.0f, 1.0f, 1.0f),
+		m_Type(LIGHT_TYPE_POINT),
+		m_Direction(0.0f, 0.0f, -1.0f),
+		m_ConstantAttenuation(1.0f),
+		m_LinearAttenuation(0.0f),
+		m_QuadraticAttenuation(0.0f),
+		m_Range(10.0f)
+	{
+	}
 
-//void Light::DebugRender()
-//{
-//	BaseSceneObject::DebugRender();
-//	//renderer->RenderSphere(m_WorldTransform.GetPosition(), m_BoundingSphereRadius);
-//
-//	switch (m_Type)
-//	{
-//	case LIGHT_TYPE_POINT:
-//	case LIGHT_TYPE_SPOT:
-//		// ¹âÕÕ·¶Î§
-//		renderer->RenderSphere(m_WorldTransform.GetPosition(), m_Range, Color4f(1.0f, 1.0f, 0.0f));
-//		break;
-//
-//	case LIGHT_TYPE_DIRECTIONAL:
-//		renderer->RenderLine(m_Direction * 10, Vector3f(0.0f, 0.0f, 0.0f));
-//		break;
-//	}
-//}
+	Light::~Light()
+	{
+	}
 
-const Vector3f Light::GetPosition() const
-{
-	return m_WorldTransform.GetPosition();
-}
+	//void Light::DebugRender()
+	//{
+	//	BaseSceneObject::DebugRender();
+	//	//renderer->RenderSphere(m_WorldTransform.GetPosition(), m_BoundingSphereRadius);
+	//
+	//	switch (m_Type)
+	//	{
+	//	case LIGHT_TYPE_POINT:
+	//	case LIGHT_TYPE_SPOT:
+	//		// ¹âÕÕ·¶Î§
+	//		renderer->RenderSphere(m_WorldTransform.GetPosition(), m_Range, Color4f(1.0f, 1.0f, 0.0f));
+	//		break;
+	//
+	//	case LIGHT_TYPE_DIRECTIONAL:
+	//		renderer->RenderLine(m_Direction * 10, Vector3f(0.0f, 0.0f, 0.0f));
+	//		break;
+	//	}
+	//}
 
-float Light::GetAttenuationFactor(float d)
-{
-	return 1.0f / (m_ConstantAttenuation + m_LinearAttenuation * d + m_QuadraticAttenuation * d * d);
+	void Light::Destroy()
+	{
+		LightingManager::Instance().RemoveLight(this);
+	}
+
+	const Vector3f Light::GetPosition() const
+	{
+		return m_WorldTransform.GetPosition();
+	}
+
+	float Light::GetAttenuationFactor(float d)
+	{
+		return 1.0f / (m_ConstantAttenuation + m_LinearAttenuation * d + m_QuadraticAttenuation * d * d);
+	}
 }

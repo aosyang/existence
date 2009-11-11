@@ -30,13 +30,13 @@ public:
 	static void ReleaseData();
 
 private:
-	MeshObject	m_Shape;
+	MeshObject*	m_Shape;
 	int			m_PosX, m_PosY;
 
-	static Material*	s_BlockMaterial[MAX_SHAPE_TYPE_NUM + 1];
-	static ITexture*	s_BlockTexture;
-	static Mesh*		s_BlockMesh;
-	static bool			s_DataInitialized;
+	static Material*		m_sBlockMaterial[MAX_SHAPE_TYPE_NUM + 1];
+	static ITexture*		m_sBlockTexture;
+	static PrimitiveMesh*	m_sBlockMesh;
+	static bool				m_sDataInitialized;
 };
 
 #endif

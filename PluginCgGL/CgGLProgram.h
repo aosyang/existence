@@ -6,14 +6,17 @@
 #include <Cg/cg.h>
 #include <Cg/cgGL.h>
 
-class CgGLProgram : public IGpuProgram
+namespace Gen
 {
-public:
-	~CgGLProgram();
+	class CgGLProgram : public IGpuProgram
+	{
+	public:
+		~CgGLProgram();
 
-	void SetMatrix4Param(const String& paramName, const Matrix4& mat);
+		void SetMatrix4Param(const String& paramName, const Matrix4& mat);
 
-	CGprogram	m_CGProgram;
-};
+		CGprogram	m_CGProgram;
+	};
+}
 
 #endif

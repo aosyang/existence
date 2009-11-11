@@ -8,49 +8,52 @@
 
 #include "EGUIManager.h"
 
-EGUIManager::EGUIManager()
-: m_UIRootObject(NULL)
+namespace Gen
 {
-}
-
-void EGUIManager::Initialize()
-{
-	m_UIRootObject = new UIRootObject();
-}
-
-void EGUIManager::Shutdown()
-{
-	if (m_UIRootObject)
+	EGUIManager::EGUIManager()
+		: m_UIRootObject(NULL)
 	{
-		m_UIRootObject->RemoveAllChildObjects();
 	}
 
-	SAFE_DELETE(m_UIRootObject);
-}
+	void EGUIManager::Initialize()
+	{
+		m_UIRootObject = new UIRootObject();
+	}
 
-void EGUIManager::Update(unsigned long deltaTime)
-{
-	m_UIRootObject->Update(deltaTime);
-}
+	void EGUIManager::Shutdown()
+	{
+		if (m_UIRootObject)
+		{
+			m_UIRootObject->RemoveAllChildObjects();
+		}
 
-void EGUIManager::RenderUI()
-{
-	// 设定视口为全屏
-	renderer->SetViewport(0, 0, 0, 0);
+		SAFE_DELETE(m_UIRootObject);
+	}
 
-	renderer->SetProjectionMode(PROJECTION_MODE_ORTHO);
-	renderer->ToggleLighting(false);
-	renderer->ViewMatrix().Identity();
-	renderer->ClearBuffer(false);
-	renderer->ToggleDepthTest(false);
-	renderer->BeginRender();
-	m_UIRootObject->Render();
+	void EGUIManager::Update(unsigned long deltaTime)
+	{
+		m_UIRootObject->Update(deltaTime);
+	}
 
-	renderer->EndRender();
-}
+	void EGUIManager::RenderUI()
+	{
+		// 设定视口为全屏
+		renderer->SetViewport(0, 0, 0, 0);
+
+		renderer->SetProjectionMode(PROJECTION_MODE_ORTHO);
+		renderer->ToggleLighting(false);
+		renderer->ViewMatrix().MakeIdentity();
+		renderer->ClearBuffer(false);
+		renderer->ToggleDepthTest(false);
+		renderer->BeginRender();
+		m_UIRootObject->Render();
+
+		renderer->EndRender();
+	}
 
 
-void EGUIManager::AddUIObject(BaseUIObject* object)
-{
-	m_UIRootObject->AttachChildObject(object);
+	void EGUIManager::AddUIObject(BaseUIObject* object)
+	{
+		m_UIRootObject->AttachChildObject(object);
+	}
 }

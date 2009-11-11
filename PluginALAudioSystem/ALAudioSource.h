@@ -13,63 +13,66 @@
 #include <AL/al.h>
 #include <AL/alc.h>
 
-// TODO: 目前ALAudioSource是不允许被直接delete的，必须由ALAudioSystem负责卸载
-
-//-----------------------------------------------------------------------------------
-/// \brief
-/// OpenAL音源
-/// 
-/// 记录了一个可以播放的音频个体信息，
-/// 可以设置在3D空间中的位置以及移动速度等信息
-//-----------------------------------------------------------------------------------
-class ALAudioSource : public IAudioSource
+namespace Gen
 {
-	friend class ALAudioSystem;
-public:
-	ALAudioSource();
-	~ALAudioSource();
+	// TODO: 目前ALAudioSource是不允许被直接delete的，必须由ALAudioSystem负责卸载
 
-	// ----- Overwrite IAudioSource
+	//-----------------------------------------------------------------------------------
+	/// \brief
+	/// OpenAL音源
+	/// 
+	/// 记录了一个可以播放的音频个体信息，
+	/// 可以设置在3D空间中的位置以及移动速度等信息
+	//-----------------------------------------------------------------------------------
+	class ALAudioSource : public IAudioSource
+	{
+		friend class ALAudioSystem;
+	public:
+		ALAudioSource();
+		~ALAudioSource();
 
-	void Play();
-	void Pause();
-	void Stop();
-	void Rewind();
+		// ----- Overwrite IAudioSource
 
-	void SetAudioBuffer(IAudioBuffer* buffer);
+		void Play();
+		void Pause();
+		void Stop();
+		void Rewind();
 
-	void SetPitch(float pitch);
-	float GetPitch();
+		void SetAudioBuffer(IAudioBuffer* buffer);
 
-	void SetGain(float gain);
-	float GetGain();
+		void SetPitch(float pitch);
+		float GetPitch();
 
-	void SetLooping(bool loop);
-	bool GetLooping();
+		void SetGain(float gain);
+		float GetGain();
 
-	void SetPlaybackTime(float time);
-	float GetPlaybackTime();
+		void SetLooping(bool loop);
+		bool GetLooping();
 
-	void SetPosition(const Vector3f& position);
-	void SetTransform(const Matrix4& transform);
+		void SetPlaybackTime(float time);
+		float GetPlaybackTime();
 
-	void SetVelocity(const Vector3f& vel);
-	const Vector3f GetVelocity();
+		void SetPosition(const Vector3f& position);
+		void SetTransform(const Matrix4& transform);
 
-	bool GetAutoRemove() const { return m_RemoveOnDone; }
+		void SetVelocity(const Vector3f& vel);
+		const Vector3f GetVelocity();
 
-	bool IsStopped();
-protected:
+		bool GetAutoRemove() const { return m_RemoveOnDone; }
 
-private:
-	Vector3f		m_SourcePosition;			///< 音源坐标
-	Vector3f		m_SourceVelocity;			///< 音源移动速度
+		bool IsStopped();
+	protected:
 
-	ALuint			m_Buffer;					///< OpenAL Buffer序号
-	ALuint			m_Source;					///< OpenAL音源序号
+	private:
+		Vector3f		m_SourcePosition;			///< 音源坐标
+		Vector3f		m_SourceVelocity;			///< 音源移动速度
 
-	bool			m_RemoveOnDone;
-};
+		ALuint			m_Buffer;					///< OpenAL Buffer序号
+		ALuint			m_Source;					///< OpenAL音源序号
+
+		bool			m_RemoveOnDone;
+	};
+}
 
 
 #endif

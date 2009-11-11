@@ -12,28 +12,31 @@
 #include "IRenderTarget.h"
 #include "GLTexture.h"
 
-class GLRenderTargetFBO : public IRenderTarget
+namespace Gen
 {
-public:
-	GLRenderTargetFBO();
-	~GLRenderTargetFBO();
+	class GLRenderTargetFBO : public IRenderTarget
+	{
+	public:
+		GLRenderTargetFBO();
+		~GLRenderTargetFBO();
 
-	// ----- Overwrite IRenderTarget
-	void SetTexture(ITexture* texture);
-	ITexture* GetTexture() const { return m_Texture; }
+		// ----- Overwrite IRenderTarget
+		void SetTexture(ITexture* texture);
+		ITexture* GetTexture() const { return m_Texture; }
 
-	void BindRenderTarget();
-	void GenerateMipmap();
+		void BindRenderTarget();
+		void GenerateMipmap();
 
-	// ----- GLRenderTargetFBO methods
+		// ----- GLRenderTargetFBO methods
 
-private:
-	GLTexture*		m_Texture;
-	unsigned int	m_Width;
-	unsigned int	m_Height;
+	private:
+		GLTexture*		m_Texture;
+		unsigned int	m_Width;
+		unsigned int	m_Height;
 
-	GLuint			m_FBO;
-	GLuint			rboId;
-};
+		GLuint			m_FBO;
+		GLuint			rboId;
+	};
+}
 
 #endif

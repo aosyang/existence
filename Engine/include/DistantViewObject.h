@@ -10,41 +10,36 @@
 #define _DISTANTVIEWOBJECT_H
 
 #include "RenderableObjectBase.h"
-#include "Mesh.h"
+#include "IMesh.h"
 
-class DistantViewObject : public RenderableObjectBase
+namespace Gen
 {
-	DECLARE_FACTORY(DistantViewObject);
-public:
-	DistantViewObject();
-	~DistantViewObject();
+	class DistantViewObject : public RenderableObjectBase
+	{
+		DECLARE_FACTORY(DistantViewObject);
+	public:
+		// ----- Overwrite IRenderableObject
 
-	// ----- Overwrite SceneObject
+		void RenderSingleObject();
 
-	const String GetTypeName() const { return "DistantViewObject"; }
+		// ----- Overwrite MovableObjectBase
 
+		bool IsCulled(Frustum* frustum);
 
-	// ----- Overwrite IRenderableObject
+		// ----- DistantViewObject Methods
 
-	void RenderSingleObject();
+		// 指定对象使用的网格
+		void SetMesh(IMesh* mesh);
 
-	// ----- Overwrite MovableObjectBase
+		// 模型位移比例
+		inline void SetOffsetScale(const Vector3f& scale) { m_OffsetScale = scale; }
+		inline Vector3f GetOffsetScale() const { return m_OffsetScale; }
 
-	bool IsCulled(Frustum* frustum);
+	private:
+		IMesh*		m_Mesh;
 
-	// ----- DistantViewObject Methods
-
-	// 指定对象使用的网格
-	void SetMesh(Mesh* mesh);
-
-	// 模型位移比例
-	inline void SetOffsetScale(const Vector3f& scale) { m_OffsetScale = scale; }
-	inline Vector3f GetOffsetScale() const { return m_OffsetScale; }
-
-private:
-	Mesh*		m_Mesh;
-
-	Vector3f	m_OffsetScale;
-};
+		Vector3f	m_OffsetScale;
+	};
+}
 
 #endif

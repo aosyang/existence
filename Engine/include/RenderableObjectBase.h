@@ -11,60 +11,61 @@
 #include "IRenderableObject.h"
 #include "SceneObject.h"
 
-class LightableObject;
-
-class RenderableObjectBase : public IRenderableObject,
-							 public SceneObject
+namespace Gen
 {
-public:
-	RenderableObjectBase();
-	~RenderableObjectBase();
+	class LightableObject;
 
-	// ----- Overwrite SceneObject
+	class RenderableObjectBase : public IRenderableObject,
+		public SceneObject
+	{
+	public:
+		RenderableObjectBase();
+		~RenderableObjectBase();
 
-	void Destroy();
+		// ----- Overwrite SceneObject
 
-	const String GetTypeName() const { return "RenderableObjectBase"; }
+		void Destroy();
 
-	// ----- Overwrite IRenderableObject
+		// ----- Overwrite IRenderableObject
 
-	void RenderSingleObject();
+		void RenderSingleObject();
 
-	// 是否透明
-	bool IsTransparent() { return false; }
+		// 是否透明
+		bool IsTransparent() { return false; }
 
-	// 获取包围盒
-	const AABB& GetAABB();
+		// 获取包围盒
+		const AABB& GetAABB();
 
-	const OBB& GetOBB();
+		const OBB& GetOBB();
 
-	void SetRenderOrder(unsigned int order);
-
-
-	// ----- Overwrite MovableObjectBase
-
-	void CollectRenderableObject(RenderableObjectList& renderableObjs, Frustum* frustum);
+		void SetRenderOrder(unsigned int order);
 
 
-	// ----- RenderableObjectBase methods
+		// ----- Overwrite MovableObjectBase
 
-	// 使物体能够被照亮
-	void CreateLightableObject();
-	void DestroyLightableObject();
+		void CollectRenderableObject(RenderableObjectList& renderableObjs, Frustum* frustum);
 
-	// 光照用包围球半径
-	float GetBoundingRadius() const { return m_BoundingSphereRadius; }
 
-	unsigned int GetRenderOrder() const { return m_RenderOrder; }
+		// ----- RenderableObjectBase methods
 
-protected:
-	bool							m_DebugRender;
-	float							m_BoundingSphereRadius;		///< 包围球半径
+		// 使物体能够被照亮
+		void CreateLightableObject();
+		void DestroyLightableObject();
 
-	bool							m_Visible;					///< 可见性
-	unsigned int					m_RenderOrder;
+		// 光照用包围球半径
+		float GetBoundingRadius() const { return m_BoundingSphereRadius; }
 
-	LightableObject*				m_LightableObject;
-};
+		unsigned int GetRenderOrder() const { return m_RenderOrder; }
+
+	protected:
+		bool							m_DebugRender;
+		float							m_BoundingSphereRadius;		///< 包围球半径
+
+		bool							m_Visible;					///< 可见性
+		unsigned int					m_RenderOrder;
+
+		LightableObject*				m_LightableObject;
+	};
+}
 
 #endif

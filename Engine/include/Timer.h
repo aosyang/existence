@@ -30,32 +30,35 @@
 
 #endif	// #if defined __PLATFORM_WIN32
 
-class Timer
+namespace Gen
 {
-public:
-	Timer();
-	~Timer();
+	class Timer
+	{
+	public:
+		Timer();
+		~Timer();
 
-	void Reset();
+		void Reset();
 
-	unsigned long GetMilliseconds();
+		unsigned long GetMilliseconds();
 
-protected:
+	protected:
 #if defined __PLATFORM_WIN32
-	clock_t mZeroClock;
+		clock_t mZeroClock;
 
-	DWORD mStartTick;
-	LONGLONG mLastTime;
-	LARGE_INTEGER mStartTime;
-	LARGE_INTEGER mFrequency;
+		DWORD mStartTick;
+		LONGLONG mLastTime;
+		LARGE_INTEGER mStartTime;
+		LARGE_INTEGER mFrequency;
 
-	DWORD mTimerMask;
+		DWORD mTimerMask;
 
 #elif defined __PLATFORM_LINUX
-	struct timeval start;
-	clock_t zeroClock;
+		struct timeval start;
+		clock_t zeroClock;
 #endif	// #if defined __PLATFORM_WIN32
 
-};
+	};
+}
 
 #endif

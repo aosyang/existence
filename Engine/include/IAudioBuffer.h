@@ -9,10 +9,13 @@
 #ifndef _IAUDIOBUFFER_H
 #define _IAUDIOBUFFER_H
 
-class IAudioBuffer
+namespace Gen
 {
-public:
-	virtual ~IAudioBuffer() {}
-};
+	class IAudioBuffer
+	{
+	public:
+		virtual ~IAudioBuffer() {}
+	};
+}
 
 #endif

@@ -28,15 +28,13 @@ void TetrisGame::StartGame()
 	m_Scene = new SceneGraph;
 
 	Block::InitializeData();
-	Tetromino::s_Game = this;
+	Tetromino::m_sGame = this;
 
-	m_Camera = new Camera();
+	m_Camera = FACTORY_CREATE(m_Scene, Camera);
 	//m_Camera->SetPosition(Vector3f(11.0f, 11.0f, 30.0f));
 	m_Camera->SetPosition(Vector3f(0.0f, 11.0f, 30.0f));
 
-	m_Scene->AddObject(m_Camera);
-
-	m_Sun = new Light();
+	m_Sun = FACTORY_CREATE(m_Scene, Light);
 	m_Sun->SetLightType(LIGHT_TYPE_DIRECTIONAL);
 	Vector3f sunDir = Vector3f(0.2f, 1.0f, 0.5f);
 	sunDir.normalize();
@@ -99,8 +97,6 @@ void TetrisGame::Shutdown()
 	SAFE_DELETE(m_Tetromino);
 
 	Tetromino::ClearBlocksInGame();
-
-	SAFE_DELETE(m_Sun);
 
 	// 释放模型、纹理资源
 	Block::ReleaseData();
@@ -417,11 +413,11 @@ void TetrisGame::RemoveLine(int line)
 	// 删除这一行
 	for (int x=0; x<10; x++)
 	{
-		//list<Block*>::iterator iter = find(Tetromino::s_BlocksInGame.begin(), Tetromino::s_BlocksInGame.end(), m_BlockList[x][line]);
-		list<Block*>::iterator iter = find_if(Tetromino::s_BlocksInGame.begin(), Tetromino::s_BlocksInGame.end(), bind2nd(equal_to<Block*>(),(m_BlockList[x][line])));
+		//list<Block*>::iterator iter = find(Tetromino::m_sBlocksInGame.begin(), Tetromino::m_sBlocksInGame.end(), m_BlockList[x][line]);
+		list<Block*>::iterator iter = find_if(Tetromino::m_sBlocksInGame.begin(), Tetromino::m_sBlocksInGame.end(), bind2nd(equal_to<Block*>(),(m_BlockList[x][line])));
 		
-		if (iter != Tetromino::s_BlocksInGame.end())
-			Tetromino::s_BlocksInGame.erase(iter);
+		if (iter != Tetromino::m_sBlocksInGame.end())
+			Tetromino::m_sBlocksInGame.erase(iter);
 		delete m_BlockList[x][line];
 		m_BlockList[x][line] = NULL;
 	}

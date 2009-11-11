@@ -15,20 +15,23 @@
 #include <AL/al.h>
 #include <AL/alc.h>
 
-class ALAudioBuffer : public IAudioBuffer
+namespace Gen
 {
-	friend class ALAudioSource;
-public:
-	ALAudioBuffer();
-	~ALAudioBuffer();
+	class ALAudioBuffer : public IAudioBuffer
+	{
+		friend class ALAudioSource;
+	public:
+		ALAudioBuffer();
+		~ALAudioBuffer();
 
-	void CreateFromData(int format, void* data, int size, int freq);
+		void CreateFromData(int format, void* data, int size, int freq);
 
-private:
-	ALuint		m_Buffer;
+	private:
+		ALuint		m_Buffer;
 
-	ALenum		m_Format;
-	ALsizei		m_Frequency;
-};
+		ALenum		m_Format;
+		ALsizei		m_Frequency;
+	};
+}
 
 #endif

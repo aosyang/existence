@@ -8,56 +8,58 @@
 
 #include "D3D9VertexBuffer.h"
 
-D3D9VertexBuffer::D3D9VertexBuffer()
-: m_D3DVertexBuffer(NULL),
-  m_D3DIndexBuffer(NULL),
-  m_VertexNum(0),
-  m_FaceNum(0),
-  m_Locked(false)
+namespace Gen
 {
-}
-
-D3D9VertexBuffer::~D3D9VertexBuffer()
-{
-	Clear();
-}
-
-bool D3D9VertexBuffer::CreateBuffer(int vertexFormat,
-									const float* vertexArray,
-									const float* normalArray,
-									const float* colorArray,
-									const float* textureCoordArray,
-									unsigned int vertexNum,
-									unsigned int* faceArray,
-									unsigned int faceNum)
-{
-	// 创建顶点缓冲
-    //if( FAILED( g_d3ddevice->CreateVertexBuffer( vertexNum * sizeof(D3DVertex),
-    //                                              D3DUSAGE_WRITEONLY, VB_FVF,
-    //                                              D3DPOOL_MANAGED, &m_D3DVertexBuffer, NULL ) ) )
-    if( FAILED( g_d3ddevice->CreateVertexBuffer( vertexNum * sizeof(D3DVertex),
-                                                  0, VB_FVF,
-                                                  D3DPOOL_DEFAULT, &m_D3DVertexBuffer, NULL ) ) )
+	D3D9VertexBuffer::D3D9VertexBuffer()
+		: m_D3DVertexBuffer(NULL),
+		m_D3DIndexBuffer(NULL),
+		m_VertexNum(0),
+		m_FaceNum(0),
+		m_Locked(false)
 	{
-		return false;
 	}
 
-	// 创建索引缓冲
-	//if( FAILED( g_d3ddevice->CreateIndexBuffer( 3 * faceNum * sizeof(unsigned int),
-	//														D3DUSAGE_WRITEONLY, D3DFMT_INDEX32, D3DPOOL_MANAGED, 
-	//														&m_D3DIndexBuffer, NULL ) ) )
-	if( FAILED( g_d3ddevice->CreateIndexBuffer( 3 * faceNum * sizeof(unsigned int),
-															0, D3DFMT_INDEX32, D3DPOOL_DEFAULT, 
-															&m_D3DIndexBuffer, NULL ) ) )
+	D3D9VertexBuffer::~D3D9VertexBuffer()
 	{
-		return false;
+		Clear();
 	}
 
-	// 将数组形式原始数据保存到缓冲中
-	D3DVertex* vert = new D3DVertex[vertexNum];
+	bool D3D9VertexBuffer::CreateBuffer(int vertexFormat,
+		const float* vertexArray,
+		const float* normalArray,
+		const float* colorArray,
+		const float* textureCoordArray,
+		unsigned int vertexNum,
+		unsigned int* faceArray,
+		unsigned int faceNum)
+	{
+		// 创建顶点缓冲
+		//if( FAILED( g_d3ddevice->CreateVertexBuffer( vertexNum * sizeof(D3DVertex),
+		//                                              D3DUSAGE_WRITEONLY, VB_FVF,
+		//                                              D3DPOOL_MANAGED, &m_D3DVertexBuffer, NULL ) ) )
+		if( FAILED( g_d3ddevice->CreateVertexBuffer( vertexNum * sizeof(D3DVertex),
+			0, VB_FVF,
+			D3DPOOL_DEFAULT, &m_D3DVertexBuffer, NULL ) ) )
+		{
+			return false;
+		}
 
-	//if (vertexArray && normalArray && textureCoordArray)
-	//{
+		// 创建索引缓冲
+		//if( FAILED( g_d3ddevice->CreateIndexBuffer( 3 * faceNum * sizeof(unsigned int),
+		//														D3DUSAGE_WRITEONLY, D3DFMT_INDEX32, D3DPOOL_MANAGED, 
+		//														&m_D3DIndexBuffer, NULL ) ) )
+		if( FAILED( g_d3ddevice->CreateIndexBuffer( 3 * faceNum * sizeof(unsigned int),
+			0, D3DFMT_INDEX32, D3DPOOL_DEFAULT, 
+			&m_D3DIndexBuffer, NULL ) ) )
+		{
+			return false;
+		}
+
+		// 将数组形式原始数据保存到缓冲中
+		D3DVertex* vert = new D3DVertex[vertexNum];
+
+		//if (vertexArray && normalArray && textureCoordArray)
+		//{
 
 		int v = 0, n = 0, t = 0;
 		for (unsigned int i=0; i<vertexNum; i++)
@@ -71,89 +73,93 @@ bool D3D9VertexBuffer::CreateBuffer(int vertexFormat,
 			vert[i].nz = -normalArray[n++];
 
 			//vert[i].color = 0xFFFFFFFF;
+
+			// 纹理坐标生成
+			// 注：d3d使用不同的uv坐标，需要进行手动转换
 			vert[i].u = textureCoordArray[t++];
-			vert[i].v = textureCoordArray[t++];
+			vert[i].v = 1.0f - textureCoordArray[t++];
 		}
 
-	//}
-	Lock();
-	SetVertexData(vert, vertexNum);
-	SetIndexData(faceArray, faceNum);
-	Unlock();
+		//}
+		Lock();
+		SetVertexData(vert, vertexNum);
+		SetIndexData(faceArray, faceNum);
+		Unlock();
 
-	delete [] vert;
+		delete [] vert;
 
-	m_VertexNum = vertexNum;
-	m_FaceNum = faceNum;
+		m_VertexNum = vertexNum;
+		m_FaceNum = faceNum;
 
-	return true;
-}
-
-void D3D9VertexBuffer::Clear()
-{
-	if (m_D3DVertexBuffer)
-	{
-		m_D3DVertexBuffer->Release();
-		m_D3DVertexBuffer = NULL;
+		return true;
 	}
 
-	if (m_D3DIndexBuffer)
+	void D3D9VertexBuffer::Clear()
 	{
-		m_D3DIndexBuffer->Release();
-		m_D3DIndexBuffer = NULL;
+		if (m_D3DVertexBuffer)
+		{
+			m_D3DVertexBuffer->Release();
+			m_D3DVertexBuffer = NULL;
+		}
+
+		if (m_D3DIndexBuffer)
+		{
+			m_D3DIndexBuffer->Release();
+			m_D3DIndexBuffer = NULL;
+		}
+
+		m_Vertices = NULL;
+		m_Indices = NULL;
+
+		m_VertexNum = 0;
+		m_FaceNum = 0;
+
+		m_Locked = false;
 	}
 
-	m_Vertices = NULL;
-	m_Indices = NULL;
 
-	m_VertexNum = 0;
-	m_FaceNum = 0;
+	void D3D9VertexBuffer::Lock()
+	{
+		m_D3DVertexBuffer->Lock(0, 0, (void**)(&m_Vertices), 0);
+		m_D3DIndexBuffer->Lock(0, 0, (void**)(&m_Indices), 0);
+		m_Locked = true;
+	}
 
-	m_Locked = false;
-}
+	void D3D9VertexBuffer::Unlock()
+	{
+		m_D3DVertexBuffer->Unlock();
+		m_D3DIndexBuffer->Unlock();
+		m_Locked = false;
+	}
 
+	void D3D9VertexBuffer::SetVertexData(void* vertexData, unsigned int vertexNum)
+	{
+		memcpy(m_Vertices, vertexData, sizeof(D3DVertex) * vertexNum);
+	}
 
-void D3D9VertexBuffer::Lock()
-{
-	m_D3DVertexBuffer->Lock(0, 0, (void**)(&m_Vertices), 0);
-	m_D3DIndexBuffer->Lock(0, 0, (void**)(&m_Indices), 0);
-	m_Locked = true;
-}
+	void D3D9VertexBuffer::SetIndexData(void* indexData, unsigned int indexNum)
+	{
+		memcpy(m_Indices, indexData, sizeof(unsigned int) * indexNum * 3);
+	}
 
-void D3D9VertexBuffer::Unlock()
-{
-	m_D3DVertexBuffer->Unlock();
-	m_D3DIndexBuffer->Unlock();
-	m_Locked = false;
-}
+	void D3D9VertexBuffer::ModifyVertexData(VertexFormat dataFormat, int offset,  int size, void* data)
+	{
+	}
 
-void D3D9VertexBuffer::SetVertexData(void* vertexData, unsigned int vertexNum)
-{
-	memcpy(m_Vertices, vertexData, sizeof(D3DVertex) * vertexNum);
-}
+	void D3D9VertexBuffer::ModifyIndexData(int offset, int size, void* data)
+	{
+	}
 
-void D3D9VertexBuffer::SetIndexData(void* indexData, unsigned int indexNum)
-{
-	memcpy(m_Indices, indexData, sizeof(unsigned int) * indexNum * 3);
-}
+	void D3D9VertexBuffer::SetIndexSize(int size)
+	{
+	}
 
-void D3D9VertexBuffer::ModifyVertexData(VertexFormat dataFormat, int offset,  int size, void* data)
-{
-}
-
-void D3D9VertexBuffer::ModifyIndexData(int offset, int size, void* data)
-{
-}
-
-void D3D9VertexBuffer::SetIndexSize(int size)
-{
-}
-
-void D3D9VertexBuffer::RenderBuffer()
-{
-	g_d3ddevice->SetStreamSource(0, this->m_D3DVertexBuffer, 0, sizeof(D3DVertex));
-	g_d3ddevice->SetFVF(VB_FVF);
-	g_d3ddevice->SetIndices(this->m_D3DIndexBuffer);
-	//m_D3DDevice->DrawPrimitive( D3DPT_TRIANGLELIST, 0, this->m_VertexNum/3 );
-	g_d3ddevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, 0, 0, this->m_VertexNum, 0, this->m_FaceNum);
+	void D3D9VertexBuffer::RenderBuffer()
+	{
+		g_d3ddevice->SetStreamSource(0, this->m_D3DVertexBuffer, 0, sizeof(D3DVertex));
+		g_d3ddevice->SetFVF(VB_FVF);
+		g_d3ddevice->SetIndices(this->m_D3DIndexBuffer);
+		//m_D3DDevice->DrawPrimitive( D3DPT_TRIANGLELIST, 0, this->m_VertexNum/3 );
+		g_d3ddevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, 0, 0, this->m_VertexNum, 0, this->m_FaceNum);
+	}
 }

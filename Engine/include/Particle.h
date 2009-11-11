@@ -13,70 +13,72 @@
 #include "Color4f.h"
 #include <memory.h>
 
-class ParticlePool;
-struct Particle;
-
-typedef bool(*ParticleUpdateFunc)(Particle*, unsigned long);
-
-bool DefaultParticleUpdateBehavior(Particle* particle, unsigned long deltaTime);
-
-struct Particle
+namespace Gen
 {
-	bool		m_Active;
-	Vector3f	m_Position;
-	Vector3f	m_Velocity;
+	class ParticlePool;
+	struct Particle;
 
-	Color4f		m_Color;
+	typedef bool(*ParticleUpdateFunc)(Particle*, unsigned long);
 
-	long		m_Age;
-	long		m_Duration;		///< 粒子生命周期，-1为永不消亡
+	bool DefaultParticleUpdateBehavior(Particle* particle, unsigned long deltaTime);
 
-	float		m_ZRotation;
-	float		m_ZRotationInc;
-
-	float		m_Scale;
-	float		m_ScaleInc;
-
-	float		m_ScreenScaleX;
-	float		m_ScreenScaleY;
-
-	ParticleUpdateFunc	m_UpdateFunc;
-
-	//int			m_VertexOffset;
-
-	//unsigned int m_IndexOffset;
-
-	Particle()
-		: m_Active(false),
-		  m_Position(0.0f, 0.0f, 0.0f),
-		  m_Velocity(0.0f, 0.0f, 0.0f),
-		  m_Age(-1),
-		  m_Duration(-1),
-		  m_ZRotation(0.0f),
-		  m_ZRotationInc(0.0f),
-		  m_Scale(1.0f),
-		  m_ScaleInc(0.0f),
-		  m_ScreenScaleX(1.0f),
-		  m_ScreenScaleY(1.0f),
-		  m_UpdateFunc(&DefaultParticleUpdateBehavior)
+	struct Particle
 	{
-	}
+		bool		m_Active;
+		Vector3f	m_Position;
+		Vector3f	m_Velocity;
 
-	Particle operator=(const Particle& rhs)
-	{
-		if (&rhs != this)
-			memcpy(this, &rhs, sizeof(Particle));
+		Color4f		m_Color;
 
-		return *this;
-	}
+		long		m_Age;
+		long		m_Duration;		///< 粒子生命周期，-1为永不消亡
 
-	// 更新粒子，如果粒子寿命结束返回false，其他情况返回true
-	bool Update(unsigned long deltaTime)
-	{
-		return (*m_UpdateFunc)(this, deltaTime);
-	}
+		float		m_ZRotation;
+		float		m_ZRotationInc;
 
-};
+		float		m_Scale;
+		float		m_ScaleInc;
 
+		float		m_ScreenScaleX;
+		float		m_ScreenScaleY;
+
+		ParticleUpdateFunc	m_UpdateFunc;
+
+		//int			m_VertexOffset;
+
+		//unsigned int m_IndexOffset;
+
+		Particle()
+			: m_Active(false),
+			m_Position(0.0f, 0.0f, 0.0f),
+			m_Velocity(0.0f, 0.0f, 0.0f),
+			m_Age(-1),
+			m_Duration(-1),
+			m_ZRotation(0.0f),
+			m_ZRotationInc(0.0f),
+			m_Scale(1.0f),
+			m_ScaleInc(0.0f),
+			m_ScreenScaleX(1.0f),
+			m_ScreenScaleY(1.0f),
+			m_UpdateFunc(&DefaultParticleUpdateBehavior)
+		{
+		}
+
+		Particle operator=(const Particle& rhs)
+		{
+			if (&rhs != this)
+				memcpy(this, &rhs, sizeof(Particle));
+
+			return *this;
+		}
+
+		// 更新粒子，如果粒子寿命结束返回false，其他情况返回true
+		bool Update(unsigned long deltaTime)
+		{
+			return (*m_UpdateFunc)(this, deltaTime);
+		}
+
+	};
+}
 
 #endif

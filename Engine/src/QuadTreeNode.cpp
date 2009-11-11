@@ -9,114 +9,117 @@
 #include "Platform.h"
 #include "Engine.h"
 
-class QuadTree;
-
-QuadTreeNode::QuadTreeNode()
+namespace Gen
 {
-	for (int i=0; i<4; i++)
+	class QuadTree;
+
+	QuadTreeNode::QuadTreeNode()
 	{
-		m_ChildNode[i] = NULL;
+		for (int i=0; i<4; i++)
+		{
+			m_ChildNode[i] = NULL;
+		}
 	}
-}
 
-QuadTreeNode::~QuadTreeNode()
-{
-	for (int i=0; i<4; i++)
+	QuadTreeNode::~QuadTreeNode()
 	{
-		SAFE_DELETE(m_ChildNode[i]);
+		for (int i=0; i<4; i++)
+		{
+			SAFE_DELETE(m_ChildNode[i]);
+		}
 	}
-}
 
-void QuadTreeNode::CreateNode(QuadTree* quadtree, float size, unsigned int subdivCount, unsigned int level)
-{
-	m_QuadTree = quadtree;
-	m_Size = size;
-	m_SubdivisionLevel = level;
-
-	if (level<subdivCount)
+	void QuadTreeNode::CreateNode(QuadTree* quadtree, float size, unsigned int subdivCount, unsigned int level)
 	{
-		float offsetx[4] = { 0.0f, size / 2, 0.0f, size / 2 };
-		float offsetz[4] = { 0.0f, 0.0f, size / 2, size / 2 };
+		m_QuadTree = quadtree;
+		m_Size = size;
+		m_SubdivisionLevel = level;
+
+		if (level<subdivCount)
+		{
+			float offsetx[4] = { 0.0f, size / 2, 0.0f, size / 2 };
+			float offsetz[4] = { 0.0f, 0.0f, size / 2, size / 2 };
+
+			for (int i=0; i<4; i++)
+			{
+				m_ChildNode[i] = new QuadTreeNode();
+				m_ChildNode[i]->m_OffsetX = m_OffsetX + offsetx[i];
+				m_ChildNode[i]->m_OffsetZ = m_OffsetZ + offsetz[i];
+
+				m_ChildNode[i]->CreateNode(quadtree, size/2, subdivCount, level+1);
+			}
+		}
+	}
+
+	bool QuadTreeNode::QueryObjectsByAABB(const AABB& aabb, const SceneObjectList& list)
+	{
+		bool result = false;
+
+		SceneObjectSet::iterator iter;
+		for (iter=m_SceneObjects.begin(); iter!=m_SceneObjects.end(); iter++)
+		{
+			// TODO: 如果物体与这个aabb相交，添加到list中
+		}
 
 		for (int i=0; i<4; i++)
 		{
-			m_ChildNode[i] = new QuadTreeNode();
-			m_ChildNode[i]->m_OffsetX = m_OffsetX + offsetx[i];
-			m_ChildNode[i]->m_OffsetZ = m_OffsetZ + offsetz[i];
-
-			m_ChildNode[i]->CreateNode(quadtree, size/2, subdivCount, level+1);
+			result |= m_ChildNode[i]->QueryObjectsByAABB(aabb, list);
 		}
+
+		return result;
 	}
-}
 
-bool QuadTreeNode::QueryObjectsByAABB(const AABB& aabb, const SceneObjectList& list)
-{
-	bool result = false;
-
-	SceneObjectSet::iterator iter;
-	for (iter=m_SceneObjects.begin(); iter!=m_SceneObjects.end(); iter++)
+	void QuadTreeNode::Render()
 	{
-		// TODO: 如果物体与这个aabb相交，添加到list中
+		float height = m_QuadTree->GetSize();
+		Vector3f vMin = Vector3f(m_OffsetX, 0.0f, m_OffsetZ);
+		Vector3f vMax = Vector3f(m_OffsetX + m_Size, height, m_OffsetZ + m_Size);
+		renderer->RenderBox(vMin, vMax);
+
+		if (m_ChildNode[0])
+			for (int i=0; i<4; i++)
+				m_ChildNode[i]->Render();
 	}
 
-	for (int i=0; i<4; i++)
+	void QuadTreeNode::TraverseRender(const Vector3f pos)
 	{
-		result |= m_ChildNode[i]->QueryObjectsByAABB(aabb, list);
-	}
-
-	return result;
-}
-
-void QuadTreeNode::Render()
-{
-	float height = m_QuadTree->GetSize();
-	Vector3f vMin = Vector3f(m_OffsetX, 0.0f, m_OffsetZ);
-	Vector3f vMax = Vector3f(m_OffsetX + m_Size, height, m_OffsetZ + m_Size);
-	renderer->RenderBox(vMin, vMax);
-
-	if (m_ChildNode[0])
-		for (int i=0; i<4; i++)
-			m_ChildNode[i]->Render();
-}
-
-void QuadTreeNode::TraverseRender(const Vector3f pos)
-{
-	float height = m_QuadTree->GetSize();
-	Vector3f vMin = Vector3f(m_OffsetX, 0.0f, m_OffsetZ);
-	Vector3f vMax = Vector3f(m_OffsetX + m_Size, height, m_OffsetZ + m_Size);
+		float height = m_QuadTree->GetSize();
+		Vector3f vMin = Vector3f(m_OffsetX, 0.0f, m_OffsetZ);
+		Vector3f vMax = Vector3f(m_OffsetX + m_Size, height, m_OffsetZ + m_Size);
 
 #define VECTOR_LESS(a, b) ((a.x < b.x) && (a.y < b.y) && (a.z < b.z))
 #define VECTOR_GREATER(a, b) ((a.x > b.x) && (a.y > b.y) && (a.z > b.z))
-	if (VECTOR_GREATER(pos, vMin) && VECTOR_LESS(pos, vMax))
-	{
-		renderer->RenderBox(vMin, vMax);
-
-		if (!m_ChildNode[0]) return;
-
-		for (int i=0; i<4; i++)
+		if (VECTOR_GREATER(pos, vMin) && VECTOR_LESS(pos, vMax))
 		{
-			m_ChildNode[i]->TraverseRender(pos);
+			renderer->RenderBox(vMin, vMax);
+
+			if (!m_ChildNode[0]) return;
+
+			for (int i=0; i<4; i++)
+			{
+				m_ChildNode[i]->TraverseRender(pos);
+			}
 		}
+
 	}
 
-}
-
-void QuadTreeNode::TraverseRenderBox(const Vector3f vMin, const Vector3f vMax)
-{
-	float height = m_QuadTree->GetSize();
-	Vector3f vNodeMin = Vector3f(m_OffsetX, 0.0f, m_OffsetZ);
-	Vector3f vNodeMax = Vector3f(m_OffsetX + m_Size, height, m_OffsetZ + m_Size);
-
-	if (VECTOR_GREATER(vMin, vNodeMin) && VECTOR_LESS(vMax, vNodeMax))
+	void QuadTreeNode::TraverseRenderBox(const Vector3f vMin, const Vector3f vMax)
 	{
-		renderer->RenderBox(vNodeMin, vNodeMax);
+		float height = m_QuadTree->GetSize();
+		Vector3f vNodeMin = Vector3f(m_OffsetX, 0.0f, m_OffsetZ);
+		Vector3f vNodeMax = Vector3f(m_OffsetX + m_Size, height, m_OffsetZ + m_Size);
 
-		if (!m_ChildNode[0]) return;
-
-		for (int i=0; i<4; i++)
+		if (VECTOR_GREATER(vMin, vNodeMin) && VECTOR_LESS(vMax, vNodeMax))
 		{
-			m_ChildNode[i]->TraverseRenderBox(vMin, vMax);
-		}
-	}
+			renderer->RenderBox(vNodeMin, vNodeMax);
 
+			if (!m_ChildNode[0]) return;
+
+			for (int i=0; i<4; i++)
+			{
+				m_ChildNode[i]->TraverseRenderBox(vMin, vMax);
+			}
+		}
+
+	}
 }

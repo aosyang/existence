@@ -24,120 +24,122 @@ using namespace std;
 
 #include "Singleton.h"
 
-class Log : public Singleton<Log>
+namespace Gen
 {
-	friend class Singleton<Log>;
-public:
-
-	~Log()
+	class Log : public Singleton<Log>
 	{
-		logfile.close();
-	}
+		friend class Singleton<Log>;
+	public:
 
-	void CreateLog(const String& filename)
-	{
-		if (logfile.is_open())
+		~Log()
+		{
 			logfile.close();
+		}
 
-		logfile.open(filename.Data());
+		void CreateLog(const String& filename)
+		{
+			if (logfile.is_open())
+				logfile.close();
 
-		assert(logfile.is_open());
-	}
+			logfile.open(filename.Data());
 
-	void Msg(const String& msg)
-	{
-		logfile << msg.Data();
-		cout << msg.Data();
-	}
+			assert(logfile.is_open());
+		}
 
-	void MsgLn(const String& msg)
-	{
-		OutputTime();
-		logfile << msg.Data() << endl;
-		cout << msg.Data() << endl;
+		void Msg(const String& msg)
+		{
+			logfile << msg.Data();
+			cout << msg.Data();
+		}
 
-		//logfile.flush();
-	}
+		void MsgLn(const String& msg)
+		{
+			OutputTime();
+			logfile << msg.Data() << endl;
+			cout << msg.Data() << endl;
 
-	// 输出时间
-	void OutputTime()
-	{
-		time_t curtime = time(0); 
-		tm t = *localtime(&curtime);
+			//logfile.flush();
+		}
 
-		String msg;
-		msg.Format("%02d:%02d:%02d - ", t.tm_hour, t.tm_min, t.tm_sec);
+		// 输出时间
+		void OutputTime()
+		{
+			time_t curtime = time(0); 
+			tm t = *localtime(&curtime);
 
-		logfile << msg.Data();
-		cout << msg.Data();
-	}
+			String msg;
+			msg.Format("%02d:%02d:%02d - ", t.tm_hour, t.tm_min, t.tm_sec);
 
-	// 警告消息
-	void Warning(const String& msg)
-	{
-		OutputTime();
+			logfile << msg.Data();
+			cout << msg.Data();
+		}
 
-		logfile << "!! Warning !! : ";
-		cout << "!! Warning !! : ";
+		// 警告消息
+		void Warning(const String& msg)
+		{
+			OutputTime();
 
-		logfile << msg.Data() << endl;
-		cout << msg.Data() << endl;
+			logfile << "!! Warning !! : ";
+			cout << "!! Warning !! : ";
 
-		//logfile.flush();
-	}
+			logfile << msg.Data() << endl;
+			cout << msg.Data() << endl;
 
-	// 错误消息
-	void Error(const String& msg)
-	{
-		OutputTime();
+			//logfile.flush();
+		}
 
-		logfile << ">> ERROR << : ";
-		cout << ">> ERROR << : ";
+		// 错误消息
+		void Error(const String& msg)
+		{
+			OutputTime();
 
-		logfile << msg.Data() << endl;
-		cout << msg.Data() << endl;
+			logfile << ">> ERROR << : ";
+			cout << ">> ERROR << : ";
 
-		//logfile.flush();
-	}
+			logfile << msg.Data() << endl;
+			cout << msg.Data() << endl;
+
+			//logfile.flush();
+		}
 
 
 #define LOGREGTYPE(type) \
 	Log& operator << (type _Val) \
-	{ \
+		{ \
 		cout << _Val; \
 		logfile << _Val; \
 		return *this; \
-	} \
+		} \
 
-	LOGREGTYPE(bool)
-	LOGREGTYPE(int)
-	LOGREGTYPE(unsigned int)
-	LOGREGTYPE(long)
-	LOGREGTYPE(unsigned long)
-	LOGREGTYPE(float)
-	LOGREGTYPE(double)
-	LOGREGTYPE(const string&)
-	LOGREGTYPE(const char*)
+		LOGREGTYPE(bool)
+			LOGREGTYPE(int)
+			LOGREGTYPE(unsigned int)
+			LOGREGTYPE(long)
+			LOGREGTYPE(unsigned long)
+			LOGREGTYPE(float)
+			LOGREGTYPE(double)
+			LOGREGTYPE(const string&)
+			LOGREGTYPE(const char*)
 
-	Log& operator<<(const String& rhs)
-	{
-		cout << rhs.Data();
-		logfile << rhs.Data();
-		return *this;
-	}
+			Log& operator<<(const String& rhs)
+		{
+			cout << rhs.Data();
+			logfile << rhs.Data();
+			return *this;
+		}
 
 
-private:
-	Log() {}
+	private:
+		Log() {}
 
-	ofstream  logfile;
-};
+		ofstream  logfile;
+	};
 
 #if defined __PLATFORM_WIN32
 #pragma warning(pop)
 #endif	//#if defined __PLATFORM_WIN32
 
 #define Log Log::Instance()
-
+}
 
 #endif

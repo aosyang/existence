@@ -8,51 +8,52 @@
 
 #include "UIRootObject.h"
 
-
-void UIRootObject::Update(unsigned long deltaTime)
+namespace Gen
 {
-	ChildrenUIObjectsSet::iterator iter;
-	for (iter = m_ChildrenObjects.begin();
-		iter != m_ChildrenObjects.end();
-		iter++)
+	void UIRootObject::Update(unsigned long deltaTime)
 	{
-		(*iter)->Update(deltaTime);
-	}
-}
-
-void UIRootObject::Render()
-{
-	ChildrenUIObjectsSet::iterator iter;
-	for (iter = m_ChildrenObjects.begin();
-		iter != m_ChildrenObjects.end();
-		iter++)
-	{
-		if ((*iter)->GetVisible())
-			(*iter)->Render();
-	}
-}
-
-void UIRootObject::AttachChildObject(BaseUIObject *object)
-{
-	// 检查重复添加
-	if (m_ChildrenObjects.find(object) != m_ChildrenObjects.end())
-	{
-		return;
+		ChildrenUIObjectsSet::iterator iter;
+		for (iter = m_ChildrenObjects.begin();
+			iter != m_ChildrenObjects.end();
+			iter++)
+		{
+			(*iter)->Update(deltaTime);
+		}
 	}
 
-	m_ChildrenObjects.insert(object);
-}
-
-void UIRootObject::RemoveAllChildObjects()
-{
-	ChildrenUIObjectsSet::iterator iter;
-	for (iter = m_ChildrenObjects.begin();
-		iter != m_ChildrenObjects.end();
-		iter++)
+	void UIRootObject::Render()
 	{
-		delete *iter;
+		ChildrenUIObjectsSet::iterator iter;
+		for (iter = m_ChildrenObjects.begin();
+			iter != m_ChildrenObjects.end();
+			iter++)
+		{
+			if ((*iter)->GetVisible())
+				(*iter)->Render();
+		}
 	}
 
-	m_ChildrenObjects.clear();
-}
+	void UIRootObject::AttachChildObject(BaseUIObject *object)
+	{
+		// 检查重复添加
+		if (m_ChildrenObjects.find(object) != m_ChildrenObjects.end())
+		{
+			return;
+		}
 
+		m_ChildrenObjects.insert(object);
+	}
+
+	void UIRootObject::RemoveAllChildObjects()
+	{
+		ChildrenUIObjectsSet::iterator iter;
+		for (iter = m_ChildrenObjects.begin();
+			iter != m_ChildrenObjects.end();
+			iter++)
+		{
+			delete *iter;
+		}
+
+		m_ChildrenObjects.clear();
+	}
+}

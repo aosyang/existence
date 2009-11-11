@@ -5,92 +5,95 @@
 
 using namespace std;
 
-Bone::Bone()
-: m_IsUpdated(false),
-  m_Parent(NULL)
+namespace Gen
 {
-}
-
-void Bone::Update()
-{
-	if (!m_Parent)
+	Bone::Bone()
+		: m_IsUpdated(false),
+		m_Parent(NULL)
 	{
-		// 这是一个根节点
-		m_RootTransform = Matrix4::IDENTITY;
 	}
-	else
+
+	void Bone::Update()
 	{
-		if (!m_Parent->m_IsUpdated)
+		if (!m_Parent)
 		{
-			m_Parent->Update();
+			// 这是一个根节点
+			m_RootTransform = Matrix4::IDENTITY;
+		}
+		else
+		{
+			if (!m_Parent->m_IsUpdated)
+			{
+				m_Parent->Update();
+			}
+
+			m_RootTransform = /*m_Parent->m_RootTransform * */m_Transform;
+		}
+		m_IsUpdated = true;
+	}
+
+	Skeletal::Skeletal()
+		//: m_BoneRoot(NULL)
+	{
+	}
+
+	Skeletal::~Skeletal()
+	{
+		for (int i=0; i<100; i++)
+			for (vector<Bone*>::iterator iter=m_Bones[i].begin(); iter!=m_Bones[i].end(); iter++)
+			{
+				delete (*iter);
+			}
+	}
+
+	Bone* Skeletal::ReadBones(ifstream& fin, unsigned int index)
+	{
+		unsigned int childNum;
+		fin >> childNum;
+
+		Matrix4 local;
+
+		for (int i=0; i<16; i++)
+		{
+			fin >> local.mArray[i];
 		}
 
-		m_RootTransform = /*m_Parent->m_RootTransform * */m_Transform;
-	}
-	m_IsUpdated = true;
-}
+		Bone* bone = new Bone();
+		bone->m_Transform = local;
 
-Skeletal::Skeletal()
-//: m_BoneRoot(NULL)
-{
-}
-
-Skeletal::~Skeletal()
-{
-	for (int i=0; i<100; i++)
-		for (vector<Bone*>::iterator iter=m_Bones[i].begin(); iter!=m_Bones[i].end(); iter++)
+		for (unsigned int i=0; i<childNum; i++)
 		{
-			delete (*iter);
+			Bone* child = ReadBones(fin, index);
+			child->m_Parent = bone;
 		}
-}
 
-Bone* Skeletal::ReadBones(ifstream& fin, unsigned int index)
-{
-	unsigned int childNum;
-	fin >> childNum;
+		m_Bones[index].push_back(bone);
 
-	Matrix4 local;
-
-	for (int i=0; i<16; i++)
-	{
-		fin >> local.mArray[i];
+		return bone;
 	}
 
-	Bone* bone = new Bone();
-	bone->m_Transform = local;
-
-	for (int i=0; i<childNum; i++)
+	bool Skeletal::LoadFromFile(const String& filename)
 	{
-		Bone* child = ReadBones(fin, index);
-		child->m_Parent = bone;
+		ifstream fin(filename.Data());
+
+		if (!fin.is_open())
+			return false;
+
+		fin >> m_Frames;
+
+		for (unsigned int i=0; i<m_Frames; i++)
+			m_BoneRoot[i] = ReadBones(fin, i);
+
+		fin.close();
+
+		return true;
 	}
 
-	m_Bones[index].push_back(bone);
-
-	return bone;
-}
-
-bool Skeletal::LoadFromFile(const String& filename)
-{
-	ifstream fin(filename.Data());
-
-	if (!fin.is_open())
-		return false;
-
-	fin >> m_Frames;
-
-	for (int i=0; i<m_Frames; i++)
-		m_BoneRoot[i] = ReadBones(fin, i);
-
-	fin.close();
-
-	return true;
-}
-
-void Skeletal::Update(unsigned int time)
-{
-	for (vector<Bone*>::iterator iter=m_Bones[time].begin(); iter!=m_Bones[time].end(); iter++)
+	void Skeletal::Update(unsigned int time)
 	{
-		(*iter)->Update();
+		for (vector<Bone*>::iterator iter=m_Bones[time].begin(); iter!=m_Bones[time].end(); iter++)
+		{
+			(*iter)->Update();
+		}
 	}
 }

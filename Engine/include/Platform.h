@@ -17,63 +17,65 @@
 #error Unsupported platform
 #endif
 
+namespace Gen
+{
 #ifdef __PLATFORM_WIN32
-typedef HWND RenderWindowHandle;
+	typedef HWND RenderWindowHandle;
 
 #define DLLEXPORT __declspec(dllexport)
 
 #elif defined __PLATFORM_LINUX
 
-typedef struct
-{
-    void*              display;
-    int         	   screen;
-    unsigned long      window;
-} RenderWindowHandle;
+	typedef struct
+	{
+		void*              display;
+		int         	   screen;
+		unsigned long      window;
+	} RenderWindowHandle;
 
 #define DLLEXPORT __attribute__ ((visibility("default")))
 
 #endif
 
-struct RenderWindowParam
-{
-	RenderWindowHandle	handle;
-	unsigned int		width, height;
-	unsigned int		color_depth_bit;
-};
+	struct RenderWindowParam
+	{
+		RenderWindowHandle	handle;
+		unsigned int		width, height;
+		unsigned int		colorDepthBit;
+	};
 
-class PlatformMessageNotifier;
+	class PlatformMessageNotifier;
 
-class Platform
-{
-public:
-	static void SetMessageNotifier(PlatformMessageNotifier* notifier) { m_MessageNotifier = notifier; }
+	class Platform
+	{
+	public:
+		static void SetMessageNotifier(PlatformMessageNotifier* notifier) { m_MessageNotifier = notifier; }
 
-	static void HandleWindowMessage();
+		static void HandleWindowMessage();
 
 #ifdef __PLATFORM_WIN32
-	// Win32消息回调函数
-	static WNDPROC CALLBACK WndProc(HWND hWnd, UINT	uMsg, WPARAM wParam, LPARAM	lParam);
+		// Win32消息回调函数
+		static WNDPROC CALLBACK WndProc(HWND hWnd, UINT	uMsg, WPARAM wParam, LPARAM	lParam);
 #endif
 
-	static PlatformMessageNotifier* m_MessageNotifier;
-};
+		static PlatformMessageNotifier* m_MessageNotifier;
+	};
 
-class PlatformMessageNotifier
-{
-public:
-	virtual ~PlatformMessageNotifier() {}
+	class PlatformMessageNotifier
+	{
+	public:
+		virtual ~PlatformMessageNotifier() {}
 
-	virtual void OnMessageQuit() = 0;
+		virtual void OnMessageQuit() = 0;
 
-	virtual void OnMessageActiveWindow(bool active) = 0;
+		virtual void OnMessageActiveWindow(bool active) = 0;
 
-	virtual void OnMessageResizeWindow(unsigned int width, unsigned int height) = 0;
-};
+		virtual void OnMessageResizeWindow(unsigned int width, unsigned int height) = 0;
+	};
 
 #define SAFE_DELETE(x)			if (x) { delete x; x = 0; }
 #define SAFE_DELETE_ARRAY(x)	if (x) { delete [] x; x = 0; }
-
+}
 
 #endif
 

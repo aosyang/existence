@@ -21,63 +21,64 @@
 
 using namespace std;
 
-class MovableObjectBase;
-class RenderableObjectBase;
-
-typedef set<RenderableObjectBase*>	RenderableObjectSet;
-typedef vector<RenderableObjectBase*> RenderableObjectList;
-
-class MovableObjectBase : public IObject
+namespace Gen
 {
-public:
-	MovableObjectBase();
+	class MovableObjectBase;
+	class RenderableObjectBase;
 
-	// ----- Overwrite IObject
+	typedef set<RenderableObjectBase*>	RenderableObjectSet;
+	typedef vector<RenderableObjectBase*> RenderableObjectList;
 
-	void Destroy();
+	class MovableObjectBase : public IObject
+	{
+	public:
+		MovableObjectBase();
 
-	void Update(unsigned long deltaTime);
+		// ----- Overwrite IObject
 
-	// 对象在这个周期内是否已经被更新过
-	bool IsUpdated();
+		void Destroy();
 
-	const String GetTypeName() const { return "MovableObjectBase"; }
+		void Update(unsigned long deltaTime);
 
-	// ----- MovableObjectBase methods
+		// 对象在这个周期内是否已经被更新过
+		bool IsUpdated();
 
-	// Transform
-	virtual void SetPosition(const Vector3f& pos);
-	virtual void SetRotation(const Quaternion& rot);
+		// ----- MovableObjectBase methods
 
-	void RotateLocal(const Quaternion& quat);
-	void TranslateLocal(const Vector3f& trans);
-	void TranslateParent(const Vector3f& trans);
+		// Transform
+		virtual void SetPosition(const Vector3f& pos);
+		virtual void SetRotation(const Quaternion& rot);
 
-	inline const Matrix4& Transform() const { return m_Transform; }
-	inline const Matrix4& WorldTransform() const { return m_WorldTransform; }
+		void RotateLocal(const Quaternion& quat);
+		void TranslateLocal(const Vector3f& trans);
+		void TranslateParent(const Vector3f& trans);
 
-	inline const Quaternion& GetLocalQuaternion() const { return m_Rotation; }
+		inline const Matrix4& Transform() const { return m_Transform; }
+		inline const Matrix4& WorldTransform() const { return m_WorldTransform; }
 
-	// 获取包围盒
-	const AABB& GetAABB();
+		inline const Quaternion& GetLocalQuaternion() const { return m_Rotation; }
 
-	const OBB& GetOBB();
+		// 获取包围盒
+		const AABB& GetAABB();
 
-	// Render Collection
+		const OBB& GetOBB();
 
-	virtual bool IsCulled(Frustum* frustum);
+		// Render Collection
 
-protected:
-	bool							m_Updated;
+		virtual bool IsCulled(Frustum* frustum);
 
-	Quaternion						m_Rotation;					///< 记录对象局部空间旋转的四元数
-	Matrix4							m_Transform;				///< 记录对象局部空间变换
-	Matrix4							m_WorldTransform;			///< 记录对象世界空间变换，注：通常不需要手动更新，由Update方法负责从父对象更新
+	protected:
+		bool							m_Updated;
+
+		Quaternion						m_Rotation;					///< 记录对象局部空间旋转的四元数
+		Matrix4							m_Transform;				///< 记录对象局部空间变换
+		Matrix4							m_WorldTransform;			///< 记录对象世界空间变换，注：通常不需要手动更新，由Update方法负责从父对象更新
 
 
-	OBB								m_OBB;
-	AABB							m_AABB;
+		OBB								m_OBB;
+		AABB							m_AABB;
 
-};
+	};
+}
 
 #endif

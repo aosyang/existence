@@ -8,19 +8,22 @@
 #ifndef _SINGLETON_H
 #define _SINGLETON_H
 
-template <typename T> class Singleton
+namespace Gen
 {
-protected:
-	Singleton(){}
-
-public:
-	static T& Instance()
+	template <typename T> class Singleton
 	{
-		static T singleton;
+	protected:
+		Singleton(){}
 
-		return singleton;
-	}
+	public:
+		static T& Instance()
+		{
+			static T singleton;
 
-};
+			return singleton;
+		}
+
+	};
+}
 
 #endif

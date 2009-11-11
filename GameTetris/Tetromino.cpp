@@ -27,9 +27,9 @@ Color4f BLOCK_COLOR[MAX_SHAPE_TYPE_NUM] =
 	Color4f(0.0f, 1.0f, 1.0f),		// Z
 };
 
-TetrisGame* Tetromino::s_Game;
+TetrisGame* Tetromino::m_sGame;
 
-list<Block*> Tetromino::s_BlocksInGame;
+list<Block*> Tetromino::m_sBlocksInGame;
 
 Tetromino::Tetromino()
 : /*m_PosX(0), m_PosY(0), */m_Position(0, 0), m_RotType(ROT_0)
@@ -65,7 +65,7 @@ void Tetromino::BuildShape()
 		m_Blocks[i] = new Block();
 		m_Blocks[i]->SetColorType(m_ShapeType);
 
-		s_BlocksInGame.push_back(m_Blocks[i]);
+		m_sBlocksInGame.push_back(m_Blocks[i]);
 	}
 
 	UpdatePos();
@@ -112,8 +112,8 @@ bool Tetromino::MoveDown()
 		if (!Apply())
 		{
 			// Game over
-			s_Game->SetGameState(GAME_STATE_OVER);
-			s_Game->GameOver();
+			m_sGame->SetGameState(GAME_STATE_OVER);
+			m_sGame->GameOver();
 			return true;
 		}
 		return false;
@@ -193,7 +193,7 @@ bool Tetromino::TryPosition(Point2D pos, int rot_type)
 			continue;
 
 		// 此格已经被占据
-		if (s_Game->m_BlockList[new_pos.x][new_pos.y])
+		if (m_sGame->m_BlockList[new_pos.x][new_pos.y])
 			return false;
 	}
 
@@ -212,7 +212,7 @@ bool Tetromino::Apply()
 		if (pos.y > 19)
 			continue;
 
-		s_Game->m_BlockList[pos.x][pos.y] = m_Blocks[i];
+		m_sGame->m_BlockList[pos.x][pos.y] = m_Blocks[i];
 	}
 
 	// TODO: 创建新的Block之前需要将旧的Block保存起来，方便退出程序时进行删除
@@ -231,8 +231,8 @@ bool Tetromino::Apply()
 
 void Tetromino::ClearBlocksInGame()
 {
-	for (list<Block*>::iterator iter=s_BlocksInGame.begin();
-		iter!=s_BlocksInGame.end();
+	for (list<Block*>::iterator iter=m_sBlocksInGame.begin();
+		iter!=m_sBlocksInGame.end();
 		iter++)
 	{
 		delete (*iter);

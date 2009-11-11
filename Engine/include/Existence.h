@@ -8,74 +8,79 @@
 #ifndef _PREREQUISITES_H
 #define _PREREQUISITES_H
 
+namespace Gen
+{
+	// Interfaces
+	class IAudioSystem;
+	class IRenderer;
+	class IVertexBuffer;
+	class ITexture;
+	class IGame;
+	class ISceneObject;
 
-// Interfaces
-class IAudioSystem;
-class IRenderer;
-class IVertexBuffer;
-class ITexture;
-class IGame;
-class ISceneObject;
+	// Math
+	class Vector3f;
+	class Matrix4;
+	class Matrix3;
+	class Frustum;
+	class Ray;
+	//class BspTriangle;
 
-// Math
-class Vector3f;
-class Matrix4;
-class Matrix3;
-class Frustum;
-class Ray;
-//class BspTriangle;
+	class Platform;
 
-class Platform;
+	// Lighting
+	class LightingManager;
+	class ILight;
+	class Light;
+	class LightableObject;
+	class ShadowManager;
 
-// Lighting
-class LightingManager;
-class ILight;
-class Light;
-class LightableObject;
-class ShadowManager;
+	class Color4f;
+	class CameraShakeEffect;
+	class Material;
+	class Input;
+	class Timer;
+	class System;
+	class Font;
+	class FontManager;
+	class NullAudioSystem;
+	class BspTree;
+	class Log;
+	class Skeletal;
+	class Image;
+	class String;
 
-class Color4f;
-class CameraShakeEffect;
-class Material;
-class TextureManager;
-class Mesh;
-class Input;
-class Timer;
-class System;
-class Font;
-class FontManager;
-class NullAudioSystem;
-class BspTree;
-class Log;
-class Skeletal;
-class Image;
-class String;
+	class MeshManager;
+	class IMesh;
+	class EmdMesh;
+	class Ms3dMesh;
 
-class SceneGraph;
-class SceneSerializer;
+	class SceneGraph;
+	class SceneSerializer;
 
-class SceneObject;
-class SceneRootObject;
-class Camera;
-class MeshObject;
-class DistantViewObject;
-class Billboard;
-class Decal;
-class ParticlePool;
-class ParticleEmitter;
-class AudioListener;
-class AudioSourceObject;
-class BspObject;
+	class SceneObject;
+	class SceneRootObject;
+	class Camera;
+	class MeshObject;
+	class DistantViewObject;
+	class Billboard;
+	class Decal;
+	class ParticlePool;
+	class ParticleEmitter;
+	class AudioListener;
+	class AudioSourceObject;
+	class BspObject;
 
-class FileSystem;
+	class FileSystem;
 
-class GameObjectBase;
+	class GameObjectBase;
 
-class EGUIManager;
-class UIRootObject;
-class BaseUIObject;
-class TextUIControl;
-class ImageUIControl;
+	class EGUIManager;
+	class UIRootObject;
+	class BaseUIObject;
+	class TextUIControl;
+	class ImageUIControl;
+}
 
 
 #include "Platform.h"
@@ -101,7 +106,6 @@ class ImageUIControl;
 #include "LightableObject.h"
 #include "Material.h"
 #include "Singleton.h"
-#include "Mesh.h"
 #include "Input.h"
 #include "Timer.h"
 #include "IGame.h"
@@ -116,6 +120,11 @@ class ImageUIControl;
 #include "Image.h"
 #include "EString.h"
 #include "StringConverter.h"
+
+#include "MeshManager.h"
+#include "IMesh.h"
+#include "EmdMesh.h"
+#include "Ms3dMesh.h"
 
 #include "SceneGraph.h"
 #include "SceneSerializer.h"

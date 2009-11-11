@@ -15,44 +15,47 @@
 
 using namespace std;
 
-// TODO FIXME: 这方法无法保证手动重新SetZOrder的控件正确排序
-class UIObjectComparer : public greater<BaseUIObject*>
+namespace Gen
 {
-public:
-	bool operator() (BaseUIObject* lhs,BaseUIObject* rhs) const
+	// TODO FIXME: 这方法无法保证手动重新SetZOrder的控件正确排序
+	class UIObjectComparer : public greater<BaseUIObject*>
 	{
-		//if (lhs->GetZOrder() == rhs->GetZOrder())
-		//{
-		//	return lhs < rhs;
-		//}
-		//return lhs->GetZOrder() < rhs->GetZOrder();
+	public:
+		bool operator() (BaseUIObject* lhs,BaseUIObject* rhs) const
+		{
+			//if (lhs->GetZOrder() == rhs->GetZOrder())
+			//{
+			//	return lhs < rhs;
+			//}
+			//return lhs->GetZOrder() < rhs->GetZOrder();
 
-		return (lhs->GetZOrder() == rhs->GetZOrder()) ? (lhs < rhs) : (lhs->GetZOrder() < rhs->GetZOrder());
+			return (lhs->GetZOrder() == rhs->GetZOrder()) ? (lhs < rhs) : (lhs->GetZOrder() < rhs->GetZOrder());
 
-	}
-};
+		}
+	};
 
-typedef set<BaseUIObject*, UIObjectComparer> ChildrenUIObjectsSet;
+	typedef set<BaseUIObject*, UIObjectComparer> ChildrenUIObjectsSet;
 
-class UIRootObject : public ISceneObject
-{
-public:
-	~UIRootObject() {}
+	class UIRootObject : public ISceneObject
+	{
+	public:
+		~UIRootObject() {}
 
-	// ----- Overwrite ISceneObject
+		// ----- Overwrite ISceneObject
 
-	void Update(unsigned long deltaTime);
-	void Render();
-	void DebugRender() {}
+		void Update(unsigned long deltaTime);
+		void Render();
+		void DebugRender() {}
 
-	// ----- UIRootObject Methods
+		// ----- UIRootObject Methods
 
-	void AttachChildObject(BaseUIObject* object);
-	void RemoveAllChildObjects();
-private:
+		void AttachChildObject(BaseUIObject* object);
+		void RemoveAllChildObjects();
+	private:
 
-	ChildrenUIObjectsSet	m_ChildrenObjects;
-};
+		ChildrenUIObjectsSet	m_ChildrenObjects;
+	};
+}
 
 #endif
 

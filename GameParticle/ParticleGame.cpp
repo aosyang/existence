@@ -83,8 +83,8 @@ void particleGame::StartGame()
 	m_UIFps = EGUIManager::Instance().CreateTextUIControl();
 	m_UIFps->SetWidth(640);
 
-	//Mesh* mesh = ResourceManager<Mesh>::Instance().GetByName("marcus");
-	Mesh* mesh = ResourceManager<Mesh>::Instance().Create();
+	//Mesh* mesh = MeshManager::Instance().GetByName("marcus");
+	PrimitiveMesh* mesh = MeshManager::Instance().CreatePrimitiveMesh();
 	mesh->CreateBox(1.0f);
 	MeshObject* obj = static_cast<MeshObject*>(m_Scene->CreateSceneObject("MeshObject"));
 	obj->SetMesh(mesh);

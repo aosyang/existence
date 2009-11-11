@@ -21,15 +21,11 @@ void GameSkeletal::StartGame()
 
 	renderer->SetClearColor(Color4f(0.0f, 0.5f, 0.5f));
 
-	m_Camera = new Camera;
+	m_Camera = FACTORY_CREATE(m_Scene, Camera);
 	m_Camera->SetFarClippingDistance(1000.0f);
 
-	// 不添加到场景的摄像机将无法移动
-	m_Scene->AddObject(m_Camera);
-
-	m_Sky = new DistantViewObject();
-	m_Sky->SetMesh(ResourceManager<Mesh>::Instance().GetByName("skybox.EMD"));
-	m_Scene->AddObject(m_Sky);
+	m_Sky = FACTORY_CREATE(m_Scene, DistantViewObject);
+	m_Sky->SetMesh(MeshManager::Instance().GetByName("skybox.EMD"));
 
 	skel.LoadFromFile("E:/testout.txt");
 

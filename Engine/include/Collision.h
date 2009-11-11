@@ -14,18 +14,21 @@
 
 using namespace std;
 
-class SceneObject;
-
-// Åö×²¼ì²â½á¹û
-struct CollisionResult
+namespace Gen
 {
-	Vector3f point, normal;
-	float distance;
-	SceneObject* obj;
-};
+	class SceneObject;
 
-typedef vector<CollisionResult>		ObjectsCollisionInfos;
+	// Åö×²¼ì²â½á¹û
+	struct CollisionResult
+	{
+		Vector3f point, normal;
+		float distance;
+		SceneObject* obj;
+	};
+
+	typedef vector<CollisionResult>		ObjectsCollisionInfos;
 
 #define COLLISION_GROUP_ALL 0xFFFFFFFF
+};
 
 #endif

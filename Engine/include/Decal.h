@@ -13,57 +13,52 @@
 #include "Material.h"
 #include "IVertexBuffer.h"
 
-
-//-----------------------------------------------------------------------------------
-/// \brief
-/// 贴附于平面表面的纹理贴花
-/// 
-/// Write detailed description for Decal here.
-/// 
-/// \remarks
-/// Write remarks for Decal here.
-//-----------------------------------------------------------------------------------
-class Decal : public RenderableObjectBase
+namespace Gen
 {
-	DECLARE_FACTORY(Decal);
-public:
-	Decal();
-	~Decal();
+	//-----------------------------------------------------------------------------------
+	/// \brief
+	/// 贴附于平面表面的纹理贴花
+	/// 
+	/// Write detailed description for Decal here.
+	/// 
+	/// \remarks
+	/// Write remarks for Decal here.
+	//-----------------------------------------------------------------------------------
+	class Decal : public RenderableObjectBase
+	{
+		DECLARE_FACTORY(Decal);
+	public:
+		// ----- Overwrite IRenderableObject
 
-	// ----- Overwrite SceneObject
+		void RenderSingleObject();
 
-	const String GetTypeName() const { return "Decal"; }
+		// ----- Decal Methods
 
-	// ----- Overwrite IRenderableObject
+		// 材质
+		inline Material* GetMaterial() const { return m_Material; }
+		inline void SetMaterial(Material* mat) { m_Material = mat; }
 
-	void RenderSingleObject();
+		void SetDirection(const Vector3f normal);
 
-	// ----- Decal Methods
+		void SetSize(float size);
+		float GetSize() const { return m_Size; }
 
-	// 材质
-	inline Material* GetMaterial() const { return m_Material; }
-	inline void SetMaterial(Material* mat) { m_Material = mat; }
+	private:
 
-	void SetDirection(const Vector3f normal);
+		// 根据尺寸构造顶点
+		void BuildVertexArray();
 
-	void SetSize(float size);
-	float GetSize() const { return m_Size; }
+	protected:
+		Material*	m_Material;		///< 贴花材质
 
-private:
+		//unsigned int	m_FaceArray[3 * 2];
+		//float			m_VertexArray[3 * 4];
+		//float			m_NormalArray[3 * 4];
+		//float			m_TexCoordArray[2 * 4];
+		IVertexBuffer*	m_VertexBuffer;
 
-	// 根据尺寸构造顶点
-	void BuildVertexArray();
-
-protected:
-	Material*	m_Material;		///< 贴花材质
-
-	//unsigned int	m_FaceArray[3 * 2];
-	//float			m_VertexArray[3 * 4];
-	//float			m_NormalArray[3 * 4];
-	//float			m_TexCoordArray[2 * 4];
-	IVertexBuffer*	m_VertexBuffer;
-
-	float			m_Size;
-};
+		float			m_Size;
+	};
+}
 
 #endif

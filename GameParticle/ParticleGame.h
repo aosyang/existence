@@ -2,6 +2,8 @@
 #define _particleGAME_H
 
 #include "Existence.h"
+using namespace Gen;
+
 #include <list>
 
 using namespace std;

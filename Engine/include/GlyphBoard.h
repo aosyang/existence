@@ -10,15 +10,18 @@
 
 #include "ITexture.h"
 
-class GlyphBoard
+namespace Gen
 {
-public:
-	GlyphBoard();
-	~GlyphBoard();
+	class GlyphBoard
+	{
+	public:
+		GlyphBoard();
+		~GlyphBoard();
 
-private:
+	private:
 
-	ITexture*	m_Texture;
-};
+		ITexture*	m_Texture;
+	};
+}
 
 #endif

@@ -6,6 +6,7 @@
 	ProjectGUID="{30B74D54-128F-4522-814A-48DA3753B503}"
 	RootNamespace="Engine"
 	Keyword="Win32Proj"
+	TargetFrameworkVersion="0"
 	>
 	<Platforms>
 		<Platform
@@ -18,7 +19,7 @@
 		<Configuration
 			Name="Debug|Win32"
 			OutputDirectory="..\..\bin\libs"
-			IntermediateDirectory="$(ConfigurationName)"
+			IntermediateDirectory="..\..\$(ProjectName)\obj\$(ConfigurationName)"
 			ConfigurationType="4"
 			CharacterSet="2"
 			>
@@ -47,7 +48,6 @@
 				RuntimeLibrary="3"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
-				Detect64BitPortabilityProblems="true"
 				DebugInformationFormat="4"
 				DisableSpecificWarnings="4819"
 			/>
@@ -85,7 +85,7 @@
 		<Configuration
 			Name="Release|Win32"
 			OutputDirectory="..\..\bin\libs"
-			IntermediateDirectory="$(ConfigurationName)"
+			IntermediateDirectory="..\..\$(ProjectName)\obj\$(ConfigurationName)"
 			ConfigurationType="4"
 			CharacterSet="2"
 			WholeProgramOptimization="1"
@@ -112,7 +112,6 @@
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
-				Detect64BitPortabilityProblems="true"
 				DebugInformationFormat="3"
 				DisableSpecificWarnings="4819"
 			/>
@@ -534,15 +533,23 @@
 			Name="Mesh"
 			>
 			<File
+				RelativePath="..\..\Engine\src\BaseMesh.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Engine\include\BaseMesh.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Engine\src\EmdMesh.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Engine\include\EmdMesh.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\Engine\include\IMesh.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\Engine\src\Mesh.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\Engine\include\Mesh.h"
 				>
 			</File>
 			<File
@@ -554,15 +561,27 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\Engine\include\MeshLoader.h"
-				>
-			</File>
-			<File
 				RelativePath="..\..\Engine\src\MeshManager.cpp"
 				>
 			</File>
 			<File
 				RelativePath="..\..\Engine\include\MeshManager.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Engine\src\Ms3dMesh.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Engine\include\Ms3dMesh.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Engine\src\PrimitiveMesh.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Engine\include\PrimitiveMesh.h"
 				>
 			</File>
 			<File

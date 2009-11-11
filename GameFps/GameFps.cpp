@@ -49,27 +49,22 @@ void GameFps::StartGame()
 
 	renderer->SetClearColor(Color4f(0.0f, 0.5f, 0.5f));
 
-	m_Camera = new Camera;
+	m_Camera = FACTORY_CREATE(m_Scene, Camera);
 	m_Camera->SetFarClippingDistance(1000.0f);
 	//m_Camera->SetPosition(Vector3f(1.0f, 0.0f, 5.0f));
 
 	// 摄像机作为收听者
-	m_AudioListener = new AudioListener();
-	m_Scene->AddObject(m_AudioListener);
+	m_AudioListener = FACTORY_CREATE(m_Scene, AudioListener);
 	//m_Camera->AttachChildObject(m_AudioListener, false);
 
 	// 设置全局的方向光照
-	m_Sun = new Light();
+	m_Sun = FACTORY_CREATE(m_Scene, Light);
 	m_Sun->SetLightType(LIGHT_TYPE_DIRECTIONAL);
 	Vector3f sunDir = Vector3f(0.2f, 1.0f, 0.5f);
 	sunDir.normalize();
 	m_Sun->SetDirection(sunDir);
-	m_Scene->AddObject(m_Sun);
 	LightingManager::Instance().AddGlobalLight(m_Sun);
 	//ShadowManager::Instance().SetLight(m_Sun);
-
-	// 不添加到场景的摄像机将无法移动
-	m_Scene->AddObject(m_Camera);
 
 	m_UIControl = EGUIManager::Instance().CreateImageUIControl();
 
@@ -86,12 +81,12 @@ void GameFps::StartGame()
 	no_mat->ModifyRectData(32, 32, 32, 32, &color);
 	//unsigned int bpp = no_mat->GetBpp();
 
-	Mesh* bspScene = ResourceManager<Mesh>::Instance().GetByName("scene.EMD");
+	IMesh* bspScene = MeshManager::Instance().GetByName("scene.EMD");
 
 	//BuildBspTreeFromMesh(&bsp, bspScene);
 
-	m_ViewGun = new MeshObject();
-	m_ViewGun->SetMesh(ResourceManager<Mesh>::Instance().GetByName("mp5.EMD"));
+	m_ViewGun = FACTORY_CREATE(m_Scene, MeshObject);
+	m_ViewGun->SetMesh(MeshManager::Instance().GetByName("mp5.EMD"));
 	m_ViewGun->CreateLightableObject();
 
 	Material* matFlare = ResourceManager<Material>::Instance().GetByName("flare");
@@ -135,7 +130,7 @@ void GameFps::StartGame()
 
 	//matCubeSky->SaveToFile("cube_sky.emt");
 
-	//Mesh* mesh = ResourceManager<Mesh>::Instance().Create("skybox");
+	//Mesh* mesh = MeshManager::Instance().Create("skybox");
 	//// 修改天空盒材质为replace
 	//for (int i=0; i<6; i++)
 	//{
@@ -143,11 +138,10 @@ void GameFps::StartGame()
 	//	mat->GetTextureRenderState(0)->envMode = ENV_MODE_REPLACE;
 	//}
 
-	m_Sky = new DistantViewObject();
-	m_Sky->SetMesh(ResourceManager<Mesh>::Instance().GetByName("skybox.EMD"));
+	m_Sky = FACTORY_CREATE(m_Scene, DistantViewObject);
+	m_Sky->SetMesh(MeshManager::Instance().GetByName("skybox.EMD"));
 	//m_Sky->SetOffsetScale(Vector3f(0.1f, 0.1f, 0.1f));
 	//m_Sky->SetOffsetScale(Vector3f(1.f, 1.f, 1.f));
-	m_Scene->AddObject(m_Sky);
 
 	String matName[] = { "lowerrec", "buttstock", "handle", "barrel", "clip", "forearm", "rearsight" };
 	for (int i=0; i<7; i++)
@@ -175,27 +169,23 @@ void GameFps::StartGame()
 	//matSphere->GetTextureRenderState(0)->texture = renderer->GetTexture("no_material");
 	//matSphere->GetTextureRenderState(1)->texture = renderer->GetTexture("Brick");
 
-	MeshObject* sphere = new MeshObject();
-	sphere->SetMesh(ResourceManager<Mesh>::Instance().GetByName("sphere.EMD"));
+	MeshObject* sphere = FACTORY_CREATE(m_Scene, MeshObject);
+	sphere->SetMesh(MeshManager::Instance().GetByName("sphere.EMD"));
 	sphere->SetMaterial(matSphere, 0);
-	m_Scene->AddObject(sphere);
 	sphere->SetPosition(Vector3f(0.0f, 30.0f, 0.0f));
 
 	sphere->CreateLightableObject();
 
 
-	m_ViewGunFlare = new MeshObject();
-	m_ViewGunFlare->SetMesh(ResourceManager<Mesh>::Instance().GetByName("gunflare.EMD"));
+	m_ViewGunFlare = FACTORY_CREATE(m_Scene, MeshObject);
+	m_ViewGunFlare->SetMesh(MeshManager::Instance().GetByName("gunflare.EMD"));
 	m_ViewGunFlare->SetVisible(false);
 
-	// TODO: AddObject和AttachChildObject二者只需要一个？
-	m_Scene->AddObject(m_ViewGun);
 	m_Camera->AttachChildObject(m_ViewGun, false);
 	m_Camera->AttachChildObject(m_ViewGunFlare, false);
 
-	m_BspScene = new BspObject();
+	m_BspScene = FACTORY_CREATE(m_Scene, BspObject);
 	m_BspScene->SetMesh(bspScene);
-	m_Scene->AddObject(m_BspScene);
 	m_BspScene->SetRenderOrder(90);
 	//LightingManager::Instance().AddLightableObject(&m_BspScene);
 
@@ -213,13 +203,10 @@ void GameFps::StartGame()
 	matDecal->SetTexture(renderer->GetTexture("bullethole"));
 	//matDecal->SaveToFile("MatDecal.emt");
 
-	m_PlayerShadow = new Decal();
+	m_PlayerShadow = FACTORY_CREATE(m_Scene, Decal);
 	m_PlayerShadow->SetSize(10.0f);
 	m_PlayerShadow->SetMaterial(matDecal);
 	m_PlayerShadow->SetRenderOrder(95);
-
-	m_Scene->AddObject(m_PlayerShadow);
-	m_Scene->AddObject(m_ViewGunFlare);
 
 	System::Instance().ToggleMouseCursor(false);
 
@@ -258,9 +245,9 @@ void GameFps::StartGame()
 	matScreenQuad->SetTexture(g_RTT);
 	matScreenQuad->SetDepthWriting(false);
 
-	Mesh* plane = ResourceManager<Mesh>::Instance().Create("plane");
+	Mesh* plane = MeshManager::Instance().Create("plane");
 	plane->CreatePositiveZPlane(1.0f);
-	MeshObject* screenQuad = new MeshObject();
+	MeshObject* screenQuad = FACTORY_CREATE(m_Scene, MeshObject);
 	screenQuad->SetMesh(plane);
 
 	m_ScreenQuadScene->AddObject(screenQuad);
@@ -616,28 +603,27 @@ void GameFps::FireWeapon(unsigned long deltaTime)
 		Engine::Instance().AudioSystem()->CreateSourceInstance(fire, m_Camera->WorldTransform().GetPosition());
 	}
 
-	Ray los = m_Camera->GetCameratRay(Math::Random(0.48f, 0.52f), Math::Random(0.48f, 0.52f));
-	Vector3f hit_pos;
+	Ray los = m_Camera->GetCameraRay(Math::Random(0.48f, 0.52f), Math::Random(0.48f, 0.52f));
+	Vector3f hitPosition;
 	BspTriangle* tri;
-	bool los_col = m_BspScene->Intersects(los, &hit_pos, &tri);
+	bool isLosCollide = m_BspScene->Intersects(los, &hitPosition, &tri);
 
-	if (los_col)
+	if (isLosCollide)
 	{
 		static int decalIndex;
 		decalIndex %= MAX_DECAL_NUM;
 		if (!m_Decals[decalIndex])
 		{
-			m_Decals[decalIndex] = new Decal;
+			m_Decals[decalIndex] = FACTORY_CREATE(m_Scene, Decal);
 			m_Decals[decalIndex]->SetMaterial(ResourceManager<Material>::Instance().GetByName("MatDecal"));
-			m_Scene->AddObject(m_Decals[decalIndex]);
 			m_BspScene->AttachChildObject(m_Decals[decalIndex]);
 
 			// 位于场景之后渲染
 			m_Decals[decalIndex]->SetRenderOrder(93);
 		}
 		// 浮起一些距离，防止z-fighting
-		hit_pos = m_BspScene->WorldTransform().GetInverseMatrix() * hit_pos;
-		m_Decals[decalIndex]->SetPosition(hit_pos + tri->normal * 0.01f);
+		hitPosition = m_BspScene->WorldTransform().GetInverseMatrix() * hitPosition;
+		m_Decals[decalIndex]->SetPosition(hitPosition + tri->normal * 0.01f);
 		m_Decals[decalIndex]->SetDirection(/*m_BspScene->WorldTransform() * */tri->normal);
 		//m_Decals[decalIndex]->Transform() *= m_BspScene->WorldTransform().GetInverseMatrix();
 
@@ -665,9 +651,8 @@ void GameFps::EjectShell(const Vector3f& pos, const Vector3f& dir)
 
 	if (!m_Shells[shellIndex].obj)
 	{
-		m_Shells[shellIndex].obj = new MeshObject();
-		m_Shells[shellIndex].obj->SetMesh(ResourceManager<Mesh>::Instance().GetByName("shell.EMD"));
-		m_Scene->AddObject(m_Shells[shellIndex].obj);
+		m_Shells[shellIndex].obj = FACTORY_CREATE(m_Scene, MeshObject);
+		m_Shells[shellIndex].obj->SetMesh(MeshManager::Instance().GetByName("shell.EMD"));
 
 		m_Shells[shellIndex].obj->CreateLightableObject();
 	}

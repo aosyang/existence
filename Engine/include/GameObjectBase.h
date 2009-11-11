@@ -10,23 +10,26 @@
 
 #include "SceneObject.h"
 
-// 每个游戏中的对象由此类派生
-// 游戏物体基类
-// 负责对象的碰撞、更新等等
-class GameObjectBase : public SceneObject
+namespace Gen
 {
-public:
-	GameObjectBase();
+	// 每个游戏中的对象由此类派生
+	// 游戏物体基类
+	// 负责对象的碰撞、更新等等
+	class GameObjectBase : public SceneObject
+	{
+	public:
+		GameObjectBase();
 
-	// ----- Overwrite IObject
-	//void Update(unsigned long deltaTime);
+		// ----- Overwrite IObject
+		//void Update(unsigned long deltaTime);
 
-	const String GetTypeName() const { return "GameObjectBase"; }
+		//const String GetTypeName() const { return "GameObjectBase"; }
 
-	// ----- Overwrite SceneObject
-	//void CollectRenderableObject(RenderableObjectList& renderableObjs, Frustum* frustum);
+		// ----- Overwrite SceneObject
+		//void CollectRenderableObject(RenderableObjectList& renderableObjs, Frustum* frustum);
 
-protected:
-};
+	protected:
+	};
+}
 
 #endif

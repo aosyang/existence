@@ -12,36 +12,39 @@
 #include "IAudioSystem.h"
 #include "Platform.h"
 
-//-----------------------------------------------------------------------------------
-/// \brief
-/// 空白音频系统
-/// 
-/// 根据音频接口提供空白的实现方法，用于没有音频系统时的替代方案
-/// 
-/// \remarks
-/// 空白音频系统的方法返回值不会导致整个系统报错
-//-----------------------------------------------------------------------------------
-class NullAudioSystem : public IAudioSystem
+namespace Gen
 {
-public:
-	bool Initialize()
+	//-----------------------------------------------------------------------------------
+	/// \brief
+	/// 空白音频系统
+	/// 
+	/// 根据音频接口提供空白的实现方法，用于没有音频系统时的替代方案
+	/// 
+	/// \remarks
+	/// 空白音频系统的方法返回值不会导致整个系统报错
+	//-----------------------------------------------------------------------------------
+	class NullAudioSystem : public IAudioSystem
 	{
-		//MessageBoxA(NULL, "Warning: Using NullAudioSystem. No sound will be heard.", "NullAudioSystem", MB_OK|MB_ICONINFORMATION);
-		return true;
-	}
+	public:
+		bool Initialize()
+		{
+			//MessageBoxA(NULL, "Warning: Using NullAudioSystem. No sound will be heard.", "NullAudioSystem", MB_OK|MB_ICONINFORMATION);
+			return true;
+		}
 
-	void Shutdown() {}
+		void Shutdown() {}
 
-	bool LoadAudioBufferFromFile(const String& bufferName, const String& filename) { return true; }
+		bool LoadAudioBufferFromFile(const String& bufferName, const String& filename) { return true; }
 
-	IAudioBuffer* GetAudioBuffer(const String& bufferName) { return NULL; }
+		IAudioBuffer* GetAudioBuffer(const String& bufferName) { return NULL; }
 
-	void SetListenerTransform(const Matrix4& transform, const Vector3f& velocity) {}
+		void SetListenerTransform(const Matrix4& transform, const Vector3f& velocity) {}
 
-	IAudioSource* CreateSourceInstance(IAudioBuffer* buffer, const Vector3f& position, bool autoRemove) { return NULL; }
+		IAudioSource* CreateSourceInstance(IAudioBuffer* buffer, const Vector3f& position, bool autoRemove) { return NULL; }
 
-	void RemoveSource(IAudioSource* source) {}
-	void Update() {}
-};
+		void RemoveSource(IAudioSource* source) {}
+		void Update() {}
+	};
+}
 
 #endif

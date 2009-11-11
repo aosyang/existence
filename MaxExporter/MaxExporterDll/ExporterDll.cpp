@@ -8,6 +8,8 @@
 #include "INode.h"
 
 #include "VertexInfo.h"
+#include <Material.h>
+#include <EmdMesh.h>
 
 #include <map>
 #include <fstream>
@@ -19,14 +21,7 @@ void WriteMesh(ofstream* out, int index, IGameMaterial* material, IGameMesh* mes
 // 版本号 0.10
 #define EMDL_VERSION 10
 
-// TODO: 使用与Mesh共同的头文件定义这些枚举值
-enum EMDL_LUMP
-{
-	EMDL_LUMP_TEXTURES = 100,
-	EMDL_LUMP_MESH_ELEMENTS,
-};
-
-TCHAR matFilename[1024];
+TCHAR matPathName[1024];
 
 void WriteBoneNodes(ofstream& fout, IGameNode* node, GMatrix& parentMat, TimeValue t, int level = 0)
 {
@@ -111,16 +106,16 @@ extern "C" __declspec(dllexport) int DoExport(const TCHAR *name,ExpInterface *ei
 	if (pos != string::npos)
 	{
 		path = filename.substr(0, pos + 1);
-		filename = filename.substr(pos + 1);
+		//filename = filename.substr(pos + 1);
 	}
 
-	pos = filename.find_last_of('.');
-	if (pos != string::npos)
-		filename = filename.substr(0, pos);
+	//pos = filename.find_last_of('.');
+	//if (pos != string::npos)
+	//	filename = filename.substr(0, pos);
 
-	filename += ".emt";
+	//filename += ".emt";
 
-	strcpy(matFilename, filename.data());
+	strcpy(matPathName, path.data());
 
 
 	// 写入文件头
@@ -242,7 +237,7 @@ void WriteMesh(ofstream* out, int index, IGameMaterial* material, IGameMesh* mes
 	if (material)
 	{
 		// 输出材质路径，临时
-		ofstream fout(matFilename);
+		//ofstream fout(matPathName);
 
 		map<int, int> matIdList;
 		int matNum = 0;
@@ -271,8 +266,13 @@ void WriteMesh(ofstream* out, int index, IGameMaterial* material, IGameMesh* mes
 					//fout << material->GetSubMaterial(matID)->GetMaterialName() << endl;
 					if (material->GetSubMaterial(matID)->GetIGameTextureMap(0))
 					{
-						fout << material->GetSubMaterial(matID)->GetMaterialName() << "\t\t= ";
-						fout << material->GetSubMaterial(matID)->GetIGameTextureMap(0)->GetBitmapFileName() << endl;
+						Gen::String matName(material->GetSubMaterial(matID)->GetMaterialName());
+						Gen::Material* mat = Gen::ResourceManager<Gen::Material>::Instance().Create(matName);
+						mat->GetTextureRenderState()->textureName = material->GetSubMaterial(matID)->GetIGameTextureMap(0)->GetBitmapFileName();
+						Gen::String matFullName = Gen::String(matPathName) + matName + ".emt";
+						mat->SaveToFile(matFullName);
+						//fout << material->GetSubMaterial(matID)->GetMaterialName() << "\t\t= ";
+						//fout << material->GetSubMaterial(matID)->GetIGameTextureMap(0)->GetBitmapFileName() << endl;
 					}
 
 				}
@@ -292,17 +292,22 @@ void WriteMesh(ofstream* out, int index, IGameMaterial* material, IGameMesh* mes
 
 			if (material->GetIGameTextureMap(0))
 			{
-				fout << material->GetMaterialName() << "\t\t= ";
-				fout << material->GetIGameTextureMap(0)->GetBitmapFileName() << endl;
+				//fout << material->GetMaterialName() << "\t\t= ";
+				//fout << material->GetIGameTextureMap(0)->GetBitmapFileName() << endl;
+				Gen::String matName(material->GetMaterialName());
+				Gen::Material* mat = Gen::ResourceManager<Gen::Material>::Instance().Create(matName);
+				mat->GetTextureRenderState()->textureName = material->GetIGameTextureMap(0)->GetBitmapFileName();
+				Gen::String matFullName = Gen::String(matPathName) + matName + ".emt";
+				mat->SaveToFile(matFullName);
 			}
 		}
-		fout.close();
+		//fout.close();
 
 		//for (map<int, int>::iterator iter=matIdList.begin(); iter!=matIdList.end(); iter++)
 		//material->GetSubMaterial(1)->GetMaterialName();
 
 		// TODO: 保存所有材质
-		unsigned int mat_header = EMDL_LUMP_TEXTURES;
+		unsigned int mat_header = Gen::EMDL_LUMP_TEXTURES;
 		out->write((char*)&mat_header, sizeof(mat_header));
 
 		// 输出材质数(即子模型数目)
@@ -325,7 +330,7 @@ void WriteMesh(ofstream* out, int index, IGameMaterial* material, IGameMesh* mes
 		}
 
 		// Mesh单元
-		unsigned int submesh_header = EMDL_LUMP_MESH_ELEMENTS;
+		unsigned int submesh_header = Gen::EMDL_LUMP_MESH_ELEMENTS;
 		out->write((char*)&submesh_header, sizeof(submesh_header));
 
 		for (int m=0; m<matNum; m++)
@@ -394,7 +399,7 @@ void WriteMesh(ofstream* out, int index, IGameMaterial* material, IGameMesh* mes
 	else	// 没有材质的模型
 	{
 
-		unsigned int submesh_header = EMDL_LUMP_MESH_ELEMENTS;
+		unsigned int submesh_header = Gen::EMDL_LUMP_MESH_ELEMENTS;
 		out->write((char*)&submesh_header, sizeof(submesh_header));
 
 		VertexMap mapVert;

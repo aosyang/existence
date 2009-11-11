@@ -16,38 +16,41 @@
 
 using namespace std;
 
-typedef vector<Light*>		VecLights;
-
-//-----------------------------------------------------------------------------------
-/// \brief
-/// 可照亮对象基类
-/// 
-/// 记录了可以被照亮的物体受到了哪些光源的影响
-/// 
-/// \remarks
-/// 任何能够受到灯光影响的对象应该继承自此类
-//-----------------------------------------------------------------------------------
-class LightableObject
+namespace Gen
 {
-public:
-	LightableObject();
+	typedef vector<Light*>		VecLights;
 
-	void AddLight(Light* light);
-	void ClearLights();
+	//-----------------------------------------------------------------------------------
+	/// \brief
+	/// 可照亮对象基类
+	/// 
+	/// 记录了可以被照亮的物体受到了哪些光源的影响
+	/// 
+	/// \remarks
+	/// 任何能够受到灯光影响的对象应该继承自此类
+	//-----------------------------------------------------------------------------------
+	class LightableObject
+	{
+	public:
+		LightableObject();
 
-	void SetupLights();
+		void AddLight(Light* light);
+		void ClearLights();
 
-	void SetMoved(bool moved) { m_Moved = moved; }
-	bool HasMoved() const { return m_Moved; }
+		void SetupLights();
 
-	void SetRenderableObject(RenderableObjectBase* rendeable) { m_RenderableObject = rendeable; }
-	RenderableObjectBase* GetRenderableObject() { return m_RenderableObject; }
+		void SetMoved(bool moved) { m_Moved = moved; }
+		bool HasMoved() const { return m_Moved; }
 
-protected:
-	bool		m_Moved;		///< 对象是否移动过
-	VecLights	m_Lights;		///< 影响对象的光源列表
+		void SetRenderableObject(RenderableObjectBase* rendeable) { m_RenderableObject = rendeable; }
+		RenderableObjectBase* GetRenderableObject() { return m_RenderableObject; }
 
-	RenderableObjectBase*	m_RenderableObject;	///< 被照亮的物体
-};
+	protected:
+		bool		m_Moved;		///< 对象是否移动过
+		VecLights	m_Lights;		///< 影响对象的光源列表
+
+		RenderableObjectBase*	m_RenderableObject;	///< 被照亮的物体
+	};
+}
 
 #endif

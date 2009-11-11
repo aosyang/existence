@@ -11,31 +11,34 @@
 #include "SceneObject.h"
 #include "QuadTree.h"
 
-class QuadTree;
-
-class QuadTreeNode
+namespace Gen
 {
-	friend class QuadTree;
-public:
-	QuadTreeNode();
-	~QuadTreeNode();
+	class QuadTree;
 
-	void CreateNode(QuadTree* quadtree, float size, unsigned int subdivCount, unsigned int level);
-	bool QueryObjectsByAABB(const AABB& aabb, const SceneObjectList& list);
+	class QuadTreeNode
+	{
+		friend class QuadTree;
+	public:
+		QuadTreeNode();
+		~QuadTreeNode();
 
-	void Render();
-	void TraverseRender(const Vector3f pos);
-	void TraverseRenderBox(const Vector3f vMin, const Vector3f vMax);
+		void CreateNode(QuadTree* quadtree, float size, unsigned int subdivCount, unsigned int level);
+		bool QueryObjectsByAABB(const AABB& aabb, const SceneObjectList& list);
 
-protected:
-	QuadTree*		m_QuadTree;				///< 该节点所属的四叉树
-	unsigned int	m_SubdivisionLevel;		///< 细分级别，标记这是第几层节点
-	QuadTreeNode*	m_ChildNode[4];			///< 子节点
+		void Render();
+		void TraverseRender(const Vector3f pos);
+		void TraverseRenderBox(const Vector3f vMin, const Vector3f vMax);
 
-	float			m_Size;
-	float			m_OffsetX, m_OffsetZ;	///< X和Z方向上的偏移(基于四叉树的位置)
+	protected:
+		QuadTree*		m_QuadTree;				///< 该节点所属的四叉树
+		unsigned int	m_SubdivisionLevel;		///< 细分级别，标记这是第几层节点
+		QuadTreeNode*	m_ChildNode[4];			///< 子节点
 
-	SceneObjectSet	m_SceneObjects;
-};
+		float			m_Size;
+		float			m_OffsetX, m_OffsetZ;	///< X和Z方向上的偏移(基于四叉树的位置)
+
+		SceneObjectSet	m_SceneObjects;
+	};
+}
 
 #endif

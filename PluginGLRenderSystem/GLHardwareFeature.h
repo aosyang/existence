@@ -14,23 +14,26 @@
 #include <memory.h>
 #include "EString.h"
 
-class GLHardwareFeature
+namespace Gen
 {
-public:
-	GLHardwareFeature();
+	class GLHardwareFeature
+	{
+	public:
+		GLHardwareFeature();
 
-	void DetectFeature();
+		void DetectFeature();
 
-	inline int GetMaxLightNum() const { return maxLightNum; }
+		inline int GetMaxLightNum() const { return maxLightNum; }
 
-	inline const String& GetFeatureString() const { return m_FeatureString; }
+		inline const String& GetFeatureString() const { return m_FeatureString; }
 
-	String	m_FeatureString;
+		String	m_FeatureString;
 
-	bool	supportedVBO;
-	bool	supportedFBO;
-	int		maxLightNum;
-	bool	supportedNonPowOf2Texture;
-};
+		bool	supportedVBO;
+		bool	supportedFBO;
+		int		maxLightNum;
+		bool	supportedNonPowOf2Texture;
+	};
+}
 
 #endif

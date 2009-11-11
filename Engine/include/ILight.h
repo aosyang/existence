@@ -11,33 +11,36 @@
 #include "Color4f.h"
 #include "Vector3f.h"
 
-enum LightType
+namespace Gen
 {
-	LIGHT_TYPE_POINT,
-	LIGHT_TYPE_SPOT,
-	LIGHT_TYPE_DIRECTIONAL,
-};
+	enum LightType
+	{
+		LIGHT_TYPE_POINT,
+		LIGHT_TYPE_SPOT,
+		LIGHT_TYPE_DIRECTIONAL,
+	};
 
-class ILight
-{
-public:
-	virtual ~ILight() {}
+	class ILight
+	{
+	public:
+		virtual ~ILight() {}
 
-	virtual const Color4f& GetAmbientColor() = 0;
-	virtual const Color4f& GetDiffuseColor() = 0;
-	virtual const Color4f& GetSpecularColor() = 0;
+		virtual const Color4f& GetAmbientColor() = 0;
+		virtual const Color4f& GetDiffuseColor() = 0;
+		virtual const Color4f& GetSpecularColor() = 0;
 
-	virtual const float GetConstantAttenuation() = 0;
-	virtual const float GetLinearAttenuation() = 0;
-	virtual const float GetQuadraticAttenuation() = 0;
+		virtual const float GetConstantAttenuation() = 0;
+		virtual const float GetLinearAttenuation() = 0;
+		virtual const float GetQuadraticAttenuation() = 0;
 
-	virtual int GetLightType() = 0;
+		virtual int GetLightType() = 0;
 
-	virtual Vector3f GetDirection() = 0;
+		virtual Vector3f GetDirection() = 0;
 
-	virtual const Vector3f GetPosition() const = 0;
+		virtual const Vector3f GetPosition() const = 0;
 
-	virtual float GetRange() const = 0;
-};
+		virtual float GetRange() const = 0;
+	};
+}
 
 #endif

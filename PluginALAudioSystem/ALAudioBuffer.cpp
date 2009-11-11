@@ -8,21 +8,23 @@
 
 #include "ALAudioBuffer.h"
 
-ALAudioBuffer::ALAudioBuffer()
+namespace Gen
 {
-	alGenBuffers(1, &m_Buffer);
+	ALAudioBuffer::ALAudioBuffer()
+	{
+		alGenBuffers(1, &m_Buffer);
+	}
+
+	ALAudioBuffer::~ALAudioBuffer()
+	{
+		alDeleteBuffers(1, &m_Buffer);
+	}
+
+	void ALAudioBuffer::CreateFromData(int format, void* data, int size, int freq)
+	{
+		m_Format = format;
+		m_Frequency = freq;
+
+		alBufferData(m_Buffer, format, data, size, freq);
+	}
 }
-
-ALAudioBuffer::~ALAudioBuffer()
-{
-	alDeleteBuffers(1, &m_Buffer);
-}
-
-void ALAudioBuffer::CreateFromData(int format, void* data, int size, int freq)
-{
-	m_Format = format;
-	m_Frequency = freq;
-
-	alBufferData(m_Buffer, format, data, size, freq);
-}
-

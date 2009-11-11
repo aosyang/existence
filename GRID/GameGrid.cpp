@@ -34,32 +34,29 @@ void GameGrid::StartGame()
 	m_Scene = new SceneGraph;
 
 	// 创建摄像机
-	m_Camera = new Camera();
+	m_Camera = FACTORY_CREATE(m_Scene, Camera);
 	m_Camera->SetPosition(Vector3f(1.0f, 0.0f, 5.0f));
 	m_Camera->SetFarClippingDistance(2000.0f);
-	m_Scene->AddObject(m_Camera);
 
 	renderer->SetAmbientColor(Color4f(0.7f, 0.7f, 0.7f));
 
 	// 设置默认的全局方向光
-	m_Sun = new Light();
+	m_Sun = FACTORY_CREATE(m_Scene, Light);
 	m_Sun->SetLightType(LIGHT_TYPE_DIRECTIONAL);
 	Vector3f sunDir = Vector3f(0.2f, 1.0f, 0.5f);
 	sunDir.normalize();
 	m_Sun->SetDirection(sunDir);
 	LightingManager::Instance().AddGlobalLight(m_Sun);
-	m_Scene->AddObject(m_Sun);
 
 	// 构建基准平面
-	m_MeshPlane = ResourceManager<Mesh>::Instance().Create();
+	m_MeshPlane = MeshManager::Instance().CreatePrimitiveMesh();
 	m_MeshPlane->CreatePositiveYPlane(WORLD_SIZE);
 
-	m_BasePlane = new MeshObject();
+	m_BasePlane = FACTORY_CREATE(m_Scene, MeshObject);
 	m_BasePlane->SetMesh(m_MeshPlane);
-	m_Scene->AddObject(m_BasePlane);
 
 	// 创建盒子
-	m_MeshBox = ResourceManager<Mesh>::Instance().Create();
+	m_MeshBox = MeshManager::Instance().CreatePrimitiveMesh();
 	m_MeshBox->CreateBox(1.0f);
 
 	m_BoxMaterial = ResourceManager<Material>::Instance().Create();
@@ -68,7 +65,7 @@ void GameGrid::StartGame()
 	//m_BoxMaterial->SetDepthTest(false);
 	//m_BoxMaterial->SetEmissive(Color4f(0.6f, 0.6f, 0.6f));
 
-	Mesh* marker = ResourceManager<Mesh>::Instance().GetByName("marker.EMD");
+	IMesh* marker = MeshManager::Instance().GetByName("marker.EMD");
 	
 	Material* matMarkerStart = ResourceManager<Material>::Instance().Create();
 	matMarkerStart->SetDiffuse(Color4f(0.0f, 1.0f, 0.0f));
@@ -79,18 +76,16 @@ void GameGrid::StartGame()
 	matMarkerGoal->SetEmissive(Color4f(0.5f, 0.0f, 0.0f));
 	matMarkerGoal->SetTexture(renderer->GetTexture("blank.bmp"));
 
-	m_MarkerStart = new MeshObject();
+	m_MarkerStart = FACTORY_CREATE(m_Scene, MeshObject);
 	m_MarkerStart->SetMesh(marker);
 	m_MarkerStart->SetMaterial(matMarkerStart, 0);
 	m_MarkerStart->CreateLightableObject();
-	m_MarkerGoal = new MeshObject();
+	m_MarkerGoal = FACTORY_CREATE(m_Scene, MeshObject);
 	m_MarkerGoal->SetMesh(marker);
 	m_MarkerGoal->SetMaterial(matMarkerGoal, 0);
 	m_MarkerGoal->CreateLightableObject();
-	m_Scene->AddObject(m_MarkerStart);
-	m_Scene->AddObject(m_MarkerGoal);
 
-	//m_IntersectionObject = new MeshObject();
+	//m_IntersectionObject = FACTORY_CREATE(m_Scene, MeshObject);
 	//m_IntersectionObject->SetMesh(m_MeshBox);
 	//m_IntersectionObject->SetMaterial(m_BoxMaterial);
 	//m_Scene->AddObject(m_IntersectionObject);
@@ -386,7 +381,7 @@ bool GameGrid::GetIntersectionPoint(Vector3f& point)
 	float y = (float)Input::Instance().GetMouseAbsY() / height;
 
 
-	Ray ray = m_Camera->GetCameratRay(x, y);
+	Ray ray = m_Camera->GetCameraRay(x, y);
 
 	float d;
 	Vector3f normal;
@@ -404,12 +399,11 @@ void GameGrid::AddBox(const Point3& pos)
 
 		WorldGrid* grid = &m_World[pos.x][pos.y][pos.z];
 		//grid->pos = pos;
-		MeshObject* obj = new MeshObject();
+		MeshObject* obj = FACTORY_CREATE(m_Scene, MeshObject);
 		obj->SetMesh(m_MeshBox);
 		obj->SetPosition(p);
 		obj->SetMaterial(m_BoxMaterial, 0);
 
-		m_Scene->AddObject(obj);
 		obj->CreateLightableObject();
 
 		grid->obj = obj;
@@ -645,12 +639,12 @@ void GameGrid::PathFinding(const Point3& start, const Point3& end)
 			break;
 	}
 
-	//Mesh* sphere = ResourceManager<Mesh>::Instance().GetByName("sphere");
+	//Mesh* sphere = MeshManager::Instance().GetByName("sphere");
 
 	for (WorldGrid* g=&m_World[pos.x][pos.y][pos.z]; parents.find(g)!=parents.end(); g=parents[g])
 	{
 		// Test render path
-		//MeshObject* obj = new MeshObject();
+		//MeshObject* obj = FACTORY_CREATE(m_Scene, MeshObject);
 		//obj->SetPosition(g->obj->WorldTransform().GetPosition() + Vector3f(0.0f, 0.5f, 0.0f));
 		//obj->SetMesh(sphere);
 		//m_Scene->AddObject(obj);

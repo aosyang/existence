@@ -5,13 +5,16 @@
 #include "Vector3f.h"
 #include "Quaternion.h"
 
-String ToString(const Vector3f& vec);
+namespace Gen
+{
+	String ToString(const Vector3f& vec);
 
-String ToString(const Quaternion& quat);
+	String ToString(const Quaternion& quat);
 
-Vector3f ToVector3f(const String& str);
+	Vector3f ToVector3f(const String& str);
 
-Quaternion ToQuaternion(const String& str);
+	Quaternion ToQuaternion(const String& str);
+}
 
 #endif
 

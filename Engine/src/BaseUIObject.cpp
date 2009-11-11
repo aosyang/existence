@@ -7,30 +7,33 @@
 //-----------------------------------------------------------------------------------
 #include "BaseUIObject.h"
 
-BaseUIObject::BaseUIObject()
-: m_ZOrder(100),		// 默认顺序为100
-  m_IsVisible(true)
+namespace Gen
 {
-	// 默认水平方向左对齐，垂直方向顶对齐
-	m_VAlignType = VALIGN_TOP;
-	m_Top = 0;
-	m_Height = 100;
-	m_HAlignType = HALIGN_LEFT;
-	m_Left = 0;
-	m_Width = 100;
-}
+	BaseUIObject::BaseUIObject()
+		: m_ZOrder(100),		// 默认顺序为100
+		m_IsVisible(true)
+	{
+		// 默认水平方向左对齐，垂直方向顶对齐
+		m_VAlignType = VALIGN_TOP;
+		m_Top = 0;
+		m_Height = 100;
+		m_HAlignType = HALIGN_LEFT;
+		m_Left = 0;
+		m_Width = 100;
+	}
 
-void BaseUIObject::Update(unsigned long deltaTime)
-{
+	void BaseUIObject::Update(unsigned long deltaTime)
+	{
 
-}
+	}
 
-void BaseUIObject::Render()
-{
+	void BaseUIObject::Render()
+	{
 
-}
+	}
 
-void BaseUIObject::SetZOrder(int z)
-{
-	m_ZOrder = z;
+	void BaseUIObject::SetZOrder(int z)
+	{
+		m_ZOrder = z;
+	}
 }

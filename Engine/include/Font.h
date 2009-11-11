@@ -15,66 +15,69 @@
 #include <freetype/freetype.h>
 #include <freetype/ftglyph.h>
 
-class FontManager;
-class Font;
-
 #include "EString.h"
 #include <map>
 
 using namespace std;
 
-struct CharacterInfo
+namespace Gen
 {
-	ITexture*	texture;			///< 字符所处的纹理
-	float		u1, v1, u2, v2;		///< 纹理坐标
+	class FontManager;
+	class Font;
 
-	// TODO: remove this, for test only
-	wchar_t		wchar;
+	struct CharacterInfo
+	{
+		ITexture*	texture;			///< 字符所处的纹理
+		float		u1, v1, u2, v2;		///< 纹理坐标
 
-	unsigned int char_height;		///< 字体高度
+		// TODO: remove this, for test only
+		wchar_t		wchar;
 
-	// TODO: 统一单位
-	int			width, height;		///< 纹理宽高
-	int			left, top;
-	int			advance_x;			///< x方向间距
-	//int			advance_y;			// 这个没用
-};
+		unsigned int charHeight;		///< 字体高度
 
-typedef map<const String, CharacterInfo>	CharacterMap;
-typedef map<const String, Font*>			FontMap;
+		// TODO: 统一单位
+		int			width, height;		///< 纹理宽高
+		int			left, top;
+		int			advance_x;			///< x方向间距
+		//int			advance_y;			// 这个没用
+	};
 
-class FontManager : public Singleton<FontManager>
-{
-	friend class Singleton<FontManager>;
-public:
-	void Initialize();
-	void Shutdown();
+	typedef map<const String, CharacterInfo>	CharacterMap;
+	typedef map<const String, Font*>			FontMap;
 
-	void UnloadAllFonts();
+	class FontManager : public Singleton<FontManager>
+	{
+		friend class Singleton<FontManager>;
+	public:
+		void Initialize();
+		void Shutdown();
 
-	// 读取一个字体文件
-	bool LoadFont(const String& font_name, const String& filename);
+		void UnloadAllFonts();
 
-	// 从指定字体中获得一个字符
-	bool GetCharacter(const String& font_name, const wchar_t wch, unsigned int char_height, CharacterInfo* info);
+		// 读取一个字体文件
+		bool LoadFont(const String& fontName, const String& filename);
 
-private:
-	FontManager();
+		// 从指定字体中获得一个字符
+		bool GetCharacter(const String& fontName, const wchar_t wch, unsigned int charHeight, CharacterInfo* info);
 
-	FT_Library		m_Library;
+	private:
+		FontManager();
 
-	FontMap			m_FontMap;
-	CharacterMap	m_CharacterMap;
-};
+		FT_Library		m_Library;
 
-class Font
-{
-	friend class FontManager;
-public:
-	~Font();
+		FontMap			m_FontMap;
+		CharacterMap	m_CharacterMap;
+	};
 
-private:
-	FT_Face m_Face;
-};
+	class Font
+	{
+		friend class FontManager;
+	public:
+		~Font();
+
+	private:
+		FT_Face m_Face;
+	};
+}
 
 #endif

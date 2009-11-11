@@ -23,104 +23,107 @@
 
 using namespace std;
 
-// 渲染器宏定义
-#define renderer Engine::Instance().Renderer()
-
-
-struct ConfigFileLine
+namespace Gen
 {
-	String key;
-	String value;
-};
-
-typedef vector<ConfigFileLine> ConfigFileKeys;
-typedef map<const String, ConfigFileKeys> ConfigGroups;
-
-// 读入配置文件
-void LoadConfigFile(const String& filename, ConfigGroups& group, String groupname = "common");
-
-class EngineMessageNotifier : public PlatformMessageNotifier
-{
-public:
-	~EngineMessageNotifier() {}
-
-	void OnMessageQuit();
-
-	void OnMessageActiveWindow(bool active);
-
-	void OnMessageResizeWindow(unsigned int width, unsigned int height);
-};
+	// 渲染器宏定义
+	#define renderer Engine::Instance().Renderer()
 
 
-class Engine : public Singleton<Engine>
-{
-	friend class Singleton<Engine>;
-public:
-	void Initialize(bool input=true);
-	void Shutdown();
+	struct ConfigFileLine
+	{
+		String key;
+		String value;
+	};
 
-	void Run();
-	void ManualUpdate(unsigned long deltaTime);
+	typedef vector<ConfigFileLine> ConfigFileKeys;
+	typedef map<const String, ConfigFileKeys> ConfigGroups;
 
-	void ResizeWindow(unsigned int width, unsigned int height);
+	// 读入配置文件
+	void LoadConfigFile(const String& filename, ConfigGroups& group, String groupName = "common");
 
-	unsigned int GetFPS() const { return m_FPS; }
+	class EngineMessageNotifier : public PlatformMessageNotifier
+	{
+	public:
+		~EngineMessageNotifier() {}
 
-	void ToggleDebugRender(bool debugRender) { m_DebugRender = debugRender; }
-	bool GetDebugRender() const { return m_DebugRender; }
+		void OnMessageQuit();
 
-	//void LoadTextures();
+		void OnMessageActiveWindow(bool active);
 
-	//-----------------------------------------------------------------------------------
-	/// \brief
-	/// 获得渲染器接口
-	///
-	/// \returns
-	/// 引擎所使用的渲染器接口
-	///
-	/// 用户通过这个接口可以直接操作渲染器
-	//-----------------------------------------------------------------------------------
-	inline IRenderer* Renderer() { return m_Renderer; }
+		void OnMessageResizeWindow(unsigned int width, unsigned int height);
+	};
 
-	//-----------------------------------------------------------------------------------
-	/// \brief
-	/// 获得音频系统接口
-	///
-	/// \returns
-	/// 引擎所使用的音频系统接口
-	///
-	/// 用户通过这个接口可以直接操作音频系统
-	//-----------------------------------------------------------------------------------
-	inline IAudioSystem* AudioSystem() { return m_AudioSystem; }
 
-	inline void SetRenderBatchCount(unsigned int count) { m_RenderBatchCount = count; }
-	inline unsigned int GetRenderBatchCount() const { return m_RenderBatchCount; }
+	class Engine : public Singleton<Engine>
+	{
+		friend class Singleton<Engine>;
+	public:
+		void Initialize(bool input=true);
+		void Shutdown();
 
-	inline void SetQuitting(bool quit) { m_Quit = quit; }
+		void Run();
+		void ManualUpdate(unsigned long deltaTime);
 
-	inline void SetGame(IGame* game) { m_Game = game; }
-	inline IGame* GetGame() { return m_Game; }
+		void ResizeWindow(unsigned int width, unsigned int height);
 
-private:
-	void LoadModules();
+		unsigned int GetFPS() const { return m_FPS; }
 
-private:
-	Engine();
+		void ToggleDebugRender(bool debugRender) { m_DebugRender = debugRender; }
+		bool GetDebugRender() const { return m_DebugRender; }
 
-	IRenderer*		m_Renderer;
-	IAudioSystem*	m_AudioSystem;
+		//void LoadTextures();
 
-	unsigned int	m_RenderBatchCount;
+		//-----------------------------------------------------------------------------------
+		/// \brief
+		/// 获得渲染器接口
+		///
+		/// \returns
+		/// 引擎所使用的渲染器接口
+		///
+		/// 用户通过这个接口可以直接操作渲染器
+		//-----------------------------------------------------------------------------------
+		inline IRenderer* Renderer() { return m_Renderer; }
 
-	EngineMessageNotifier* m_MessageNotifier;
+		//-----------------------------------------------------------------------------------
+		/// \brief
+		/// 获得音频系统接口
+		///
+		/// \returns
+		/// 引擎所使用的音频系统接口
+		///
+		/// 用户通过这个接口可以直接操作音频系统
+		//-----------------------------------------------------------------------------------
+		inline IAudioSystem* AudioSystem() { return m_AudioSystem; }
 
-	IGame*			m_Game;
-	bool			m_Quit;
+		inline void SetRenderBatchCount(unsigned int count) { m_RenderBatchCount = count; }
+		inline unsigned int GetRenderBatchCount() const { return m_RenderBatchCount; }
 
-	bool			m_DebugRender;
+		inline void SetQuitting(bool quit) { m_Quit = quit; }
 
-	// FPS相关
-	unsigned int	m_FPS;
-};
+		inline void SetGame(IGame* game) { m_Game = game; }
+		inline IGame* GetGame() { return m_Game; }
+
+	private:
+		void LoadModules();
+
+	private:
+		Engine();
+
+		IRenderer*		m_Renderer;
+		IAudioSystem*	m_AudioSystem;
+
+		unsigned int	m_RenderBatchCount;
+
+		EngineMessageNotifier* m_MessageNotifier;
+
+		IGame*			m_Game;
+		bool			m_Quit;
+
+		bool			m_DebugRender;
+
+		// FPS相关
+		unsigned int	m_FPS;
+	};
+}
 
 #endif

@@ -14,39 +14,54 @@
 #include "Plane3.h"
 #include "AABB.h"
 
-class Frustum
+namespace Gen
 {
-public:
-	Frustum();
+	enum FrustumPlane
+	{
+		FRUSTUM_PLANE_RIGHT,
+		FRUSTUM_PLANE_LEFT,
+		FRUSTUM_PLANE_BOTTOM,
+		FRUSTUM_PLANE_TOP,
+		FRUSTUM_PLANE_FAR,
+		FRUSTUM_PLANE_NEAR,
+	};
 
-	// 生成透视投影矩阵
-	Matrix4 BuildPrespectiveProjMatrix(float fovy = 45.0f, float aspect = 4.0f/3.0f, float near = 1.0f, float far = 100.0f);
+	class Frustum
+	{
+	public:
+		Frustum();
 
-	// 生成正交投影矩阵
-	Matrix4 BuildOrthographicProjMatrix(float left, float right, float bottom, float top, float znear, float zfar);
+		// 生成透视投影矩阵
+		Matrix4 BuildPrespectiveProjMatrix(float fovy = 45.0f, float aspect = 4.0f/3.0f, float near = 1.0f, float far = 100.0f);
 
-	// 生成投影矩阵
-	Matrix4 BuildProjectionMatrix(float left, float right, float bottom, float top, float znear, float zfar);
+		// 生成正交投影矩阵
+		Matrix4 BuildOrthographicProjMatrix(float left, float right, float bottom, float top, float znear, float zfar);
 
-	// 提取视截体平面
-	void ExtractFrustumPlanes(const Matrix4& projMatrix, const Matrix4& viewMatrix);
+		// 生成投影矩阵
+		Matrix4 BuildProjectionMatrix(float left, float right, float bottom, float top, float znear, float zfar);
 
-	// “点-视截体”检测
-	bool IsPointInFrustum(const Vector3f& point);
+		// 根据投影矩阵和视矩阵生成视截体平面
+		void BuildFrustumPlanes(const Matrix4& projMatrix, const Matrix4& viewMatrix);
 
-	// 与AABB相交判断
-	bool IntersectsAABB(const AABB& aabb);
+		// “点-视截体”检测
+		bool IsPointInFrustum(const Vector3f& point);
 
-	// “球体-视截体”检测
-	float SphereInFrustum(const Vector3f& point, float radius);
+		// 与AABB相交判断
+		bool IntersectsAABB(const AABB& aabb);
 
-	Matrix4& ProjectionMatrix() { return m_ProjMatrix; }
+		// “球体-视截体”检测
+		float SphereInFrustum(const Vector3f& point, float radius);
 
-	float	m_Left, m_Right, m_Bottom, m_Top;
-private:
-	Plane3			m_FrustumPlanes[6];			///< 视截体平面，参数分别代表系数a, b, c, d
+		Matrix4& ProjectionMatrix() { return m_ProjMatrix; }
 
-	Matrix4			m_ProjMatrix;
-};
+		Plane3 GetFrustumPlane(FrustumPlane plane) const { return m_FrustumPlanes[plane]; }
+
+		float	m_Left, m_Right, m_Bottom, m_Top;
+	private:
+		Plane3			m_FrustumPlanes[6];			///< 视截体平面
+
+		Matrix4			m_ProjMatrix;
+	};
+}
 
 #endif

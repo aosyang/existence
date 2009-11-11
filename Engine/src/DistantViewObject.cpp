@@ -9,47 +9,50 @@
 #include "DistantViewObject.h"
 #include "Engine.h"
 
-DistantViewObject::DistantViewObject()
-: m_OffsetScale(0.0f, 0.0f, 0.0f)
+namespace Gen
 {
-	// render very first
-	m_RenderOrder = 70;
-}
-
-DistantViewObject::~DistantViewObject()
-{
-}
-
-void DistantViewObject::RenderSingleObject()
-{
-	RenderableObjectBase::RenderSingleObject();
-
-	// 将渲染时使用的变换矩阵进行hack
-	Matrix4 invViewMatrix = renderer->ViewMatrix().GetInverseMatrix();
-	Matrix4 distviewMatrix = m_WorldTransform;
-	
-	Vector3f offset = invViewMatrix.GetPosition();
-	offset.x *= m_OffsetScale.x;
-	offset.y *= m_OffsetScale.y;
-	offset.z *= m_OffsetScale.z;
-
-	distviewMatrix.SetPosition(invViewMatrix.GetPosition() - offset);
-
-	for (int i=0; i<m_Mesh->GetElementsNum(); i++)
+	DistantViewObject::DistantViewObject()
+		: m_OffsetScale(0.0f, 0.0f, 0.0f)
 	{
-		MeshElement* elem = m_Mesh->GetElement(i);
-		renderer->RenderVertexBuffer(elem->m_VertexBuffer, m_Mesh->GetMaterial(i), distviewMatrix);
+		// render very first
+		m_RenderOrder = 70;
 	}
-	renderer->ClearBuffer(false);
-}
 
-bool DistantViewObject::IsCulled(Frustum* frustum)
-{
-	return false;
-}
+	DistantViewObject::~DistantViewObject()
+	{
+	}
 
-void DistantViewObject::SetMesh(Mesh* mesh)
-{
-	AssertFatal(mesh, "DistantViewObject::SetMesh() : Mesh cannot be null!");
-	m_Mesh = mesh;
+	void DistantViewObject::RenderSingleObject()
+	{
+		RenderableObjectBase::RenderSingleObject();
+
+		// 将渲染时使用的变换矩阵进行hack
+		Matrix4 invViewMatrix = renderer->ViewMatrix().GetInverseMatrix();
+		Matrix4 distviewMatrix = m_WorldTransform;
+
+		Vector3f offset = invViewMatrix.GetPosition();
+		offset.x *= m_OffsetScale.x;
+		offset.y *= m_OffsetScale.y;
+		offset.z *= m_OffsetScale.z;
+
+		distviewMatrix.SetPosition(invViewMatrix.GetPosition() - offset);
+
+		for (int i=0; i<m_Mesh->GetElementCount(); i++)
+		{
+			MeshElement* elem = m_Mesh->GetElement(i);
+			renderer->RenderVertexBuffer(elem->GetVertexBuffer(), m_Mesh->GetMaterial(i), distviewMatrix);
+		}
+		renderer->ClearBuffer(false);
+	}
+
+	bool DistantViewObject::IsCulled(Frustum* frustum)
+	{
+		return false;
+	}
+
+	void DistantViewObject::SetMesh(IMesh* mesh)
+	{
+		AssertFatal(mesh, "DistantViewObject::SetMesh() : Mesh cannot be null!");
+		m_Mesh = mesh;
+	}
 }

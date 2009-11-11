@@ -22,126 +22,128 @@
 
 using namespace std;
 
-template <class T>
-class ResourceManager : public Singleton< ResourceManager<T> >		// use "> >" instead of ">>", gcc told me so...
+namespace Gen
 {
-	friend class Singleton< ResourceManager<T> >;
-public:
-	typedef map<const String, T*>	ResourceMap;
-
-	// 创建对象实例
-	T* Create(const String& name = "")
+	template <class T>
+	class ResourceManager : public Singleton< ResourceManager<T> >		// use "> >" instead of ">>", gcc told me so...
 	{
-		String res_name;
+		friend class Singleton< ResourceManager<T> >;
+	public:
+		typedef map<const String, T*>	ResourceMap;
 
-		T* res = new T;
-
-		// 如果没有指定名称，自动生成一个
-		if (name == "")
+		// 创建对象实例
+		T* Create(const String& name = "")
 		{
-			res_name.Format("#UNNAMED%d", m_sIndex);
-			m_sIndex++;
+			String resName;
 
-			while (m_ResourceMap.find(res_name)!=m_ResourceMap.end())
+			T* res = new T;
+
+			// 如果没有指定名称，自动生成一个
+			if (name == "")
 			{
-				res_name.Format("#UNNAMED%d", m_sIndex);
+				resName.Format("#UNNAMED%d", m_sIndex);
 				m_sIndex++;
+
+				while (m_ResourceMap.find(resName)!=m_ResourceMap.end())
+				{
+					resName.Format("#UNNAMED%d", m_sIndex);
+					m_sIndex++;
+				}
+			}
+			else
+			{
+				resName = name;
+				CorrectSlash(resName);
+
+				// 创建资源已存在，致命错误
+				AssertFatal(m_ResourceMap.find(resName)==m_ResourceMap.end(), "ResourceManager::Create(): Specified resource name already exists.");
+
+				//while (m_ResourceMap.find(resName)!=m_ResourceMap.end())
+				//{
+				//	// 与已有资源名称重复，重命名
+				//	resName.Format("%s_%d", name.Data(), n);
+				//	n++;
+				//}
+			}
+			m_ResourceMap[resName] = res;
+			res->m_Name = &(m_ResourceMap.find(resName)->first);
+
+			return res;
+		}
+
+		T* LoadResource(const String& resName, const String& filename)
+		{
+			if (m_ResourceMap.find(resName)!=m_ResourceMap.end())
+				return NULL;
+
+			T* res = (*m_sLoadFunc)(filename);
+			if (res)
+			{
+				m_ResourceMap[resName] = res;
+				res->m_Name = &(m_ResourceMap.find(resName)->first);
+			}
+
+			return res;
+		}
+
+		//void Destroy(T* res)
+		//{
+		//	m_ResourceMap.erase(res);
+		//	//if (m_ResourceMap.find(res)!=m_ResourceMap.end())
+		//	//	delete res;
+		//}
+
+		T* GetByName(const String& name)
+		{
+			String sName(name);
+			CorrectSlash(sName);
+
+			typename ResourceMap::iterator iter;
+			if ((iter = m_ResourceMap.find(sName))!=m_ResourceMap.end())
+				return iter->second;
+
+			return NULL;
+		}
+
+		// 卸载所有对象
+		void UnloadAllResources()
+		{
+			typename ResourceManager<T>::ResourceMap::iterator iter = m_ResourceMap.begin();
+			for (;iter!=m_ResourceMap.end(); iter++)
+			{
+				SAFE_DELETE(iter->second);
 			}
 		}
-		else
+
+		void DumpToLog()
 		{
-			res_name = name;
-			CorrectSlash(res_name);
+			Log.MsgLn("----------- Begin dumping ResourceManager");
 
-			// 创建资源已存在，致命错误
-			AssertFatal(m_ResourceMap.find(res_name)==m_ResourceMap.end(), "ResourceManager::Create(): Specified resource name already exists.");
+			typename ResourceMap::iterator iter;
+			for (iter=m_ResourceMap.begin();
+				 iter!=m_ResourceMap.end();
+				 iter++)
+			{
+				Log.MsgLn(iter->first);
+			}
 
-			//while (m_ResourceMap.find(res_name)!=m_ResourceMap.end())
-			//{
-			//	// 与已有资源名称重复，重命名
-			//	res_name.Format("%s_%d", name.Data(), n);
-			//	n++;
-			//}
+			Log.MsgLn("----------- End dumping ResourceManager");
 		}
-		m_ResourceMap[res_name] = res;
-		res->m_Name = &(m_ResourceMap.find(res_name)->first);
+		
+		ResourceMap& GetResourceMap() { return m_ResourceMap; }
 
-		return res;
-	}
+		static unsigned int m_sIndex;
 
-	T* LoadResource(const String& resname, const String& filename)
-	{
-		if (m_ResourceMap.find(resname)!=m_ResourceMap.end())
-			return NULL;
+		typedef T*(*LoadFunc)(const String& filename);
+		static LoadFunc m_sLoadFunc;
 
-		T* res = (*m_sLoadFunc)(filename);
-		if (res)
-		{
-			m_ResourceMap[resname] = res;
-			res->m_Name = &(m_ResourceMap.find(resname)->first);
-		}
+	private:
+		ResourceManager() {}
+		~ResourceManager() { UnloadAllResources(); }
 
-		return res;
-	}
-
-	//void Destroy(T* res)
-	//{
-	//	m_ResourceMap.erase(res);
-	//	//if (m_ResourceMap.find(res)!=m_ResourceMap.end())
-	//	//	delete res;
-	//}
-
-	T* GetByName(const String& name)
-	{
-		String sName(name);
-		CorrectSlash(sName);
-
-		typename ResourceMap::iterator iter;
-		if ((iter = m_ResourceMap.find(sName))!=m_ResourceMap.end())
-			return iter->second;
-
-		return NULL;
-	}
-
-	// 卸载所有对象
-	void UnloadAllResources()
-	{
-		typename ResourceManager<T>::ResourceMap::iterator iter = m_ResourceMap.begin();
-		for (;iter!=m_ResourceMap.end(); iter++)
-		{
-			SAFE_DELETE(iter->second);
-		}
-	}
-
-	void DumpToLog()
-	{
-		Log.MsgLn("----------- Begin dumping ResourceManager");
-
-		typename ResourceMap::iterator iter;
-		for (iter=m_ResourceMap.begin();
-			 iter!=m_ResourceMap.end();
-			 iter++)
-		{
-			Log.MsgLn(iter->first);
-		}
-
-		Log.MsgLn("----------- End dumping ResourceManager");
-	}
-	
-	ResourceMap& GetResourceMap() { return m_ResourceMap; }
-
-	static unsigned int m_sIndex;
-
-	typedef T*(*LoadFunc)(const String& filename);
-	static LoadFunc m_sLoadFunc;
-
-private:
-	ResourceManager() {}
-	~ResourceManager() { UnloadAllResources(); }
-
-protected:
-	ResourceMap			m_ResourceMap;
-};
+	protected:
+		ResourceMap			m_ResourceMap;
+	};
 
 // 宏定义，用于声明一个类将使用资源管理器
 #if defined __PLATFORM_WIN32
@@ -149,5 +151,6 @@ protected:
 #elif defined __PLATFORM_LINUX
 #define DECLARE_RESOURCEMANAGER(className) template class ResourceManager<className>
 #endif
+}
 
 #endif

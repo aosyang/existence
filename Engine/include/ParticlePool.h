@@ -19,60 +19,57 @@
 
 using namespace std;
 
-class ParticleEmitter;
-
-bool ParticleComparer(Particle lhs, Particle rhs);
-
-class ParticlePool : public RenderableObjectBase
+namespace Gen
 {
-	friend class ParticleEmitter;
-	DECLARE_FACTORY(ParticlePool);
-public:
-	ParticlePool();
-	~ParticlePool();
+	class ParticleEmitter;
 
-	// ----- Overwrite ISceneObject
+	bool ParticleComparer(Particle lhs, Particle rhs);
 
-	void Destroy();
+	class ParticlePool : public RenderableObjectBase
+	{
+		friend class ParticleEmitter;
+		DECLARE_FACTORY(ParticlePool);
+	public:
+		// ----- Overwrite ISceneObject
 
-	void Update(unsigned long deltaTime);
+		void Destroy();
 
-	const String GetTypeName() const { return "ParticlePool"; }
+		void Update(unsigned long deltaTime);
+
+		// ----- Overwrite IRenderableObject
+
+		void RenderSingleObject();
+
+		// ----- ParticlePool Methods
+		inline Material* GetMaterial() const { return m_Material; }
+		inline void SetMaterial(Material* mat) { m_Material = mat; }
+
+		// 池中粒子是否已满
+		bool IsFull() const { return (m_ActiveParticleCount>=m_PoolCapability); }
+		void BuildVertexData();
+
+		void AddParticle(const Particle& particle);
+	private:
+		IVertexBuffer*		m_VertexBuffer;
+		Material*			m_Material;
+		ParticleEmitter*	m_Emitter;
 
 
-	// ----- Overwrite IRenderableObject
+		unsigned int		m_PoolCapability;
+		unsigned int		m_ActiveParticleCount;
 
-	void RenderSingleObject();
+		list<unsigned int>	m_FreeOffset;
 
-	// ----- ParticlePool Methods
-	inline Material* GetMaterial() const { return m_Material; }
-	inline void SetMaterial(Material* mat) { m_Material = mat; }
+		vector<Particle>		m_Particles;
 
-	// 池中粒子是否已满
-	bool IsFull() const { return (m_ActiveParticleCount>=m_PoolCapability); }
-	void BuildVertexData();
+		bool	m_SortByZOrder;
+		bool	m_VanishOnEmpty;		///< 粒子生命结束，销毁粒子池
 
-	void AddParticle(const Particle& particle);
-private:
-	IVertexBuffer*		m_VertexBuffer;
-	Material*			m_Material;
-	ParticleEmitter*	m_Emitter;
-
-
-	int		m_PoolCapability;
-	int		m_ActiveParticleCount;
-
-	list<unsigned int>	m_FreeOffset;
-
-	vector<Particle>		m_Particles;
-
-	bool	m_SortByZOrder;
-	bool	m_VanishOnEmpty;		///< 粒子生命结束，销毁粒子池
-
-	bool	m_UseBoxBounding;
-	bool	m_BoundingWrapRepeat;
-	Vector3f	m_BoundingMin;
-	Vector3f	m_BoundingMax;
-};
+		bool	m_UseBoxBounding;
+		bool	m_BoundingWrapRepeat;
+		Vector3f	m_BoundingMin;
+		Vector3f	m_BoundingMax;
+	};
+}
 
 #endif

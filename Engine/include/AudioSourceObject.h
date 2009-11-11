@@ -13,43 +13,41 @@
 #include "IAudioSource.h"
 #include "EString.h"
 
-class AudioSourceObject : public SceneObject
+namespace Gen
 {
-	DECLARE_FACTORY(AudioSourceObject);
-public:
-	AudioSourceObject();
-	~AudioSourceObject();
+	class AudioSourceObject : public SceneObject
+	{
+		DECLARE_FACTORY(AudioSourceObject);
+	public:
+		// ----- Overwrite IObject
 
-	// ----- Overwrite IObject
+		void Update(unsigned long deltaTime);
 
-	void Update(unsigned long deltaTime);
+		// ----- AudioSourceObject Methods
 
-	const String GetTypeName() const { return "AudioSourceObject"; }
+		bool CreateAudioSource(IAudioBuffer* buffer);
+		bool CreateAudioSource(const String& bufferName);
 
-	// ----- AudioSourceObject Methods
+		// 指定音源(注：不要让多个对象共享同一个音源)
+		//void SetAudioSource(IAudioSource* source);
+		IAudioSource* GetAudioSource() { return m_Source; }
 
-	bool CreateAudioSource(IAudioBuffer* buffer);
-	bool CreateAudioSource(const String& bufferName);
+		void Play();
+		void Stop();
+		void Pause();
 
-	// 指定音源(注：不要让多个对象共享同一个音源)
-	//void SetAudioSource(IAudioSource* source);
-	IAudioSource* GetAudioSource() { return m_Source; }
+		void SetLooping(bool loop);
+		bool GetLooping();
 
-	void Play();
-	void Stop();
-	void Pause();
+		inline void SetVelocityFactor(float factor) { m_VelocityFactor = factor; }
+		inline float GetVelocityFactor() const { return m_VelocityFactor; }
 
-	void SetLooping(bool loop);
-	bool GetLooping();
+	protected:
+		IAudioSource*		m_Source;
 
-	inline void SetVelocityFactor(float factor) { m_VelocityFactor = factor; }
-	inline float GetVelocityFactor() const { return m_VelocityFactor; }
-
-protected:
-	IAudioSource*		m_Source;
-
-	Vector3f			m_OldPosition;			///< 计算移动速度用的上一帧位置
-	float				m_VelocityFactor;		///< 速度因子，影响多普勒效应，设置成0.0f为关闭
-};
+		Vector3f			m_OldPosition;			///< 计算移动速度用的上一帧位置
+		float				m_VelocityFactor;		///< 速度因子，影响多普勒效应，设置成0.0f为关闭
+	};
+}
 
 #endif

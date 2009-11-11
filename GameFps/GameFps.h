@@ -2,6 +2,7 @@
 #define _EMPTYGAME_H
 
 #include "Existence.h"
+using namespace Gen;
 
 #define MAX_DECAL_NUM 100
 #define MAX_SHELL_NUM 100

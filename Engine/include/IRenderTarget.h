@@ -11,17 +11,20 @@
 
 #include "ITexture.h"
 
-class IRenderTarget
+namespace Gen
 {
-public:
-	virtual ~IRenderTarget() {}
+	class IRenderTarget
+	{
+	public:
+		virtual ~IRenderTarget() {}
 
-	// 指定RT的渲染目的纹理
-	virtual void SetTexture(ITexture* texture) = 0;
-	virtual ITexture* GetTexture() const = 0;
+		// 指定RT的渲染目的纹理
+		virtual void SetTexture(ITexture* texture) = 0;
+		virtual ITexture* GetTexture() const = 0;
 
-	virtual void BindRenderTarget() = 0;
-	virtual void GenerateMipmap() = 0;
-};
+		virtual void BindRenderTarget() = 0;
+		virtual void GenerateMipmap() = 0;
+	};
+}
 
 #endif

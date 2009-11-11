@@ -14,22 +14,25 @@
 #include "Matrix4.h"
 #include "Material.h"
 
-// 单一可渲染物体，以Material分组
-class IRenderableObject
+namespace Gen
 {
-public:
-	virtual ~IRenderableObject() {}
+	// 单一可渲染物体，以Material分组
+	class IRenderableObject
+	{
+	public:
+		virtual ~IRenderableObject() {}
 
-	// 渲染物体
-	virtual void RenderSingleObject() = 0;
+		// 渲染物体
+		virtual void RenderSingleObject() = 0;
 
-	// 获取材质
-	//virtual Material* GetMaterial() = 0;
+		// 获取材质
+		//virtual Material* GetMaterial() = 0;
 
-	// 是否透明
-	virtual bool IsTransparent() = 0;
+		// 是否透明
+		virtual bool IsTransparent() = 0;
 
-	virtual	void SetRenderOrder(unsigned int order) = 0;
-};
+		virtual	void SetRenderOrder(unsigned int order) = 0;
+	};
+}
 
 #endif

@@ -58,30 +58,32 @@
 #include "Matrix3.h"
 #include "Vector3f.h"
 
-class Matrix3;
-class Vector3f;
-
-class Quaternion
+namespace Gen
 {
-public:
-	float x, y, z, w;
+	class Matrix3;
+	class Vector3f;
 
-	Quaternion();
-	Quaternion(const Matrix3& mat);
+	class Quaternion
+	{
+	public:
+		float x, y, z, w;
 
-	Quaternion operator*(const Quaternion& rhs) const;
-	Quaternion operator*=(const Quaternion& rhs);
+		Quaternion();
+		Quaternion(const Matrix3& mat);
 
-	void Normalize();
+		Quaternion operator*(const Quaternion& rhs) const;
+		Quaternion operator*=(const Quaternion& rhs);
 
-	// 给定任意轴，在局部空间中沿该轴作逆时针旋转指定弧度
-	void CreateFromLocalAxisAngle(const Vector3f axis, float angle_rad);
+		void Normalize();
 
-	Matrix3 GetRotationMatrix() const;
+		// 给定任意轴，在局部空间中沿该轴作逆时针旋转指定弧度
+		void CreateFromLocalAxisAngle(const Vector3f axis, float angle_rad);
 
-	static Quaternion Slerp(const Quaternion &p, const Quaternion &q, float t);
-	static float DotProduct(const Quaternion &a, const Quaternion &b);
-};
+		Matrix3 GetRotationMatrix() const;
 
+		static Quaternion Slerp(const Quaternion &p, const Quaternion &q, float t);
+		static float DotProduct(const Quaternion &a, const Quaternion &b);
+	};
+}
 
 #endif

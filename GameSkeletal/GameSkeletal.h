@@ -2,7 +2,7 @@
 #define _GAMESKELETAL_H
 
 #include "Existence.h"
-
+using namespace Gen;
 
 class GameSkeletal : public IGame
 {

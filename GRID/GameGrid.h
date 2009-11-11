@@ -6,6 +6,8 @@
 // 每个障碍物摆在格子上
 
 #include "Existence.h"
+using namespace Gen;
+
 #include "Point3.h"
 #include <set>
 #include <list>
@@ -130,10 +132,10 @@ private:
 
 	Light*			m_Sun;
 
-	Mesh*			m_MeshPlane;
+	PrimitiveMesh*	m_MeshPlane;
 	MeshObject*		m_BasePlane;
 
-	Mesh*			m_MeshBox;
+	PrimitiveMesh*	m_MeshBox;
 	Material*		m_BoxMaterial;
 	MeshObject*		m_IntersectionObject;
 

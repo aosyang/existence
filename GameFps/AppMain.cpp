@@ -1,4 +1,5 @@
 #include "Existence.h"
+using namespace Gen;
 
 #include "GameFps.h"
 
