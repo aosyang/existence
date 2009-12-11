@@ -4,9 +4,10 @@
 
 namespace Gen
 {
-	BspObject::BspObject()
-		: m_Mesh(NULL),
-		m_Bsp(NULL)
+	BspObject::BspObject(SceneGraph* scene)
+	: RenderableObjectBase(scene),
+	  m_Mesh(NULL),
+	  m_Bsp(NULL)
 	{
 
 	}

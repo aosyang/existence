@@ -15,8 +15,9 @@ namespace Gen
 	Vector3f nearPointWorld;
 	Vector3f farPointWorld;
 
-	Camera::Camera()
-	: m_Pitch(0.0f), m_Heading(0.0f),
+	Camera::Camera(SceneGraph* scene)
+	: SceneObject(scene),
+	  m_Pitch(0.0f), m_Heading(0.0f),
 	  m_FOVy(45.0f), m_NearClippingDistance(1.0f), m_FarClippingDistance(100.0f),
 	  m_RestrictPitch(true), m_PitchMax(90.0f), m_PitchMin(-90.0f),
 	  m_MatrixOutOfData(true)
@@ -160,7 +161,8 @@ namespace Gen
 		UpdateFrustum();
 	}
 
-	// x, y  0.0 ~ 1.0
+	// 根据屏幕上一点坐标，获取鼠标通过点击该点所产生的射线
+	// 注：x, y的取值范围为  0.0 ~ 1.0
 	Ray Camera::GetCameraRay(float x, float y)
 	{
 		Vector3f nearPoint = Vector3f(2.0f * x - 1.0f, - 2.0f * y + 1.0f, -1.0f);

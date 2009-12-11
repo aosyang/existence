@@ -11,15 +11,15 @@
 
 namespace Gen
 {
-	Billboard::Billboard()
-		: m_Material(NULL),
-		m_Radius(10.0f),
-		m_ZRotataion(0.0f),
-		m_ZOffset(0.0f),
-		m_Scale(1.0f),
-		m_Scale_x(1.0f),
-		m_Scale_y(1.0f),
-		m_NeedUpdateVertexData(false)
+	Billboard::Billboard(SceneGraph* scene)
+	: RenderableObjectBase(scene),
+	  m_Radius(10.0f),
+	  m_ZRotataion(0.0f),
+	  m_ZOffset(0.0f),
+	  m_Scale(1.0f),
+	  m_Scale_x(1.0f),
+	  m_Scale_y(1.0f),
+	  m_NeedUpdateVertexData(false)
 	{
 		m_RenderOrder = 110;
 

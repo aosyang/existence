@@ -8,6 +8,7 @@
 #include "EString.h"
 #include <stdarg.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 namespace Gen
 {
@@ -37,6 +38,11 @@ namespace Gen
 	String::String(int val)
 	{
 		Format("%d", val);
+	}
+	
+	String::String(long val)
+	{
+		Format("%ld", val);
 	}
 
 	String::String(float val)

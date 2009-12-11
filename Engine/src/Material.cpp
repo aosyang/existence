@@ -251,7 +251,7 @@ namespace Gen
 
 	void ReadDiffuse(Material* mat, const String& val)
 	{
-		mat->SetColor(val.ToColor4f());
+		mat->SetDiffuse(val.ToColor4f());
 	}
 
 	void ReadSpecular(Material* mat, const String& val)

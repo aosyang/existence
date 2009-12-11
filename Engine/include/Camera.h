@@ -32,7 +32,7 @@ namespace Gen
 	//-----------------------------------------------------------------------------------
 	class Camera : public SceneObject
 	{
-		DECLARE_FACTORY(Camera);
+		DECLARE_FACTORY_OBJECT(Camera);
 	public:
 		// ----- Overwrite IObject
 

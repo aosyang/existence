@@ -264,7 +264,7 @@ namespace Gen
 			m_Quit = m_Game->OnNotifyQuitting();
 
 		// TODO: SceneGraph renders here.
-		if (renderer->GetActive())
+		//if (renderer->GetActive())
 		{
 			m_Game->RenderScene();
 

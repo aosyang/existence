@@ -31,7 +31,7 @@ namespace Gen
 		if (m_MeshLoaders.find(ext)==m_MeshLoaders.end())
 			m_MeshLoaders[ext] = func;
 
-		System::Instance().RegisterExtensionLoader(ext, LoadMeshes);
+		//System::Instance().RegisterExtensionLoader(ext, LoadMeshes);
 	}
 
 	bool MeshManager::LoadFromFile(const String& resName, const String& filename)

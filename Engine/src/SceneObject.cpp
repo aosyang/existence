@@ -50,21 +50,22 @@ namespace Gen
 		REGISTER_FACTORY(MeshObject);
 	}
 
-	SceneObject* SceneObjectFactory::CreateSceneObject(const String& className)
+	SceneObject* SceneObjectFactory::CreateSceneObject(SceneGraph* scene, const String& className)
 	{
 		AssertFatal(m_FactoryCreators.find(className)!=m_FactoryCreators.end(),
 			"SceneObjectFactory::CreateSceneObject(): Unable to create scene object, not a registered class name.");
-		return (*m_FactoryCreators[className])();
+		return (*m_FactoryCreators[className])(scene);
 	}
 
 
-	SceneObject::SceneObject()
-		: m_Visible(true),
-		m_Scene(NULL),
-		m_ParentObject(NULL),
-		m_KeepRotation(false),
-		m_CollisionGroupMask(0),		// 默认不参与任何碰撞
-		m_Serializable(false)
+	SceneObject::SceneObject(SceneGraph* scene)
+	: MovableObjectBase(),
+	  m_Visible(true),
+	  m_Scene(scene),
+	  m_ParentObject(NULL),
+	  m_KeepRotation(false),
+	  m_CollisionGroupMask(0),		// 默认不参与任何碰撞
+	  m_Serializable(false)
 	{
 	}
 

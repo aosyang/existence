@@ -9,10 +9,15 @@
 
 namespace Gen
 {
-	GameObjectBase::GameObjectBase()
-		: SceneObject()
+	GameObjectBase::GameObjectBase(SceneGraph* scene)
+	: SceneObject(scene)
 	{
 	}
+
+	GameObjectBase::~GameObjectBase()
+	{
+	}
+
 	//
 	//void GameObjectBase::CollectRenderableObject(RenderableObjectList& renderableObjs, Frustum* frustum)
 	//{

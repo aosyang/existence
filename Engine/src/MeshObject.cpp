@@ -12,11 +12,11 @@
 
 namespace Gen
 {
-	MeshObject::MeshObject()
-		: m_Mesh(NULL),
-		m_SubMeshCount(0),
-		m_Materials(NULL)
-		//m_FrustumCulling(true)
+	MeshObject::MeshObject(SceneGraph* scene)
+	: RenderableObjectBase(scene),
+	  m_SubMeshCount(0),
+	  m_Materials(NULL)
+	  //m_FrustumCulling(true)
 	{
 	}
 

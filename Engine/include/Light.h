@@ -19,7 +19,7 @@ namespace Gen
 
 	class Light : public SceneObject, public ILight
 	{
-		DECLARE_FACTORY(Light);
+		DECLARE_FACTORY_OBJECT(Light);
 	public:
 		// ----- Overwrite IObject
 		void Destroy();

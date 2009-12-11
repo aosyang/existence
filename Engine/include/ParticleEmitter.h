@@ -28,7 +28,7 @@ namespace Gen
 
 	class ParticleEmitter : public SceneObject
 	{
-		DECLARE_FACTORY(ParticleEmitter);
+		DECLARE_FACTORY_OBJECT(ParticleEmitter);
 	public:
 		// ----- Overwrite IObject
 

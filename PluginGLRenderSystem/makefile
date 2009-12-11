@@ -5,7 +5,7 @@ LD = g++
 
 CFLAGS = -Wall -O -g -D_LINUX
 LDFLAGS = -shared -fPIC
-INCLUDE = -I ../extra/include/ -I ../Engine/
+INCLUDE = -I ../extra/include/ -I ../Engine/include/
 LIBS = -L../bin/libs -lEngine -ldl -lGL -lGLU -lXxf86vm -lfreetype -lOIS -lfreeimage 
 LIBPATH = ../bin/plugins
 TARGET = $(LIBPATH)/PluginGLRenderSystem.so

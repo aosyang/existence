@@ -11,8 +11,9 @@
 
 namespace Gen
 {
-	Decal::Decal()
-		: m_Material(NULL)
+	Decal::Decal(SceneGraph* scene)
+	: RenderableObjectBase(scene),
+	  m_Material(NULL)
 	{
 		m_VertexBuffer = renderer->BuildVertexBuffer();
 		SetSize(1.0f);

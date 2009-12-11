@@ -97,7 +97,7 @@ namespace Gen
 
 	SceneObject* SceneGraph::CreateSceneObject(const String& className)
 	{
-		SceneObject* sceneObj = m_ObjectFactory.CreateSceneObject(className);
+		SceneObject* sceneObj = m_ObjectFactory.CreateSceneObject(this, className);
 		AddObject(sceneObj);
 
 		return sceneObj;

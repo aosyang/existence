@@ -19,16 +19,17 @@ namespace Gen
 		particle->m_Velocity = Vector3f(0.0f, 1.0f, 0.0f);
 	}
 
-	ParticleEmitter::ParticleEmitter()
-		: m_EmitterShape(EMITTER_SHAPE_POINT),
-		m_ParticlePool(NULL),
-		m_Material(NULL),
-		m_BoxMin(0.0f, 0.0f, 0.0f),
-		m_BoxMax(0.0f, 0.0f, 0.0f),
-		m_Interval(-1),
-		m_TimeSinceLastUpdate(0),
-		m_ParticleInitState(&DefaultParticleState),
-		m_ParticleBehaviorFunc(NULL)
+	ParticleEmitter::ParticleEmitter(SceneGraph* scene)
+	: SceneObject(scene),
+	  m_EmitterShape(EMITTER_SHAPE_POINT),
+	  m_ParticlePool(NULL),
+	  m_Material(NULL),
+	  m_BoxMin(0.0f, 0.0f, 0.0f),
+	  m_BoxMax(0.0f, 0.0f, 0.0f),
+	  m_Interval(-1),
+	  m_TimeSinceLastUpdate(0),
+	  m_ParticleInitState(&DefaultParticleState),
+	  m_ParticleBehaviorFunc(NULL)
 	{
 	}
 

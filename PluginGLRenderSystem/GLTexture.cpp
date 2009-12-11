@@ -14,6 +14,8 @@ namespace Gen
 
 	int up_to_pow_of_two(int n)
 	{
+		if (n==1) return 1;
+
 		int l = int(log((float)(n - 1)) / log(2.0f));
 		return 1 << (l+1);
 	}

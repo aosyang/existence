@@ -12,10 +12,11 @@
 
 namespace Gen
 {
-	RenderableObjectBase::RenderableObjectBase()
-		: m_Visible(true),
-		m_RenderOrder(100),
-		m_LightableObject(NULL)
+	RenderableObjectBase::RenderableObjectBase(SceneGraph* scene)
+	: SceneObject(scene),
+	  m_Visible(true),
+	  m_RenderOrder(100),
+	  m_LightableObject(NULL)
 	{
 	}
 

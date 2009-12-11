@@ -32,20 +32,23 @@ namespace Gen
 
 
 
-	typedef SceneObject* (*FactoryCreateFuncPtr)();
+	typedef SceneObject* (*FactoryCreateFuncPtr)(SceneGraph*);
 
 	// 在每个SceneObject的派生类中声明这个对象，事先创建该类对象的工厂
 	// 返回类型字串
 	// 同时将构造和析构函数声明为私有，防止对象被直接构造
-	#define DECLARE_FACTORY(className) \
+	// 调用了这个宏声明的对象必须实现带一个参数SceneGraph*的构造函数和析构函数
+	#define DECLARE_FACTORY_OBJECT(className) \
 		public:	\
-			static SceneObject* FactoryCreateSceneObject() { \
-				return new className(); \
+			static SceneObject* FactoryCreateSceneObject(SceneGraph* scene) { \
+				return new className(scene); \
 			} \
 			const String GetTypeName() const { return #className; } \
+		protected: \
+			className(SceneGraph* scene); \
+			~className(); \
 		private: \
-			className(); \
-			~className();
+			className();
 
 	// 在场景中创建一个对象并转换为对应类型的指针
 	#define FACTORY_CREATE(scenePtr, className) static_cast<className*>(scenePtr->CreateSceneObject(#className))
@@ -62,7 +65,7 @@ namespace Gen
 		static void RegisterFactoryCreator(const String& className, FactoryCreateFuncPtr ptrFunc);
 		static void RegisterDefaultFactories();
 
-		SceneObject* CreateSceneObject(const String& className);
+		SceneObject* CreateSceneObject(SceneGraph* scene, const String& className);
 	protected:
 		static SceneObjectFactoryCreators	m_FactoryCreators;
 	};
@@ -79,7 +82,7 @@ namespace Gen
 	{
 		friend class SceneSerializer;
 	public:
-		SceneObject();
+		SceneObject(SceneGraph* scene);
 		~SceneObject();
 
 		// ----- Overwrite IObject

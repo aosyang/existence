@@ -36,13 +36,14 @@ namespace Gen
 		return result;
 	}
 
-	ParticlePool::ParticlePool()
-		: m_Material(NULL),
-		m_PoolCapability(100),
-		m_ActiveParticleCount(0),
-		m_SortByZOrder(true),
-		m_VanishOnEmpty(true),
-		m_UseBoxBounding(false)
+	ParticlePool::ParticlePool(SceneGraph* scene)
+	: RenderableObjectBase(scene),
+	  m_Material(NULL),
+	  m_PoolCapability(100),
+	  m_ActiveParticleCount(0),
+	  m_SortByZOrder(true),
+	  m_VanishOnEmpty(true),
+	  m_UseBoxBounding(false)
 	{
 		for (unsigned int i=0; i<m_PoolCapability; i++)
 			m_FreeOffset.push_back(i);

@@ -10,9 +10,10 @@
 
 namespace Gen
 {
-	AudioListener::AudioListener()
-		: m_OldPosition(0.0f, 0.0f, 0.0f),
-		m_VelocityFactor(0.0f)
+	AudioListener::AudioListener(SceneGraph* scene)
+	: SceneObject(scene),
+	  m_OldPosition(0.0f, 0.0f, 0.0f),
+	  m_VelocityFactor(0.0f)
 	{}
 
 	AudioListener::~AudioListener() {}

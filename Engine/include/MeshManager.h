@@ -25,6 +25,8 @@ namespace Gen
 
 	typedef IMesh*(*MeshLoaderFunc)(const String&);
 	typedef map<const String, MeshLoaderFunc>	MeshLoaders;
+	
+	bool LoadMeshes(const String& resName, const String& filename);
 
 	class MeshManager : public Singleton<MeshManager>
 	{

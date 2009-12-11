@@ -105,8 +105,11 @@ namespace Gen
 		RegisterExtensionLoader(".ttc", &LoadFont);
 
 		// 模型
-		//RegisterExtensionLoader(".emd", &LoadEMDMesh);
+		// this hacks: 将两次注册减少为一次
+		// 注：目前如果在MeshManager中调用System进行扩展名注册会造成System的构造函数被循环引用的错误
+		RegisterExtensionLoader(".emd", &LoadMeshes);
 		MeshManager::Instance().RegisterExtensionLoader(".emd", &EmdMesh::ManagerLoad);
+		RegisterExtensionLoader(".ms3d", &LoadMeshes);
 		MeshManager::Instance().RegisterExtensionLoader(".ms3d", &Ms3dMesh::ManagerLoad);
 
 		// 音频

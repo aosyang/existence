@@ -17,7 +17,7 @@ namespace Gen
 {
 	class AudioSourceObject : public SceneObject
 	{
-		DECLARE_FACTORY(AudioSourceObject);
+		DECLARE_FACTORY_OBJECT(AudioSourceObject);
 	public:
 		// ----- Overwrite IObject
 

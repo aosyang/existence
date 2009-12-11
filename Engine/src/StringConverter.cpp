@@ -1,4 +1,5 @@
 #include "StringConverter.h"
+#include <stdio.h>
 
 namespace Gen
 {

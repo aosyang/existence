@@ -5,9 +5,9 @@ LD = g++
 
 ENGINEPATH = ..
 
-CFLAGS = -Wall -O -g -D_LINUX
+CFLAGS = -Wall -O0 -g -D_LINUX
 LDFLAGS = -shared -fPIC
-INCLUDE = -I $(ENGINEPATH)/Engine -I $(ENGINEPATH)/extra/include/freetype2/freetype2 -I $(ENGINEPATH)/extra/include
+INCLUDE = -I $(ENGINEPATH)/Engine/include/ -I $(ENGINEPATH)/extra/include/freetype2/freetype2 -I $(ENGINEPATH)/extra/include
 LIBS = -L$(ENGINEPATH)/bin/libs -lEngine -lfreeimage -lfreetype -lOIS
 TARGETPATH = ../bin/gameparticle/linux
 TARGET = $(TARGETPATH)/gameparticle

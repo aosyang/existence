@@ -29,17 +29,11 @@ namespace Gen
 		//-----------------------------------------------------------------------------------
 		void EnableBreakOnAlloc();
 
-		void FatalError(const String& title, const String& msg, const String& file, const String& line);
-
-		static String	_DEBUG_MSG;
+		void FatalError(const char* title, const char* msg, const char* expression, const char* file, long line);
 	}
 
 #define AssertFatal(expression, msg) if ((expression)==0) { \
-		Debug::_DEBUG_MSG = ""; \
-		Debug::_DEBUG_MSG += msg; \
-		Debug::_DEBUG_MSG += "\nExpression : "; \
-		Debug::_DEBUG_MSG += #expression; \
-		Debug::FatalError("Fatal error!", Debug::_DEBUG_MSG, __FILE__, __LINE__); \
+		Debug::FatalError("Fatal error!", msg, #expression, __FILE__, __LINE__); \
 	}
 }
 

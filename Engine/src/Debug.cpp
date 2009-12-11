@@ -39,9 +39,11 @@ namespace Gen
 #endif // #if defined __PLATFORM_WIN32
 		}
 
-		void FatalError(const String& title, const String& msg, const String& file, const String& line)
+		void FatalError(const char* title, const char* msg, const char* expression, const char* file, long line)
 		{
 			String errorMsg = msg;
+			errorMsg += "\nExpression : ";
+			errorMsg += expression;
 			errorMsg += "\nIn file ";
 			errorMsg += file;
 			errorMsg += "\nLine ";
@@ -49,9 +51,9 @@ namespace Gen
 
 			Log.Error(errorMsg);
 #if defined __PLATFORM_WIN32
-			MessageBoxA(NULL, errorMsg.Data(), title.Data(), MB_OK|MB_ICONERROR);
+			MessageBoxA(NULL, errorMsg.Data(), title, MB_OK|MB_ICONERROR);
 #elif defined __PLATFORM_LINUX
-			printf("%s %s", title.Data(), errorMsg.Data());
+			printf("%s %s", title, errorMsg.Data());
 #endif
 			assert(0);
 		}

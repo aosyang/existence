@@ -19,8 +19,8 @@
 #include "istdplug.h"
 #include "iparamb2.h"
 #include "iparamm2.h"
-#include "igame.h"
-#include "igameobject.h"
+//#include "igame.h"
+//#include "igameobject.h"
 //SIMPLE TYPE
 
 #include <fstream>

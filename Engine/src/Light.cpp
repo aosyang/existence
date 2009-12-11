@@ -12,16 +12,17 @@
 
 namespace Gen
 {
-	Light::Light()
-		: m_Ambient(0.0f, 0.0f, 0.0f, 1.0f),
-		m_Diffuse(1.0f, 1.0f, 1.0f, 1.0f),
-		m_Specular(1.0f, 1.0f, 1.0f, 1.0f),
-		m_Type(LIGHT_TYPE_POINT),
-		m_Direction(0.0f, 0.0f, -1.0f),
-		m_ConstantAttenuation(1.0f),
-		m_LinearAttenuation(0.0f),
-		m_QuadraticAttenuation(0.0f),
-		m_Range(10.0f)
+	Light::Light(SceneGraph* scene)
+	: SceneObject(scene),
+	  m_Ambient(0.0f, 0.0f, 0.0f, 1.0f),
+	  m_Diffuse(1.0f, 1.0f, 1.0f, 1.0f),
+	  m_Specular(1.0f, 1.0f, 1.0f, 1.0f),
+	  m_Type(LIGHT_TYPE_POINT),
+	  m_Direction(0.0f, 0.0f, -1.0f),
+	  m_ConstantAttenuation(1.0f),
+	  m_LinearAttenuation(0.0f),
+	  m_QuadraticAttenuation(0.0f),
+	  m_Range(10.0f)
 	{
 	}
 

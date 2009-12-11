@@ -40,7 +40,7 @@ namespace Gen
 				DispatchMessage(&msg);
 			}
 		}
-#elif defined __PLATFORM_WIN32
+#elif defined __PLATFORM_LINUX
 		if (XPending(g_Display) > 0)
 		{
 			X11::XEvent event;
@@ -109,7 +109,7 @@ namespace Gen
 
 		return (WNDPROC)DefWindowProc(hWnd, uMsg, wParam, lParam);
 	}
+#endif
 }
 
-#endif
 

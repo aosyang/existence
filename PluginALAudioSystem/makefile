@@ -5,7 +5,7 @@ LD = g++
 
 CFLAGS = -Wall -O -g -D_LINUX
 LDFLAGS = -shared -fPIC
-INCLUDE = -I ../Engine/ #-I ../extra/include/  
+INCLUDE = -I ../Engine/include #-I ../extra/include/  
 LIBS = -L../bin/libs -lEngine -lopenal -lalut -lvorbis -lvorbisfile -logg
 LIBPATH = ../bin/plugins
 TARGET = $(LIBPATH)/PluginALAudioSystem.so

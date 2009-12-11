@@ -16,7 +16,7 @@ namespace Gen
 {
 	class DistantViewObject : public RenderableObjectBase
 	{
-		DECLARE_FACTORY(DistantViewObject);
+		DECLARE_FACTORY_OBJECT(DistantViewObject);
 	public:
 		// ----- Overwrite IRenderableObject
 

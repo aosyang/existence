@@ -11,8 +11,9 @@
 
 namespace Gen
 {
-	DistantViewObject::DistantViewObject()
-		: m_OffsetScale(0.0f, 0.0f, 0.0f)
+	DistantViewObject::DistantViewObject(SceneGraph* scene)
+	: RenderableObjectBase(scene),
+	  m_OffsetScale(0.0f, 0.0f, 0.0f)
 	{
 		// render very first
 		m_RenderOrder = 70;

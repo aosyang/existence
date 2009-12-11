@@ -23,6 +23,7 @@ namespace Gen
 		String(const Color4f& color);
 		String(bool val);
 		String(int val);
+		String(long val);
 		String(float val);
 
 		bool operator==(const String& rhs) const;
