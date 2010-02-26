@@ -42,7 +42,7 @@ namespace Gen
 
 		// ----- ParticlePool Methods
 		inline Material* GetMaterial() const { return m_Material; }
-		inline void SetMaterial(Material* mat) { m_Material = mat; }
+		void SetMaterial(Material* mat);
 
 		// 池中粒子是否已满
 		bool IsFull() const { return (m_ActiveParticleCount>=m_PoolCapability); }
@@ -51,6 +51,7 @@ namespace Gen
 		void AddParticle(const Particle& particle);
 	private:
 		IVertexBuffer*		m_VertexBuffer;
+		IIndexBuffer*		m_IndexBuffer;
 		Material*			m_Material;
 		ParticleEmitter*	m_Emitter;
 

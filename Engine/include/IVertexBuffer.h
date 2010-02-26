@@ -19,6 +19,7 @@ namespace Gen
 		VFormat_Texcoord0 = 1 << 3,
 	};
 
+	// 顶点缓冲接口
 	class IVertexBuffer
 	{
 	public:
@@ -30,9 +31,7 @@ namespace Gen
 									const float* normalArray,
 									const float* colorArray,
 									const float* textureCoordArray,
-									unsigned int vertexNum,
-									unsigned int* faceArray,
-									unsigned int faceNum) = 0;
+									unsigned int vertexNum) = 0;
 		virtual void Clear() = 0;
 
 		// 锁定缓冲，以进行修改
@@ -41,13 +40,34 @@ namespace Gen
 
 		// TODO: 这两个方法必须确定了数据格式之后才能作为公共接口
 		virtual void SetVertexData(void* vertexData, unsigned int vertexNum) = 0;
-		virtual void SetIndexData(void* indexData, unsigned int indexNum) = 0;
 
 		virtual void ModifyVertexData(VertexFormat dataFormat, int offset,  int size, void* data) = 0;
+
+		// 指定为顶点数据来源
+		virtual void SetAsVertexDataSource() = 0;
+	};
+
+	// 索引缓冲接口
+	// TODO: 增加一个接口使用户可以设置多边形类型
+	class IIndexBuffer
+	{
+	public:
+		virtual ~IIndexBuffer() {}
+
+		virtual bool CreateBuffer(unsigned int* faceArray,
+								  unsigned int faceNum) = 0;
+		virtual void Clear() = 0;
+
+		virtual void Lock() = 0;
+		virtual void Unlock() = 0;
+
+		virtual void SetIndexData(void* indexData, unsigned int indexNum) = 0;
+
 		virtual void ModifyIndexData(int offset, int size, void* data) = 0;
 		virtual void SetIndexSize(int size) = 0;
 
-		virtual void RenderBuffer() = 0;
+		// 使用已指定的顶点数据渲染多边形
+		virtual void RenderPrimitive() = 0;
 	};
 }
 

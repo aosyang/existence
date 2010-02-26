@@ -31,7 +31,7 @@ namespace Gen
 		// ----- BspObject Methods
 
 		// 指定用于生成bsp结构的mesh
-		void SetMesh(IMesh* mesh);
+		void SetMesh(BaseMesh* mesh);
 
 		// 使用球体进行碰撞，newpos将返回一个合法的位置
 		bool PushSphere(const Vector3f& pos, Vector3f& newpos, float radius);
@@ -43,7 +43,7 @@ namespace Gen
 		bool IsPointInSolid(const Vector3f& point);
 
 	private:
-		IMesh*		m_Mesh;
+		BaseMesh*		m_Mesh;
 
 		BspTree*	m_Bsp;
 	};

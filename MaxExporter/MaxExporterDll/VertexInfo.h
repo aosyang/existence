@@ -1,43 +1,42 @@
 #ifndef _VERTEXINFO_H
 #define _VERTEXINFO_H
 
-#include <math.h>
+//#define EPSILON 0.00001f
+//#define FLOAT_EQUALS_ZERO(num) (fabs(num) <= EPSILON)
+//#define FLOAT_EQUAL(a, b) (fabs(a-b) <= EPSILON)
 
-bool fequal(float a, float b, float e = 0.0001f)
-{
-	return (fabs(a - b) < e);
-}
+#include <MathUtil.h>
 
-struct VertexInfo
+class VertexInfo
 {
+public:
 	float x, y, z;
 	float nx, ny, nz;
 	float u, v;
 
-	bool operator == (const VertexInfo& rhs)
+	int index;
+
+	bool operator<(const VertexInfo& rhs) const
 	{
-		return ( fequal(x, rhs.x) && fequal( y , rhs.y ) && fequal( z , rhs.z ) &&
-			fequal(nx , rhs.nx ) && fequal( ny , rhs.ny ) && fequal( nz , rhs.nz ) &&
-			fequal(u , rhs.u ) && fequal( v , rhs.v) );
+		return lessThan(rhs);
 	}
 
-	VertexInfo& operator= (const VertexInfo& rhs)
+	bool lessThan(const VertexInfo& rhs, int level=0) const
 	{
-		x = rhs.x;
-		y = rhs.y;
-		z = rhs.z;
+		float l = (&this->x)[level];
+		float r = (&rhs.x)[level];
 
-		nx = rhs.nx;
-		ny = rhs.ny;
-		nz = rhs.nz;
-
-		u = rhs.u;
-		v = rhs.v;
-
-		return (*this);
+		if (!FLOAT_EQUAL(l, r) && l < r)
+			return true;
+		else
+		{
+			if (FLOAT_EQUAL(l, r) && level<7)
+				return lessThan(rhs, level+1);
+			else
+				return false;
+		}
 	}
 
-	// TODO: 添加其他的顶点信息
 };
 
 #endif

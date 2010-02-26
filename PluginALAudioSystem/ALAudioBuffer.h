@@ -9,7 +9,7 @@
 #ifndef _ALAUDIOBUFFER_H
 #define _ALAUDIOBUFFER_H
 
-#include "IAudioBuffer.h"
+#include "IDeviceAudioBuffer.h"
 #include "ALAudioSource.h"
 
 #include <AL/al.h>
@@ -17,7 +17,7 @@
 
 namespace Gen
 {
-	class ALAudioBuffer : public IAudioBuffer
+	class ALAudioBuffer : public IDeviceAudioBuffer
 	{
 		friend class ALAudioSource;
 	public:

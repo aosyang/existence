@@ -1,17 +1,15 @@
 //-----------------------------------------------------------------------------------
-/// ResourceManager.h 资源管理器模板
+/// ResourceManager.h 资源管理器，统一管理各类资源
 /// 
 /// File Encoding : GB2312
 /// 
-/// Copyright (c) 2009 by Mwolf
+/// Copyright (c) 2009 - 2010 by Mwolf
 //-----------------------------------------------------------------------------------
 #ifndef _RESOURCEMANAGER_H
 #define _RESOURCEMANAGER_H
 
 #include "Platform.h"
 #include "Singleton.h"
-#include "Debug.h"
-#include "FileSystem.h"
 
 #include <map>
 #include "EString.h"
@@ -24,133 +22,43 @@ using namespace std;
 
 namespace Gen
 {
-	template <class T>
-	class ResourceManager : public Singleton< ResourceManager<T> >		// use "> >" instead of ">>", gcc told me so...
+	struct ResourceFileNameInfo;
+	class Resource;
+	
+	typedef map<const String, Resource*>	ResourceMap;
+
+	// 资源管理器基类
+	class ResourceManagerBase
 	{
-		friend class Singleton< ResourceManager<T> >;
 	public:
-		typedef map<const String, T*>	ResourceMap;
+		ResourceManagerBase();
+		virtual ~ResourceManagerBase() {}
 
-		// 创建对象实例
-		T* Create(const String& name = "")
-		{
-			String resName;
+		// 从文件创建资源对象句柄
+		virtual bool CreateResourceHandles(ResourceFileNameInfo* resName) = 0;
 
-			T* res = new T;
+		// 通过名称获取资源
+		Resource* GetResourceByName(const String& resName);
 
-			// 如果没有指定名称，自动生成一个
-			if (name == "")
-			{
-				resName.Format("#UNNAMED%d", m_sIndex);
-				m_sIndex++;
+		// 卸载该管理器的全部资源
+		void UnloadAllResources();
 
-				while (m_ResourceMap.find(resName)!=m_ResourceMap.end())
-				{
-					resName.Format("#UNNAMED%d", m_sIndex);
-					m_sIndex++;
-				}
-			}
-			else
-			{
-				resName = name;
-				CorrectSlash(resName);
+		// 测试功能：将所有资源及其状态导出到日志
+		void DumpToLog() const;
 
-				// 创建资源已存在，致命错误
-				AssertFatal(m_ResourceMap.find(resName)==m_ResourceMap.end(), "ResourceManager::Create(): Specified resource name already exists.");
-
-				//while (m_ResourceMap.find(resName)!=m_ResourceMap.end())
-				//{
-				//	// 与已有资源名称重复，重命名
-				//	resName.Format("%s_%d", name.Data(), n);
-				//	n++;
-				//}
-			}
-			m_ResourceMap[resName] = res;
-			res->m_Name = &(m_ResourceMap.find(resName)->first);
-
-			return res;
-		}
-
-		T* LoadResource(const String& resName, const String& filename)
-		{
-			if (m_ResourceMap.find(resName)!=m_ResourceMap.end())
-				return NULL;
-
-			T* res = (*m_sLoadFunc)(filename);
-			if (res)
-			{
-				m_ResourceMap[resName] = res;
-				res->m_Name = &(m_ResourceMap.find(resName)->first);
-			}
-
-			return res;
-		}
-
-		//void Destroy(T* res)
-		//{
-		//	m_ResourceMap.erase(res);
-		//	//if (m_ResourceMap.find(res)!=m_ResourceMap.end())
-		//	//	delete res;
-		//}
-
-		T* GetByName(const String& name)
-		{
-			String sName(name);
-			CorrectSlash(sName);
-
-			typename ResourceMap::iterator iter;
-			if ((iter = m_ResourceMap.find(sName))!=m_ResourceMap.end())
-				return iter->second;
-
-			return NULL;
-		}
-
-		// 卸载所有对象
-		void UnloadAllResources()
-		{
-			typename ResourceManager<T>::ResourceMap::iterator iter = m_ResourceMap.begin();
-			for (;iter!=m_ResourceMap.end(); iter++)
-			{
-				SAFE_DELETE(iter->second);
-			}
-		}
-
-		void DumpToLog()
-		{
-			Log.MsgLn("----------- Begin dumping ResourceManager");
-
-			typename ResourceMap::iterator iter;
-			for (iter=m_ResourceMap.begin();
-				 iter!=m_ResourceMap.end();
-				 iter++)
-			{
-				Log.MsgLn(iter->first);
-			}
-
-			Log.MsgLn("----------- End dumping ResourceManager");
-		}
-		
 		ResourceMap& GetResourceMap() { return m_ResourceMap; }
+	protected:
+		// 生成自动名称
+		String GenerateAutoName();
 
-		static unsigned int m_sIndex;
-
-		typedef T*(*LoadFunc)(const String& filename);
-		static LoadFunc m_sLoadFunc;
-
-	private:
-		ResourceManager() {}
-		~ResourceManager() { UnloadAllResources(); }
+		// 检查用户指定的资源名称，如果发生重复则报错，不提供名字则自动生成
+		String CheckResName(const String& resName);
 
 	protected:
-		ResourceMap			m_ResourceMap;
-	};
+		ResourceMap			m_ResourceMap;			///< 资源容器
 
-// 宏定义，用于声明一个类将使用资源管理器
-#if defined __PLATFORM_WIN32
-#define DECLARE_RESOURCEMANAGER(className) ResourceManager<className>
-#elif defined __PLATFORM_LINUX
-#define DECLARE_RESOURCEMANAGER(className) template class ResourceManager<className>
-#endif
+		int					m_AutoNameIndex;		///< 自动命名索引
+	};
 }
 
 #endif

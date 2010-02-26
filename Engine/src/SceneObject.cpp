@@ -19,8 +19,12 @@
 #include "Decal.h"
 #include "DistantViewObject.h"
 #include "MeshObject.h"
+#include "SkeletalMeshObject.h"
+
 #include "SceneGraph.h"
+#include "Engine.h"
 #include "StringConverter.h"
+#include "Renderer.h"
 
 namespace Gen
 {
@@ -48,6 +52,7 @@ namespace Gen
 		REGISTER_FACTORY(Decal);
 		REGISTER_FACTORY(DistantViewObject);
 		REGISTER_FACTORY(MeshObject);
+		REGISTER_FACTORY(SkeletalMeshObject);
 	}
 
 	SceneObject* SceneObjectFactory::CreateSceneObject(SceneGraph* scene, const String& className)
@@ -140,6 +145,19 @@ namespace Gen
 			return MovableObjectBase::IsCulled(frustum);
 
 		return true;
+	}
+
+	// DebugäÖÈ¾
+	void SceneObject::DebugRender()
+	{
+		Renderer::Instance().RenderBox(m_AABB.worldMin, m_AABB.worldMax);
+		Renderer::Instance().RenderBox(m_OBB.localMin, m_OBB.localMax, Color4f(0.0f, 1.0f, 0.0f), WorldTransform());
+
+		SceneObjectSet::iterator iter;
+		for (iter=m_ChildrenObjects.begin(); iter!=m_ChildrenObjects.end(); iter++)
+		{
+			(*iter)->DebugRender();
+		}
 	}
 
 	void SceneObject::SetSceneGraphRecursively(SceneGraph* scene)

@@ -25,6 +25,7 @@ namespace Gen
 				return control; \
 			}
 
+	class Material;
 
 	class EGUIManager : public Singleton<EGUIManager>
 	{
@@ -51,7 +52,7 @@ namespace Gen
 
 	protected:
 		UIRootObject*				m_UIRootObject;		///< UI¸ù¶ÔÏó
-
+		Material*					m_UIMaterial;
 	};
 }
 

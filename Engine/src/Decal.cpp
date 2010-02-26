@@ -8,6 +8,7 @@
 
 #include "Decal.h"
 #include "Engine.h"
+#include "Renderer.h"
 
 namespace Gen
 {
@@ -15,13 +16,15 @@ namespace Gen
 	: RenderableObjectBase(scene),
 	  m_Material(NULL)
 	{
-		m_VertexBuffer = renderer->BuildVertexBuffer();
+		m_VertexBuffer = Renderer::Instance().BuildVertexBuffer();
+		m_IndexBuffer = Renderer::Instance().BuildIndexBuffer();
 		SetSize(1.0f);
 	}
 
 	Decal::~Decal()
 	{
-		SAFE_DELETE(m_VertexBuffer)
+		SAFE_DELETE(m_VertexBuffer);
+		SAFE_DELETE(m_IndexBuffer);
 	}
 
 
@@ -29,7 +32,14 @@ namespace Gen
 	{
 		RenderableObjectBase::RenderSingleObject();
 
-		renderer->RenderVertexBuffer(m_VertexBuffer, m_Material, m_WorldTransform);
+		Renderer::Instance().SetupMaterial(m_Material);
+		Renderer::Instance().RenderPrimitives(m_VertexBuffer, m_IndexBuffer, m_WorldTransform);
+	}
+	
+	void Decal::SetMaterial(Material* mat)
+	{
+		if (mat) mat->Trigger();
+		m_Material = mat;
 	}
 
 	void Decal::SetDirection(const Vector3f normal)
@@ -86,7 +96,9 @@ namespace Gen
 		//memcpy(m_TexCoordArray, uv, sizeof(float) * 8);
 
 		m_VertexBuffer->Clear();
-		m_VertexBuffer->CreateBuffer(VFormat_Position|VFormat_Normal|VFormat_Texcoord0, vert, normal, NULL, uv, 4, face, 2);
+		m_VertexBuffer->CreateBuffer(VFormat_Position|VFormat_Normal|VFormat_Texcoord0, vert, normal, NULL, uv, 4);
+		m_IndexBuffer->Clear();
+		m_IndexBuffer->CreateBuffer(face, 2);
 
 		m_BoundingSphereRadius = m_Size * 0.5f;
 		m_OBB.localMax = Vector3f(m_Size * 0.5f, m_Size * 0.5f, m_Size * 0.5f);

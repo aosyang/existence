@@ -10,6 +10,8 @@
 #include "Frustum.h"
 #include "LightingManager.h"
 #include "ShadowManager.h"
+#include "Renderer.h"
+
 #include <algorithm>
 
 namespace Gen
@@ -128,11 +130,11 @@ namespace Gen
 	{
 		m_RenderView = view;
 
-		renderer->ViewMatrix() = view.viewMatrix;
-		renderer->ProjectionMatrix() = view.projMatrix;
+		Renderer::Instance().SetViewMatrix(view.viewMatrix);
+		Renderer::Instance().SetProjectionMatrix(view.projMatrix);
 	}
 
-	void SceneGraph::RenderScene()
+	void SceneGraph::RenderScene(bool debugRender)
 	{
 		//ShadowManager::Instance().RenderLightViewScene(m_RootObject);
 
@@ -152,13 +154,13 @@ namespace Gen
 		sort(renderList.begin(), renderList.end(), RenderableObjectBaseComparer);
 
 		//m_RootObject->CollectRenderObjects(m_RenderView);
-		renderer->SetProjectionMode(PROJECTION_MODE_PERSPECTIVE);
-		renderer->ClearBuffer(
+		//Renderer::Instance().SetProjectionMode(PROJECTION_MODE_PERSPECTIVE);
+		Renderer::Instance().ClearBuffer(
 #if defined __PLATFORM_LINUX	// 为何在glx下面清除深度缓冲会崩溃？
 			true, false
 #endif
 			);
-		renderer->BeginRender();
+		Renderer::Instance().BeginRender();
 		//m_RootObject->Render();
 		RenderableObjectList::iterator renderIter;
 
@@ -167,7 +169,16 @@ namespace Gen
 			(*renderIter)->RenderSingleObject();
 		}
 
-		renderer->EndRender();
+		if (debugRender)
+		{
+			// 渲染场景对象的调试信息
+			for (iter=m_SceneObjects.begin(); iter!=m_SceneObjects.end(); iter++)
+			{
+				(*iter)->DebugRender();
+			}
+		}
+
+		Renderer::Instance().EndRender();
 	}
 
 	void SceneGraph::RayPickingSceneObject(const Ray& ray, ObjectsCollisionInfos& sceneObjects, int type, int collisionGroup)

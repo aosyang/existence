@@ -13,15 +13,16 @@ namespace Gen
 {
 	AudioSourceObject::AudioSourceObject(SceneGraph* scene)
 	: SceneObject(scene),
-	  m_Source(NULL),
+	  m_Buffer(NULL),
 	  m_OldPosition(0.0f, 0.0f, 0.0f),
 	  m_VelocityFactor(0.0f)
 	{
+		m_Source = Engine::Instance().AudioSystem()->CreateAudioSource();
 	}
 
 	AudioSourceObject::~AudioSourceObject()
 	{
-		Engine::Instance().AudioSystem()->RemoveSource(m_Source);
+		SAFE_DELETE(m_Source);
 	}
 
 	void AudioSourceObject::Update(unsigned long deltaTime)
@@ -36,23 +37,15 @@ namespace Gen
 		m_Source->SetVelocity(vel);
 	}
 
-	bool AudioSourceObject::CreateAudioSource(IAudioBuffer* buffer)
+	void AudioSourceObject::SetAudioBuffer(AudioBuffer* buffer)
 	{
-		SAFE_DELETE(m_Source);
+		m_Buffer = buffer;
+		m_Source->SetAudioBuffer(buffer->GetDeviceAudioBuffer());
 
-		m_Source = Engine::Instance().AudioSystem()->CreateSourceInstance(buffer, Vector3f(0.0f, 0.0f, 0.0f), false);
-		//m_Source->Play();
-		return (m_Source != NULL);
-	}
-
-	bool AudioSourceObject::CreateAudioSource(const String& bufferName)
-	{
-		IAudioBuffer* buffer;
-		buffer = Engine::Instance().AudioSystem()->GetAudioBuffer(bufferName);
-
-		if (!buffer) return false;
-
-		return CreateAudioSource(buffer);
+		if (buffer)
+		{
+			buffer->Trigger();
+		}
 	}
 
 	void AudioSourceObject::Play()

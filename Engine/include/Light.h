@@ -24,6 +24,9 @@ namespace Gen
 		// ----- Overwrite IObject
 		void Destroy();
 
+		// ----- Overwrite SceneObject
+		void DebugRender();
+
 		// ----- Overwrite ILight
 		void SetAmbientColor(const Color4f& color) { m_Ambient = color; }
 		const Color4f& GetAmbientColor() { return m_Ambient; }
@@ -55,6 +58,11 @@ namespace Gen
 		float GetRange() const { return m_Range; }
 
 		// ----- Light Methods
+
+		// 控制灯光开关
+		void ToggleActive(bool active) { m_Active = active; }
+		bool GetActive() const { return m_Active; }
+
 		void SetRange(float range) { m_Range = range; }
 
 		float GetAttenuationFactor(float d);
@@ -74,6 +82,7 @@ namespace Gen
 		float		m_LinearAttenuation;
 		float		m_QuadraticAttenuation;
 
+		bool		m_Active;			///< 是否激活
 		float		m_Range;			///< 作用范围
 	};
 }

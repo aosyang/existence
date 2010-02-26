@@ -16,7 +16,7 @@ namespace Gen
 	ShadowManager::ShadowManager()
 		: m_Light(NULL)
 	{
-		ITexture* depthTexture = renderer->BuildDepthTexture("depth", SHADOW_MAP_SIZE, SHADOW_MAP_SIZE);
+		//BaseTexture* depthTexture = Renderer::Instance().BuildDepthTexture("depth", SHADOW_MAP_SIZE, SHADOW_MAP_SIZE);
 		//depthTexture->SetMinFilterType(FILTER_TYPE_NEAREST);
 		//depthTexture->SetMagFilterType(FILTER_TYPE_NEAREST);
 	}
@@ -35,7 +35,7 @@ namespace Gen
 	//	lightViewMatrix.SetLookAt(dir, Vector3f(0.0f, 1.0f, 0.0f));
 	//	lightViewMatrix.SetPosition(Vector3f(1.0f, 1.0f, 1.0f));
 	//
-	//	renderer->ViewMatrix() = lightViewMatrix;
+	//	Renderer::Instance().ViewMatrix() = lightViewMatrix;
 	//
 	//}
 	//

@@ -46,7 +46,7 @@ public:
 
 	bool HasNeighbour(Point3 pos)
 	{
-		for (int i=0; i<this->neighbourCount; i++)
+		for (unsigned int i=0; i<this->neighbourCount; i++)
 		{
 			if (this->neighbourPos[i] == pos)
 				return true;

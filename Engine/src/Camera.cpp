@@ -8,6 +8,7 @@
 #include "Camera.h"
 #include "Engine.h"
 #include "System.h"
+#include "Renderer.h"
 
 namespace Gen
 {
@@ -52,20 +53,21 @@ namespace Gen
 		}
 
 	}
-	//
-	//void Camera::DebugRender()
-	//{
-	//	BaseSceneObject::DebugRender();
-	//
-	//	// 使用最小和最大角坐标确定一个立方体
-	//	Vector3f vMin = Vector3f(-1.0f, -1.0f, -1.0f);
-	//	Vector3f vMax = Vector3f(1.0f, 1.0f, 1.0f);
-	//
-	//	Matrix4 matViewProjInv = (m_Frustum.ProjectionMatrix() * m_ViewMatrix).GetInverseMatrix();
-	//
-	//	renderer->RenderBox(vMin, vMax, Color4f(1.0f, 1.0f, 1.0f), /*m_WorldTransform * */matViewProjInv);
-	//	renderer->RenderLine(nearPointWorld, farPointWorld);
-	//}
+	
+	void Camera::DebugRender()
+	{
+		// 使用最小和最大角坐标确定一个立方体
+		Vector3f vMin = Vector3f(-1.0f, -1.0f, -1.0f);
+		Vector3f vMax = Vector3f(1.0f, 1.0f, 1.0f);
+	
+		Matrix4 matViewProjInv = (m_Frustum.ProjectionMatrix() * m_ViewMatrix).GetInverseMatrix();
+	
+		// 渲染摄像机的视截体
+		Renderer::Instance().RenderBox(vMin, vMax, Color4f(1.0f, 1.0f, 1.0f), /*m_WorldTransform * */matViewProjInv);
+		//Renderer::Instance().RenderLine(nearPointWorld, farPointWorld);
+
+		SceneObject::DebugRender();
+	}
 
 	//-----------------------------------------------------------------------------------
 	/// \brief
@@ -248,11 +250,11 @@ namespace Gen
 
 		//m_Frustum.BuildOrthographicProjMatrix(-m_Aspect/2, m_Aspect/2, -0.5f, 0.5f, m_NearClippingDistance, m_FarClippingDistance);
 
-		//renderer->ProjectionMatrix() = m_Frustum.ProjectionMatrix();
+		//Renderer::Instance().ProjectionMatrix() = m_Frustum.ProjectionMatrix();
 
 		m_Frustum.BuildFrustumPlanes(m_Frustum.ProjectionMatrix(), m_ViewMatrix/* * m_WorldTransform*/);
 
-		//renderer->NotifyUpdateProjectionMatrix();
+		//Renderer::Instance().NotifyUpdateProjectionMatrix();
 
 	}
 }

@@ -4,7 +4,8 @@ GameSkeletal::GameSkeletal()
  : m_Scene(NULL),
    m_Camera(NULL),
    m_Sky(NULL),
-   m_UIFps(NULL)
+   m_UIFps(NULL),
+   m_DebugRender(false)
 {
 }
 
@@ -12,22 +13,55 @@ GameSkeletal::~GameSkeletal()
 {
 }
 
-static Skeletal skel;
-
 void GameSkeletal::StartGame()
 {
 	m_Scene = new SceneGraph;
-	renderer->SetAmbientColor(Color4f(1.f, 1.f, 1.f));
+	Renderer::Instance().SetAmbientColor(Color4f(1.f, 1.f, 1.f));
 
-	renderer->SetClearColor(Color4f(0.0f, 0.5f, 0.5f));
+	//Renderer::Instance().SetClearColor(Color4f(0.0f, 0.5f, 0.5f));
 
 	m_Camera = FACTORY_CREATE(m_Scene, Camera);
 	m_Camera->SetFarClippingDistance(1000.0f);
 
+	// 创建天空盒
 	m_Sky = FACTORY_CREATE(m_Scene, DistantViewObject);
 	m_Sky->SetMesh(MeshManager::Instance().GetByName("skybox.EMD"));
 
-	skel.LoadFromFile("E:/testout.txt");
+	// 创建主光源(阳光)
+	Light* light = FACTORY_CREATE(m_Scene, Light);
+	light->SetLightType(LIGHT_TYPE_DIRECTIONAL);
+	light->SetDirection(Vector3f(0.787f, 0.38f, 0.486f));
+	LightingManager::Instance().AddGlobalLight(light);
+
+	// 创建辅助背光源
+	Light* light2 = FACTORY_CREATE(m_Scene, Light);
+	light2->SetLightType(LIGHT_TYPE_DIRECTIONAL);
+	light2->SetDirection(Vector3f(-0.787f, -0.38f, -0.486f));
+	light2->SetDiffuseColor(Color4f(0.2f, 0.2f, 0.2f));
+	LightingManager::Instance().AddGlobalLight(light2);
+
+	// 创建白色受光材质
+	Material* white = MaterialManager::Instance().Create("white");
+
+	// 创建骨骼动画对象
+	m_SkelMesh1 = FACTORY_CREATE(m_Scene, SkeletalMeshObject);
+	BaseMesh* mesh = MeshManager::Instance().GetByName("Hammer.emd");
+	Skeleton* skel = SkeletonManager::Instance().GetByName("Hammer");
+	m_SkelMesh1->SetMesh(mesh);
+	m_SkelMesh1->SetSkeleton(skel);
+	m_SkelMesh1->PlayAnimation("default");
+	m_SkelMesh1->SetMaterial(white, 0);
+	m_SkelMesh1->CreateLightableObject();
+	m_SkelMesh1->SetPosition(Vector3f(-25.0f, 0.0f, -30.0f));
+
+	m_SkelMesh2 = FACTORY_CREATE(m_Scene, SkeletalMeshObject);
+	m_SkelMesh2->SetMesh(mesh);
+	m_SkelMesh2->SetSkeleton(skel);
+	m_SkelMesh2->PlayAnimation("default");
+	m_SkelMesh2->SetAnimationTime(5.0f);
+	m_SkelMesh2->SetMaterial(white, 0);
+	m_SkelMesh2->CreateLightableObject();
+	m_SkelMesh2->SetPosition(Vector3f(25.0f, 0.0f, -30.0f));
 
 	m_UIFps = EGUIManager::Instance().CreateTextUIControl();
 }
@@ -42,7 +76,8 @@ void GameSkeletal::OnKeyPressed(unsigned int key)
 	switch(key)
 	{
 	case KC_P:
-		Engine::Instance().ToggleDebugRender(!Engine::Instance().GetDebugRender());
+		m_DebugRender = !m_DebugRender;
+		return;
 	}
 }
 
@@ -60,7 +95,7 @@ void GameSkeletal::OnResizeWindow(unsigned int width, unsigned int height)
 		m_Camera->SetAspect(aspect);
 		
 		// ...以及投影矩阵
-		renderer->ProjectionMatrix() = m_Camera->GetProjMatrix();
+		Renderer::Instance().SetProjectionMatrix(m_Camera->GetProjMatrix());
 	}
 
 }
@@ -116,18 +151,12 @@ void GameSkeletal::Update(unsigned long deltaTime)
 	float y = -(float)Input::Instance().GetJoyStickAbs(0) / 0x7FFF * 0.1f * deltaTime;
 	m_Camera->RotateLocal(x, y);
 
-	static unsigned long timeToAdvance = 0;
-	timeToAdvance += deltaTime;
-	if (timeToAdvance > 33)
-	{
-		frame++;
-		frame %= 100;
+	static float angle = 0.0f;
+	angle += 0.001f * deltaTime;
 
-		timeToAdvance = 0;
-
-		skel.Update(frame);
-	}
-
+	Quaternion quat;
+	quat.CreateFromLocalAxisAngle(Vector3f(0.0f, 1.0f, 0.0f), angle);
+	m_SkelMesh1->SetRotation(quat);
 
 	// ******************************************* 更新 *******************************************
 	m_Scene->UpdateScene(deltaTime);
@@ -139,9 +168,6 @@ void GameSkeletal::Update(unsigned long deltaTime)
 
 	sprintf(buf, "FPS: %d", fps);
 	m_UIFps->SetText(buf);
-
-	// 更新光照
-	LightingManager::Instance().Update();
 }
 
 void GameSkeletal::RenderScene()
@@ -155,13 +181,5 @@ void GameSkeletal::RenderScene()
 
 	// 设定渲染视点
 	m_Scene->SetupRenderView(rv);
-	m_Scene->RenderScene();
-
-	renderer->BeginRender();
-	for (vector<Bone*>::iterator iter=skel.m_Bones[frame].begin(); iter!=skel.m_Bones[frame].end(); iter++)
-	{
-		if ((*iter)->m_Parent)
-			renderer->RenderLine((*iter)->m_RootTransform.GetPosition(), (*iter)->m_Parent->m_RootTransform.GetPosition());
-	}
-	renderer->EndRender();
+	m_Scene->RenderScene(m_DebugRender);
 }

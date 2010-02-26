@@ -9,6 +9,7 @@
 #include "LightingManager.h"
 #include "LightableObject.h"
 #include "Engine.h"
+#include "Renderer.h"
 
 namespace Gen
 {
@@ -39,11 +40,11 @@ namespace Gen
 		else	// 否则关闭所有光照状态
 		{
 			// Disable all lights
-			int maxLightNum = renderer->GetMaxLightsNumber();
+			int maxLightNum = Renderer::Instance().GetMaxLightCount();
 
 			for (int i=0; i<maxLightNum; i++)
 			{
-				renderer->SetupLight(i, NULL);
+				Renderer::Instance().SetupLight(i, NULL);
 			}
 		}
 	}

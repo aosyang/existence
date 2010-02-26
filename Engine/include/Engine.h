@@ -9,7 +9,7 @@
 #define _ENGINE_H
 
 #include "Singleton.h"
-#include "IRenderer.h"
+#include "IRenderDevice.h"
 #include "IAudioSystem.h"
 #include "Platform.h"
 #include "IGame.h"
@@ -25,10 +25,6 @@ using namespace std;
 
 namespace Gen
 {
-	// 渲染器宏定义
-	#define renderer Engine::Instance().Renderer()
-
-
 	struct ConfigFileLine
 	{
 		String key;
@@ -68,21 +64,7 @@ namespace Gen
 
 		unsigned int GetFPS() const { return m_FPS; }
 
-		void ToggleDebugRender(bool debugRender) { m_DebugRender = debugRender; }
-		bool GetDebugRender() const { return m_DebugRender; }
-
 		//void LoadTextures();
-
-		//-----------------------------------------------------------------------------------
-		/// \brief
-		/// 获得渲染器接口
-		///
-		/// \returns
-		/// 引擎所使用的渲染器接口
-		///
-		/// 用户通过这个接口可以直接操作渲染器
-		//-----------------------------------------------------------------------------------
-		inline IRenderer* Renderer() { return m_Renderer; }
 
 		//-----------------------------------------------------------------------------------
 		/// \brief
@@ -109,7 +91,6 @@ namespace Gen
 	private:
 		Engine();
 
-		IRenderer*		m_Renderer;
 		IAudioSystem*	m_AudioSystem;
 
 		unsigned int	m_RenderBatchCount;
@@ -118,8 +99,6 @@ namespace Gen
 
 		IGame*			m_Game;
 		bool			m_Quit;
-
-		bool			m_DebugRender;
 
 		// FPS相关
 		unsigned int	m_FPS;

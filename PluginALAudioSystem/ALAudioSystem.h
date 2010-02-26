@@ -39,23 +39,15 @@ namespace Gen
 		bool Initialize();
 		void Shutdown();
 
-		bool LoadAudioBufferFromFile(const String& bufferName, const String& filename);
-
-		IAudioBuffer* GetAudioBuffer(const String& bufferName);
+		IDeviceAudioBuffer* LoadAudioBufferFromFile(const String& filename);
 
 		void SetListenerTransform(const Matrix4& transform, const Vector3f& velocity);
 
-		IAudioSource* CreateSourceInstance(IAudioBuffer* buffer, const Vector3f& position, bool autoRemove);
+		IAudioSource* CreateAudioSource();
 
-		void RemoveSource(IAudioSource* source);
+		//IAudioSource* CreateSourceInstance(IAudioBuffer* buffer, const Vector3f& position, bool autoRemove);
 
-		void Update();
 	private:
-		typedef map<const String, ALAudioBuffer*>	ALAudioBufferList;
-		ALAudioBufferList							m_Buffers;
-
-		typedef set<ALAudioSource*>				ALAudioSourceList;
-		ALAudioSourceList						m_Sources;
 
 		typedef IAudioFileFormat* (*CreateFileFormatFunc)(const String& filename);
 		map<const String, CreateFileFormatFunc>			m_FileFormatCreator;

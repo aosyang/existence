@@ -3,7 +3,7 @@
 extern Color4f BLOCK_COLOR[MAX_SHAPE_TYPE_NUM];
 
 Material*		Block::m_sBlockMaterial[MAX_SHAPE_TYPE_NUM + 1];
-ITexture*		Block::m_sBlockTexture;
+BaseTexture*	Block::m_sBlockTexture;
 PrimitiveMesh*	Block::m_sBlockMesh;
 bool			Block::m_sDataInitialized = false;
 
@@ -57,12 +57,12 @@ void Block::InitializeData()
 	// 指定方块材质
 
 	//Block::m_sBlockTexture = TextureManager::Instance().GetTexture("block_surface");
-	Block::m_sBlockTexture = renderer->GetTexture("blank.bmp");
+	Block::m_sBlockTexture = TextureManager::Instance().GetByName("blank.bmp");
 
 	// 生成不同形状用的材质
 	for (int i=0; i<MAX_SHAPE_TYPE_NUM + 1; i++)
 	{
-		Block::m_sBlockMaterial[i] = ResourceManager<Material>::Instance().Create();
+		Block::m_sBlockMaterial[i] = MaterialManager::Instance().Create();
 		Block::m_sBlockMaterial[i]->SetTexture(Block::m_sBlockTexture);
 
 		if (i<MAX_SHAPE_TYPE_NUM)

@@ -14,6 +14,11 @@
 #include "FileSystem.h"
 #include "EString.h"
 #include "MeshManager.h"
+#include "TextureManager.h"
+#include "Font.h"
+#include "SkeletonManager.h"
+#include "Renderer.h"
+#include "AudioManager.h"
 
 #include <algorithm>
 #include <fstream>
@@ -26,57 +31,6 @@ namespace Gen
 	using namespace X11;
 	Display*	g_Display = 0;		// 给Platform使用的X11 Display
 #endif	// #if defined __PLATFORM_LINUX
-
-	// 纹理载入函数
-	bool LoadTextures(const String& resName, const String& filename)
-	{
-		Image* image = new Image();
-
-		String msg;
-		bool result = image->LoadFromFile(filename);
-		if (result)
-		{
-			renderer->BuildTexture(resName,
-				image->GetWidth(),
-				image->GetHeight(),
-				image->GetBPP(),
-				image->GetData());
-
-		}
-
-		delete image;
-		return result;
-
-		return true;
-	}
-
-	// 材质载入函数
-	bool LoadMaterial(const String& resName, const String& filename)
-	{
-		// 去掉扩展名
-		size_t pos = resName.Find(".");
-		String actureResName = resName.Substr(0, pos);
-		if (ResourceManager<Material>::Instance().LoadResource(actureResName, filename))
-			return true;
-		return false;
-	}
-
-	bool LoadFont(const String& resName, const String& filename)
-	{
-		// 去掉扩展名
-		size_t pos = resName.Find(".");
-		String actureResName = resName.Substr(0, pos);
-		if (FontManager::Instance().LoadFont(actureResName, filename))
-			return true;
-		return false;
-	}
-
-	bool LoadAudio(const String& resName, const String& filename)
-	{
-		if (Engine::Instance().AudioSystem()->LoadAudioBufferFromFile(resName, filename))
-			return true;
-		return false;
-	}
 
 	System::System()
 		: m_FullScreen(false)
@@ -91,36 +45,32 @@ namespace Gen
 		// TODO: 注册各个扩展名读取函数
 
 		// 图像文件
-		RegisterExtensionLoader(".bmp", &LoadTextures);
-		RegisterExtensionLoader(".tga", &LoadTextures);
-		RegisterExtensionLoader(".jpg", &LoadTextures);
-		RegisterExtensionLoader(".png", &LoadTextures);
+		RegisterExtensionManager(".bmp", &TextureManager::Instance());
+		RegisterExtensionManager(".tga", &TextureManager::Instance());
+		RegisterExtensionManager(".jpg", &TextureManager::Instance());
+		RegisterExtensionManager(".png", &TextureManager::Instance());
+
+		// 立方体材质
+		RegisterExtensionManager(".ect", &TextureManager::Instance());
 		// To be more...
 
 		// 材质
-		RegisterExtensionLoader(".emt", &LoadMaterial);
+		RegisterExtensionManager(".emt", &MaterialManager::Instance());
 
 		// 字体
-		RegisterExtensionLoader(".ttf", &LoadFont);
-		RegisterExtensionLoader(".ttc", &LoadFont);
+		RegisterExtensionManager(".ttf", &FontManager::Instance());
+		RegisterExtensionManager(".ttc", &FontManager::Instance());
 
 		// 模型
-		// this hacks: 将两次注册减少为一次
-		// 注：目前如果在MeshManager中调用System进行扩展名注册会造成System的构造函数被循环引用的错误
-		RegisterExtensionLoader(".emd", &LoadMeshes);
-		MeshManager::Instance().RegisterExtensionLoader(".emd", &EmdMesh::ManagerLoad);
-		RegisterExtensionLoader(".ms3d", &LoadMeshes);
-		MeshManager::Instance().RegisterExtensionLoader(".ms3d", &Ms3dMesh::ManagerLoad);
+		RegisterExtensionManager(".emd", &MeshManager::Instance());
+		RegisterExtensionManager(".ms3d", &MeshManager::Instance());
 
 		// 音频
-		RegisterExtensionLoader(".wav", &LoadAudio);
-		RegisterExtensionLoader(".ogg", &LoadAudio);
+		RegisterExtensionManager(".wav", &AudioManager::Instance());
+		RegisterExtensionManager(".ogg", &AudioManager::Instance());
 
-	}
-
-	bool ResourceComparer(const ResourceFileNameInfo& lhs, const ResourceFileNameInfo& rhs)
-	{
-		return lhs.period < rhs.period;
+		// 骨骼
+		RegisterExtensionManager(".ebh", &SkeletonManager::Instance());
 	}
 
 	void System::LoadResources(const String& filename)
@@ -150,35 +100,31 @@ namespace Gen
 		String dataPath = FileSystem::Instance().GetValidResourcePath(FileSystem::Instance().GetDataPath());
 		FileSystem::Instance().FindFilesInDir(dataPath, list, true);
 
-		sort(list.begin(), list.end(), ResourceComparer);
-
 		// 根据扩展名，使用对应的读取函数载入资源
 		for (vector<ResourceFileNameInfo>::iterator iter=list.begin();
 			iter!=list.end();
 			iter++)
 		{
-			// 如果已经注册过这个扩展名，调用注册函数进行载入
-			if (m_FileLoaders.find(iter->ext)!=m_FileLoaders.end())
+			// 如果已经注册过这个扩展名，调用对应方法载入资源
+			if (m_ExtManagers.find(iter->ext)!=m_ExtManagers.end())
 			{
 				String msg;
-				String pathName = iter->path + CORRECT_SLASH + iter->filename;
+				msg.Format("Loading resource %s.", iter->filename.Data());
+				Log.MsgLn(msg);
 
 				// 对于文件的载入，使用文件基于$data路径的相对路径作为资源访问名称
 				// 例：
 				//    $data\texture\glow.bmp
 				//    其访问名称应该为：texture\glow.bmp
 
-				msg.Format("Loading resource %s.", pathName.Data());
-				Log.MsgLn(msg);
-
-				if (!(*m_FileLoaders[iter->ext])(iter->filename, pathName))
+				if (!m_ExtManagers[iter->ext]->CreateResourceHandles(&(*iter)))
 				{
-					msg.Format("FAILED loading resource %s.", pathName.Data());
+					msg.Format("FAILED loading resource %s.", iter->filename.Data());
 					Log.Error(msg);
 				}
 			}
 		}
-
+/*
 		// 独立指定路径的资源都放在resources组当中
 		// 这个组中的文件需要指定完整的路径
 		ConfigGroups::iterator group_iter;
@@ -212,6 +158,7 @@ namespace Gen
 				}
 			}
 		}
+		*/
 	}
 
 	// 创建渲染窗体
@@ -259,55 +206,57 @@ namespace Gen
 		wc.lpszMenuName = NULL;
 		wc.lpszClassName = title.Data();
 
-		AssertFatal(RegisterClass(&wc), "System::CreateRenderWindow() : Failed to register window class.")
+		AssertFatal(RegisterClass(&wc), "System::CreateRenderWindow() : Failed to register window class.");
 
-			if (fullscreen)
-			{
-				DEVMODE dmScreenSettings;
-				memset (&dmScreenSettings, 0, sizeof(dmScreenSettings));
-				dmScreenSettings.dmSize = sizeof(dmScreenSettings);
-				dmScreenSettings.dmPelsWidth = width;
-				dmScreenSettings.dmPelsHeight = height;
-				dmScreenSettings.dmBitsPerPel = bits;
-				dmScreenSettings.dmFields = DM_BITSPERPEL | DM_PELSWIDTH |DM_PELSHEIGHT;
+		if (fullscreen)
+		{
+			DEVMODE dmScreenSettings;
+			memset (&dmScreenSettings, 0, sizeof(dmScreenSettings));
+			dmScreenSettings.dmSize = sizeof(dmScreenSettings);
+			dmScreenSettings.dmPelsWidth = width;
+			dmScreenSettings.dmPelsHeight = height;
+			dmScreenSettings.dmBitsPerPel = bits;
+			dmScreenSettings.dmFields = DM_BITSPERPEL | DM_PELSWIDTH |DM_PELSHEIGHT;
 
-				AssertFatal(ChangeDisplaySettings(&dmScreenSettings, CDS_FULLSCREEN)==DISP_CHANGE_SUCCESSFUL,
-					"System::CreateRenderWindow() : Unable to use selected display mode.");
-			}
+			AssertFatal(ChangeDisplaySettings(&dmScreenSettings, CDS_FULLSCREEN)==DISP_CHANGE_SUCCESSFUL,
+				"System::CreateRenderWindow() : Unable to use selected display mode.");
+		}
 
-			if (fullscreen)
-			{
-				dwExStyle = WS_EX_APPWINDOW;
-				dwStyle = WS_POPUP;
-				ShowCursor(false);
-			}
-			else
-			{
-				dwExStyle = WS_EX_APPWINDOW | WS_EX_WINDOWEDGE;
-				dwStyle = WS_OVERLAPPEDWINDOW;
-			}
+		if (fullscreen)
+		{
+			dwExStyle = WS_EX_APPWINDOW;
+			dwStyle = WS_POPUP;
+			ShowCursor(false);
+		}
+		else
+		{
+			dwExStyle = WS_EX_APPWINDOW | WS_EX_WINDOWEDGE;
+			dwStyle = WS_OVERLAPPEDWINDOW;
+		}
 
-			AdjustWindowRectEx (&WindowRect, dwStyle, false, dwExStyle);
+		AdjustWindowRectEx (&WindowRect, dwStyle, false, dwExStyle);
 
-			m_RenderWindowParam.handle = CreateWindowEx(	dwExStyle,
-				title.Data(), 
-				title.Data(), 
-				dwStyle |
-				WS_CLIPSIBLINGS |					
-				WS_CLIPCHILDREN, 
-				(GetSystemMetrics(SM_CXSCREEN) - WindowRect.right) / 2,
-				(GetSystemMetrics(SM_CYSCREEN) - WindowRect.bottom) / 2,
-				WindowRect.right - WindowRect.left, 
-				WindowRect.bottom - WindowRect.top, 
-				NULL, 
-				NULL, 
-				hInstance, 
-				NULL);
-			AssertFatal(m_RenderWindowParam.handle, "System::CreateRenderWindow(): Error creating render window.");
+		m_RenderWindowParam.handle =
+			CreateWindowEx(	dwExStyle,
+							title.Data(),
+							title.Data(),
+							dwStyle |
+							WS_CLIPSIBLINGS |
+							WS_CLIPCHILDREN,
+							(GetSystemMetrics(SM_CXSCREEN) - WindowRect.right) / 2,
+							(GetSystemMetrics(SM_CYSCREEN) - WindowRect.bottom) / 2,
+							WindowRect.right - WindowRect.left,
+							WindowRect.bottom - WindowRect.top,
+							NULL,
+							NULL,
+							hInstance,
+							NULL);
 
-			ShowWindow(m_RenderWindowParam.handle,SW_SHOW);						// Show The Window
-			SetForegroundWindow(m_RenderWindowParam.handle);						// Slightly Higher Priority
-			SetFocus(m_RenderWindowParam.handle);									// Sets Keyboard Focus To The Window
+		AssertFatal(m_RenderWindowParam.handle, "System::CreateRenderWindow(): Error creating render window.");
+
+		ShowWindow(m_RenderWindowParam.handle,SW_SHOW);						// Show The Window
+		SetForegroundWindow(m_RenderWindowParam.handle);						// Slightly Higher Priority
+		SetFocus(m_RenderWindowParam.handle);									// Sets Keyboard Focus To The Window
 
 #elif defined __PLATFORM_LINUX
 		// 建立与X Server的连接，获取Display
@@ -423,7 +372,7 @@ namespace Gen
 	void System::CenterMouseCursor()
 	{
 #if defined __PLATFORM_WIN32
-		if (renderer->GetActive())
+		if (Renderer::Instance().GetActive())
 		{
 
 			RECT rect;
@@ -437,12 +386,12 @@ namespace Gen
 #endif	// #if defined __PLATFORM_WIN32
 	}
 
-	void System::RegisterExtensionLoader(const String& ext, FileLoadFuncPtr func)
+	void System::RegisterExtensionManager(const String& ext, ResourceManagerBase* manager)
 	{
-		// 防止同名扩展名重复注册
-		AssertFatal(m_FileLoaders.find(ext)==m_FileLoaders.end(),
-			"System::RegisterExtensionLoader(): Extension has been already registered.");
-		AssertFatal(func, "System::RegisterExtensionLoader(): Loader function cannot be null.");
-		m_FileLoaders[ext] = func;
+		AssertFatal(m_ExtManagers.find(ext)==m_ExtManagers.end(),
+			"System::RegisterExtensionManager(): Extension has been already registered.");
+		AssertFatal(manager, "System::RegisterExtensionManager(): Manager cannot be null.");
+		m_ExtManagers[ext] = manager;
 	}
+
 }

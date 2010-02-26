@@ -30,7 +30,7 @@ GameGrid::~GameGrid()
 
 void GameGrid::StartGame()
 {
-	//renderer->SetClearColor(Color4f(0.5f, 1.0f, 1.0f));
+	//Renderer::Instance().SetClearColor(Color4f(0.5f, 1.0f, 1.0f));
 	m_Scene = new SceneGraph;
 
 	// 创建摄像机
@@ -38,7 +38,7 @@ void GameGrid::StartGame()
 	m_Camera->SetPosition(Vector3f(1.0f, 0.0f, 5.0f));
 	m_Camera->SetFarClippingDistance(2000.0f);
 
-	renderer->SetAmbientColor(Color4f(0.7f, 0.7f, 0.7f));
+	Renderer::Instance().SetAmbientColor(Color4f(0.7f, 0.7f, 0.7f));
 
 	// 设置默认的全局方向光
 	m_Sun = FACTORY_CREATE(m_Scene, Light);
@@ -59,22 +59,27 @@ void GameGrid::StartGame()
 	m_MeshBox = MeshManager::Instance().CreatePrimitiveMesh();
 	m_MeshBox->CreateBox(1.0f);
 
-	m_BoxMaterial = ResourceManager<Material>::Instance().Create();
-	m_BoxMaterial->SetTexture(renderer->GetTexture("grid_tex.bmp"));
+	m_BoxMaterial = MaterialManager::Instance().Create();
+	BaseTexture* gridTex = TextureManager::Instance().GetByName("grid_tex.bmp");
+	m_BoxMaterial->SetTexture(gridTex);
 	//m_BoxMaterial->SetDepthWriting(false);
 	//m_BoxMaterial->SetDepthTest(false);
 	//m_BoxMaterial->SetEmissive(Color4f(0.6f, 0.6f, 0.6f));
 
-	IMesh* marker = MeshManager::Instance().GetByName("marker.EMD");
+	BaseMesh* marker = MeshManager::Instance().GetByName("marker.EMD");
+	// BaseMesh* marker = MeshManager::Instance().GetByName("Hammer.emd");
+
+	// Skeleton* skel = SkeletonManager::Instance().GetByName("Hammer");
+	// skel->Trigger();
 	
-	Material* matMarkerStart = ResourceManager<Material>::Instance().Create();
+	Material* matMarkerStart = MaterialManager::Instance().Create();
 	matMarkerStart->SetDiffuse(Color4f(0.0f, 1.0f, 0.0f));
 	matMarkerStart->SetEmissive(Color4f(0.0f, 0.5f, 0.0f));
-	matMarkerStart->SetTexture(renderer->GetTexture("blank.bmp"));
-	Material* matMarkerGoal = ResourceManager<Material>::Instance().Create();
+	matMarkerStart->SetTexture(TextureManager::Instance().GetByName("blank.bmp"));
+	Material* matMarkerGoal = MaterialManager::Instance().Create();
 	matMarkerGoal->SetDiffuse(Color4f(1.0f, 0.0f, 0.0f));
 	matMarkerGoal->SetEmissive(Color4f(0.5f, 0.0f, 0.0f));
-	matMarkerGoal->SetTexture(renderer->GetTexture("blank.bmp"));
+	matMarkerGoal->SetTexture(TextureManager::Instance().GetByName("blank.bmp"));
 
 	m_MarkerStart = FACTORY_CREATE(m_Scene, MeshObject);
 	m_MarkerStart->SetMesh(marker);
@@ -183,6 +188,12 @@ void GameGrid::OnKeyPressed(unsigned int key)
 		m_TimeToRun = 0;
 		PathFinding(m_Start, m_Goal);
 		break;
+	case KC_H:
+		SkeletonManager::Instance().DumpToLog();
+		MeshManager::Instance().DumpToLog();
+		TextureManager::Instance().DumpToLog();
+		MaterialManager::Instance().DumpToLog();
+		FontManager::Instance().DumpToLog();
 	default:
 		break;
 	}
@@ -198,7 +209,7 @@ void GameGrid::OnResizeWindow(unsigned int width, unsigned int height)
 	if (m_Camera)
 	{
 		m_Camera->SetAspect(aspect);
-		renderer->ProjectionMatrix() = m_Camera->GetProjMatrix();
+		Renderer::Instance().SetProjectionMatrix(m_Camera->GetProjMatrix());
 	}
 
 }
@@ -361,8 +372,8 @@ void GameGrid::RenderScene()
 	rv.frustum = m_Camera->GetFrustum();
 
 	// 全屏渲染
-	renderer->SetViewport(0, 0, 0, 0);
-	//renderer->SetViewport(160, 120, 320, 240);
+	Renderer::Instance().SetViewport(0, 0, 0, 0);
+	//Renderer::Instance().SetViewport(160, 120, 320, 240);
 
 	// 设定渲染视点
 	m_Scene->SetupRenderView(rv);
@@ -601,7 +612,7 @@ void GameGrid::PathFinding(const Point3& start, const Point3& end)
 		}
 
 		m_CloseList.insert(grid);
-		for (int i=0; i<grid->neighbourCount; i++)
+		for (unsigned int i=0; i<grid->neighbourCount; i++)
 		{
 			Point3& npos = grid->neighbourPos[i];
 

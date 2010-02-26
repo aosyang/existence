@@ -9,11 +9,14 @@
 #include "MeshObject.h"
 #include "Engine.h"
 #include "MeshManager.h"
+#include "MeshElement.h"
+#include "Renderer.h"
 
 namespace Gen
 {
 	MeshObject::MeshObject(SceneGraph* scene)
-	: RenderableObjectBase(scene),
+	: m_Mesh(NULL),
+	  RenderableObjectBase(scene),
 	  m_SubMeshCount(0),
 	  m_Materials(NULL)
 	  //m_FrustumCulling(true)
@@ -29,7 +32,7 @@ namespace Gen
 	{
 		if (!RenderableObjectBase::OnSave(node)) return false;
 
-		node->SaveAttribute("MeshName", m_Mesh->GetName());
+		node->SaveAttribute("MeshName", m_Mesh->GetResourceName());
 		return true;
 	}
 
@@ -52,17 +55,19 @@ namespace Gen
 			for (int i=0; i<m_Mesh->GetElementCount(); i++)
 			{
 				MeshElement* elem = m_Mesh->GetElement(i);
-				renderer->RenderVertexBuffer(elem->GetVertexBuffer(),
-					m_Materials[i],
-					m_WorldTransform);
+				Renderer::Instance().SetupMaterial(m_Materials[i]);
+				Renderer::Instance().RenderPrimitives(m_Mesh->GetVertexBuffer(),
+													  elem->GetIndexBuffer(),
+													  m_WorldTransform);
 			}
 		}
 	}
 
-	void MeshObject::SetMesh(IMesh* mesh)
+	void MeshObject::SetMesh(BaseMesh* mesh)
 	{
 		AssertFatal(mesh, "MeshObject::SetMesh() : Mesh cannot be null!");
 		m_Mesh = mesh;
+		mesh->Trigger();
 
 		SAFE_DELETE_ARRAY(m_Materials);
 
@@ -74,13 +79,24 @@ namespace Gen
 		m_Materials = new MaterialPtr[m_SubMeshCount];
 
 		for (int i=0; i<m_SubMeshCount; i++)
+		{
 			m_Materials[i] = m_Mesh->GetMaterial(i);
+			if (m_Materials[i])
+				m_Materials[i]->Trigger();
+		}
 
 		// 根据mesh的包围球半径更新对象包围球半径
 		m_BoundingSphereRadius = m_Mesh->GetBoundingRadius();
 
 		m_OBB.Reset();
 		m_OBB.Expand(m_Mesh->GetOBB());
+	}
+
+	void MeshObject::SetMaterial(Material* mat, int index)
+	{
+		m_Materials[index] = mat;
+		if (mat)
+			mat->Trigger();
 	}
 
 	//-----------------------------------------------------------------------------------

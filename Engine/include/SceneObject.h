@@ -96,6 +96,9 @@ namespace Gen
 
 		// ----- SceneObject methods
 
+		// debugäÖÈ¾
+		virtual void DebugRender();
+
 		// Åö×²¼ì²â
 
 		// AABBÅö×²²éÑ¯

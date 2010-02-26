@@ -45,9 +45,9 @@ void GameFps::StartGame()
 
 	m_Scene = new SceneGraph;
 	//m_Scene->SetAmbientColor(Color4f(0.7f, 0.7f, 0.7f));
-	renderer->SetAmbientColor(Color4f(1.f, 1.f, 1.f));
+	Renderer::Instance().SetAmbientColor(Color4f(1.f, 1.f, 1.f));
 
-	renderer->SetClearColor(Color4f(0.0f, 0.5f, 0.5f));
+	Renderer::Instance().SetClearColor(Color4f(0.0f, 0.5f, 0.5f));
 
 	m_Camera = FACTORY_CREATE(m_Scene, Camera);
 	m_Camera->SetFarClippingDistance(1000.0f);
@@ -68,7 +68,7 @@ void GameFps::StartGame()
 
 	m_UIControl = EGUIManager::Instance().CreateImageUIControl();
 
-	ITexture* no_mat = renderer->GetTexture("Brick.jpg");
+	BaseTexture* no_mat = TextureManager::Instance().GetByName("Brick.jpg");
 	unsigned char color[32 * 32 * 3] = { 0x0 };
 
 	for (int i=0; i<32*32; i++)
@@ -78,53 +78,46 @@ void GameFps::StartGame()
 		color[i*3+2] = 0xff;// * i / (32 * 32);
 	}
 
-	no_mat->ModifyRectData(32, 32, 32, 32, &color);
+	no_mat->Trigger();
+	IDeviceTexture* devTex = no_mat->GetDeviceTexture();
+	if (devTex->GetType()==TEXTURE_TYPE_2D)
+	{
+		static_cast<DeviceTexture2D*>(devTex)->ModifyRectData(32, 32, 32, 32, &color);
+	}
 	//unsigned int bpp = no_mat->GetBpp();
 
-	IMesh* bspScene = MeshManager::Instance().GetByName("scene.EMD");
+	BaseMesh* bspScene = MeshManager::Instance().GetByName("scene.EMD");
 
 	//BuildBspTreeFromMesh(&bsp, bspScene);
 
-	m_ViewGun = FACTORY_CREATE(m_Scene, MeshObject);
-	m_ViewGun->SetMesh(MeshManager::Instance().GetByName("mp5.EMD"));
-	m_ViewGun->CreateLightableObject();
-
-	Material* matFlare = ResourceManager<Material>::Instance().GetByName("flare");
+	Material* matFlare = MaterialManager::Instance().GetByName("flare");
 	//if (matFlare)
 	//{
-	//	matFlare->SetTexture(renderer->GetTexture("flare"));
+	//	matFlare->SetTexture(Renderer::Instance().GetTexture("flare"));
 	//	matFlare->GetTextureRenderState()->srcBlendFactor = BLEND_FACTOR_ONE;
 	//	matFlare->GetTextureRenderState()->dstBlendFactor = BLEND_FACTOR_ONE;
 	//	matFlare->SetDepthWriting(false);
 	//}
 	//matFlare->SaveToFile("flare.emt");
 
-	Image cubeMap[6];
-	cubeMap[0].LoadFromFile("../../../data/sky/snowlake_bk.tga");
-	cubeMap[1].LoadFromFile("../../../data/sky/snowlake_ft.tga");
-	cubeMap[2].LoadFromFile("../../../data/sky/snowlake_up.tga");
-	cubeMap[3].LoadFromFile("../../../data/sky/snowlake_dn.tga");
-	cubeMap[4].LoadFromFile("../../../data/sky/snowlake_rt.tga");
-	cubeMap[5].LoadFromFile("../../../data/sky/snowlake_lf.tga");
-	unsigned char* data[6];
-	for (int i=0; i<6; i++)
-		data[i] = cubeMap[i].GetData();
-	renderer->BuildCubeTexture("cubeMap", cubeMap[0].GetWidth(), cubeMap[0].GetHeight(), cubeMap[0].GetBPP(), data);
-
-	Material* matShell = ResourceManager<Material>::Instance().Create("goldshell");
+	Material* matShell = MaterialManager::Instance().Create("goldshell");
 	if (matShell)
 	{
-		matShell->SetTexture(renderer->GetTexture("goldshell"));
+		matShell->SetTexture(TextureManager::Instance().GetByName("rifle_goldshell.bmp"));
 		matShell->SetTextureLayerEnabled(1, true);
-		matShell->GetTextureRenderState(1)->texture = renderer->GetTexture("env_sphere");
+		matShell->GetTextureRenderState(1)->texture = TextureManager::Instance().GetByName("spheremap.png")->GetDeviceTexture();
 		matShell->GetTextureRenderState(1)->envMode = ENV_MODE_ADD;
 		matShell->GetTextureRenderState(1)->genMode = GEN_MODE_SPHERE;
 
 		//matShell->SaveToFile("goldshell.emt", true);
 	}
 
-	Material* matCubeSky = ResourceManager<Material>::Instance().Create("cube_sky");
-	matCubeSky->GetTextureRenderState(0)->texture = renderer->GetTexture("cubeMap");
+	Material* matCubeSky = MaterialManager::Instance().Create("cube_sky");
+	BaseTexture* tex = TextureManager::Instance().GetByName("cubeMap");
+	if (tex)
+	{
+		matCubeSky->GetTextureRenderState(0)->texture = tex->GetDeviceTexture();
+	}
 	matCubeSky->GetTextureRenderState(0)->envMode = ENV_MODE_MODULATE;
 	matCubeSky->GetTextureRenderState(0)->genMode = GEN_MODE_CUBE_MAP;
 
@@ -143,31 +136,33 @@ void GameFps::StartGame()
 	//m_Sky->SetOffsetScale(Vector3f(0.1f, 0.1f, 0.1f));
 	//m_Sky->SetOffsetScale(Vector3f(1.f, 1.f, 1.f));
 
-	String matName[] = { "lowerrec", "buttstock", "handle", "barrel", "clip", "forearm", "rearsight" };
+	String matName[] = { "mp5\\lowerrec.bmp",
+						 "mp5\\buttstock.bmp",
+						 "mp5\\handle.bmp",
+						 "mp5\\barrel.bmp",
+						 "mp5\\clip.bmp",
+						 "mp5\\forearm.bmp",
+						 "mp5\\rearsight.bmp" };
 	for (int i=0; i<7; i++)
 	{
-		Material* gunMat = ResourceManager<Material>::Instance().Create(matName[i]);
-		gunMat->SetTexture(renderer->GetTexture(matName[i]));
+		Material* gunMat = MaterialManager::Instance().Create(matName[i]);
+		gunMat->SetTexture(TextureManager::Instance().GetByName(matName[i]));
 		gunMat->SetTextureLayerEnabled(1, true);
-		gunMat->GetTextureRenderState(1)->texture = renderer->GetTexture("cubeMap");
+		gunMat->SetTexture(TextureManager::Instance().GetByName("sky\\sky.ect"), 1);
 		gunMat->GetTextureRenderState(1)->envMode = ENV_MODE_MODULATE;
 		gunMat->GetTextureRenderState(1)->genMode = GEN_MODE_CUBE_MAP;
 		//gunMat->SaveToFile(String(matName[i]) + ".emt");
 	}
 
-	Material* matSphere = ResourceManager<Material>::Instance().Create("metal_sphere");
-	//matSphere->SetTextureLayerEnabled(1, true);
-	//matSphere->GetTextureRenderState(0)->texture = renderer->GetTexture("no_material");
-	//matSphere->GetTextureRenderState(1)->texture = renderer->GetTexture("cubeMap");
-	//matSphere->GetTextureRenderState(1)->envMode = ENV_MODE_MODULATE;
-	//matSphere->GetTextureRenderState(1)->genMode = GEN_MODE_CUBE_MAP;
-	IGpuProgram* vprogram = renderer->LoadGpuProgram("./base_vp.cg", "main", GPU_VERTEX_PROGRAM);
-	IGpuProgram* fprogram = renderer->LoadGpuProgram("./base_fp.cg", "main", GPU_FRAGMENT_PROGRAM);
-	matSphere->SetVertexProgram(vprogram);
-	matSphere->SetFragmentProgram(fprogram);
-	//matSphere->SetTextureLayerEnabled(1, true);
-	//matSphere->GetTextureRenderState(0)->texture = renderer->GetTexture("no_material");
-	//matSphere->GetTextureRenderState(1)->texture = renderer->GetTexture("Brick");
+	m_ViewGun = FACTORY_CREATE(m_Scene, MeshObject);
+	m_ViewGun->SetMesh(MeshManager::Instance().GetByName("mp5.EMD"));
+	m_ViewGun->CreateLightableObject();
+
+	Material* matSphere = MaterialManager::Instance().Create("metal_sphere");
+	//IGpuProgram* vprogram = Renderer::Instance().LoadGpuProgram("./base_vp.cg", "main", GPU_VERTEX_PROGRAM);
+	//IGpuProgram* fprogram = Renderer::Instance().LoadGpuProgram("./base_fp.cg", "main", GPU_FRAGMENT_PROGRAM);
+	//matSphere->SetVertexProgram(vprogram);
+	//matSphere->SetFragmentProgram(fprogram);
 
 	MeshObject* sphere = FACTORY_CREATE(m_Scene, MeshObject);
 	sphere->SetMesh(MeshManager::Instance().GetByName("sphere.EMD"));
@@ -193,14 +188,14 @@ void GameFps::StartGame()
 	//LightingManager::Instance().AddLightableObject(&m_ViewGun);
 
 	// FIXME: 开枪时候纹理会闪烁
-	Material* matDecal = ResourceManager<Material>::Instance().Create("MatDecal");
+	Material* matDecal = MaterialManager::Instance().Create("MatDecal");
 	//matDecal->GetTextureRenderState()->srcBlendFactor = BLEND_FACTOR_ZERO;
 	//matDecal->GetTextureRenderState()->dstBlendFactor = BLEND_FACTOR_SRC_ALPHA_SATURATE;
 	matDecal->SetAlphaTest(true);
 	matDecal->SetDepthWriting(false);
 	//matDecal->SetDepthTest(false);
 	matDecal->SetAlphaRef(0.01f);
-	matDecal->SetTexture(renderer->GetTexture("bullethole"));
+	matDecal->SetTexture(TextureManager::Instance().GetByName("bullethole"));
 	//matDecal->SaveToFile("MatDecal.emt");
 
 	m_PlayerShadow = FACTORY_CREATE(m_Scene, Decal);
@@ -232,14 +227,14 @@ void GameFps::StartGame()
 #ifdef RENDER_TARGET_TEST
 	m_ScreenQuadScene = new SceneGraph;
 
-	g_RTT = renderer->BuildTexture("RTT", 640, 480, 32, NULL);
-	g_RenderTarget = renderer->CreateRenderTarget();
+	g_RTT = Renderer::Instance().BuildTexture("RTT", 640, 480, 32, NULL);
+	g_RenderTarget = Renderer::Instance().CreateRenderTarget();
 	g_RenderTarget->SetTexture(g_RTT);
 	g_RenderTarget->GenerateMipmap();
 
 	Material* matScreenQuad = ResourceManager<Material>::Instance().Create("screen quad");
-	IGpuProgram* quadvs = renderer->LoadGpuProgram("ScreenQuad.cg", "main", GPU_VERTEX_PROGRAM);
-	IGpuProgram* quadfs = renderer->LoadGpuProgram("ScreenQuadFP.cg", "main", GPU_FRAGMENT_PROGRAM);
+	IGpuProgram* quadvs = Renderer::Instance().LoadGpuProgram("ScreenQuad.cg", "main", GPU_VERTEX_PROGRAM);
+	IGpuProgram* quadfs = Renderer::Instance().LoadGpuProgram("ScreenQuadFP.cg", "main", GPU_FRAGMENT_PROGRAM);
 	matScreenQuad->SetVertexProgram(quadvs);
 	matScreenQuad->SetFragmentProgram(quadfs);
 	matScreenQuad->SetTexture(g_RTT);
@@ -285,9 +280,9 @@ void GameFps::OnKeyPressed(unsigned int key)
 	case KC_F:
 		toggleWireframe = !toggleWireframe;
 		break;
-	case KC_P:
-		Engine::Instance().ToggleDebugRender(!Engine::Instance().GetDebugRender());
-		break;
+	//case KC_P:
+	//	Engine::Instance().ToggleDebugRender(!Engine::Instance().GetDebugRender());
+	//	break;
 	case KC_SPACE:
 		g_CameraShake.Create(0.5f, 30.0f, 2000);
 		break;
@@ -308,7 +303,7 @@ void GameFps::OnResizeWindow(unsigned int width, unsigned int height)
 		m_Camera->SetAspect(aspect);
 		
 		// ...以及投影矩阵
-		renderer->ProjectionMatrix() = m_Camera->GetProjMatrix();
+		Renderer::Instance().SetProjectionMatrix(m_Camera->GetProjMatrix());
 	}
 
 }
@@ -553,10 +548,10 @@ void GameFps::RenderScene()
 	rv.projMatrix = m_Camera->GetProjMatrix();
 	rv.frustum = m_Camera->GetFrustum();
 
-	renderer->SetViewport(0, 0, 0, 0);
+	Renderer::Instance().SetViewport(0, 0, 0, 0);
 
 #ifdef RENDER_TARGET_TEST
-	renderer->SetRenderTarget(g_RenderTarget);
+	Renderer::Instance().SetRenderTarget(g_RenderTarget);
 #endif
 
 	// 设定渲染视点
@@ -564,26 +559,26 @@ void GameFps::RenderScene()
 	m_Scene->RenderScene();
 
 #ifdef RENDER_TARGET_TEST
-	renderer->SetRenderTarget(NULL);
+	Renderer::Instance().SetRenderTarget(NULL);
 
 	m_ScreenQuadScene->RenderScene();
 #endif
 
 	if (toggleWireframe)
 	{
-		renderer->BeginRender();
+		Renderer::Instance().BeginRender();
 
 		vector<BspTriangle*> triList;
 		m_BspScene->TraverseTree(&triList, m_Camera->WorldTransform().GetPosition());
 
 		for (vector<BspTriangle*>::iterator iter=triList.begin(); iter!=triList.end(); iter++)
 		{
-			renderer->RenderLine((*iter)->vertices[0], (*iter)->vertices[1], Color4f(0.5f, 0.5f, 1.0f));
-			renderer->RenderLine((*iter)->vertices[1], (*iter)->vertices[2], Color4f(0.5f, 0.5f, 1.0f));
-			renderer->RenderLine((*iter)->vertices[2], (*iter)->vertices[0], Color4f(0.5f, 0.5f, 1.0f));
+			Renderer::Instance().RenderLine((*iter)->vertices[0], (*iter)->vertices[1], Color4f(0.5f, 0.5f, 1.0f));
+			Renderer::Instance().RenderLine((*iter)->vertices[1], (*iter)->vertices[2], Color4f(0.5f, 0.5f, 1.0f));
+			Renderer::Instance().RenderLine((*iter)->vertices[2], (*iter)->vertices[0], Color4f(0.5f, 0.5f, 1.0f));
 		}
 
-		renderer->EndRender();
+		Renderer::Instance().EndRender();
 	}
 
 }
@@ -597,11 +592,11 @@ void GameFps::FireWeapon(unsigned long deltaTime)
 	if (timeToFire<100) return;
 	
 	timeToFire = 0;
-	IAudioBuffer* fire = Engine::Instance().AudioSystem()->GetAudioBuffer("fire1.wav");
-	if (fire)
-	{
-		Engine::Instance().AudioSystem()->CreateSourceInstance(fire, m_Camera->WorldTransform().GetPosition());
-	}
+	//IAudioBuffer* fire = Engine::Instance().AudioSystem()->GetAudioBuffer("fire1.wav");
+	//if (fire)
+	//{
+	//	Engine::Instance().AudioSystem()->CreateSourceInstance(fire, m_Camera->WorldTransform().GetPosition());
+	//}
 
 	Ray los = m_Camera->GetCameraRay(Math::Random(0.48f, 0.52f), Math::Random(0.48f, 0.52f));
 	Vector3f hitPosition;
@@ -615,7 +610,7 @@ void GameFps::FireWeapon(unsigned long deltaTime)
 		if (!m_Decals[decalIndex])
 		{
 			m_Decals[decalIndex] = FACTORY_CREATE(m_Scene, Decal);
-			m_Decals[decalIndex]->SetMaterial(ResourceManager<Material>::Instance().GetByName("MatDecal"));
+			m_Decals[decalIndex]->SetMaterial(MaterialManager::Instance().GetByName("MatDecal"));
 			m_BspScene->AttachChildObject(m_Decals[decalIndex]);
 
 			// 位于场景之后渲染

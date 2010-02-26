@@ -9,10 +9,10 @@
 #ifndef _IAUDIOSOURCE_H
 #define _IAUDIOSOURCE_H
 
-#include "IAudioBuffer.h"
-
 namespace Gen
 {
+	class IDeviceAudioBuffer;
+
 	//-----------------------------------------------------------------------------------
 	/// \brief
 	/// 音源接口
@@ -37,7 +37,7 @@ namespace Gen
 		virtual void Rewind() = 0;
 
 		// 指定音源使用的音频缓冲
-		virtual void SetAudioBuffer(IAudioBuffer* buffer) = 0;
+		virtual void SetAudioBuffer(IDeviceAudioBuffer* buffer) = 0;
 
 		// 音高
 		virtual void SetPitch(float pitch) = 0;

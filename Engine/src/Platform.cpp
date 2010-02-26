@@ -67,11 +67,11 @@ namespace Gen
 			{
 				//if (!HIWORD(wParam))								// Check Minimization State
 				//{
-				//	renderer->SetActive(true);									// Program Is Active
+				//	Renderer::Instance().SetActive(true);									// Program Is Active
 				//}
 				//else												// Otherwise
 				//{
-				//	renderer->SetActive(false);									// Program Is No Longer Active
+				//	Renderer::Instance().SetActive(false);									// Program Is No Longer Active
 
 				//}
 				if (m_MessageNotifier)
@@ -100,7 +100,7 @@ namespace Gen
 
 		case WM_SIZE:											// Resize The OpenGL Window
 			{
-				//renderer->ResizeRenderWindow(LOWORD(lParam),HIWORD(lParam));
+				//Renderer::Instance().ResizeRenderWindow(LOWORD(lParam),HIWORD(lParam));
 				if (m_MessageNotifier)
 					m_MessageNotifier->OnMessageResizeWindow(LOWORD(lParam), HIWORD(lParam));
 				return 0;											// Jump Back

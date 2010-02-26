@@ -7,9 +7,10 @@
 //-----------------------------------------------------------------------------------
 
 #include "ParticlePool.h"
-#include <algorithm>
 #include "Engine.h"
 #include "SceneGraph.h"
+#include "Renderer.h"
+#include <algorithm>
 
 namespace Gen
 {
@@ -51,9 +52,11 @@ namespace Gen
 		// 渲染顺序靠后，通常粒子不写入Z Buffer，且具有Alpha混合
 		m_RenderOrder = 110;
 
-		m_VertexBuffer = renderer->BuildVertexBuffer();
-		m_VertexBuffer->CreateBuffer(VFormat_Position/*|VFormat_Normal*/|VFormat_Color|VFormat_Texcoord0, NULL, NULL, NULL, NULL, 4 * m_PoolCapability, NULL, 2 * m_PoolCapability);
-		m_VertexBuffer->SetIndexSize(0);
+		m_VertexBuffer = Renderer::Instance().BuildVertexBuffer();
+		m_IndexBuffer = Renderer::Instance().BuildIndexBuffer();
+		m_VertexBuffer->CreateBuffer(VFormat_Position/*|VFormat_Normal*/|VFormat_Color|VFormat_Texcoord0, NULL, NULL, NULL, NULL, 4 * m_PoolCapability);
+		m_IndexBuffer->CreateBuffer(NULL, 2 * m_PoolCapability);
+		m_IndexBuffer->SetIndexSize(0);
 	}
 
 	ParticlePool::~ParticlePool()
@@ -64,7 +67,8 @@ namespace Gen
 	{
 		RenderableObjectBase::Destroy();
 
-		delete m_VertexBuffer;
+		SAFE_DELETE(m_VertexBuffer);
+		SAFE_DELETE(m_IndexBuffer);
 	}
 
 	void ParticlePool::Update(unsigned long deltaTime)
@@ -100,8 +104,8 @@ namespace Gen
 	{
 		RenderableObjectBase::RenderSingleObject();
 
-		matView = renderer->ViewMatrix();
-		matViewInv = renderer->ViewMatrix().GetInverseMatrix();
+		matView = Renderer::Instance().GetViewMatrix();
+		matViewInv = matView.GetInverseMatrix();
 
 		// 排序
 		sort(m_Particles.begin(), m_Particles.end(), ParticleComparer);
@@ -110,7 +114,14 @@ namespace Gen
 		BuildVertexData();
 
 		// TODO: 这样的粒子池不能够进行渲染，否则粒子方向会发生错误
-		renderer->RenderVertexBuffer(m_VertexBuffer, m_Material, m_WorldTransform);
+		Renderer::Instance().SetupMaterial(m_Material);
+		Renderer::Instance().RenderPrimitives(m_VertexBuffer, m_IndexBuffer, m_WorldTransform);
+	}
+
+	void ParticlePool::SetMaterial(Material* mat)
+	{
+		m_Material = mat;
+		if (mat) mat->Trigger();
 	}
 
 	void ParticlePool::BuildVertexData()
@@ -160,14 +171,15 @@ namespace Gen
 			m_VertexBuffer->ModifyVertexData(VFormat_Texcoord0, 8 * i, sizeof(float) * 8, uv);
 		}
 
-		m_VertexBuffer->SetIndexSize(m_ActiveParticleCount * 2);
+		// 更新索引缓冲数据，处理有效粒子数目变化的情况
+		m_IndexBuffer->SetIndexSize(m_ActiveParticleCount * 2);
 		iter = m_Particles.begin();
 		for (unsigned int i=0; i<m_ActiveParticleCount; i++, iter++)
 		{
 			//unsigned int offset = iter->m_IndexOffset;
 			unsigned int index[6] = { i * 4, 2 + i * 4, 1 + i * 4,
 				2 + i * 4, 3 + i * 4, 1 + i * 4 };
-			m_VertexBuffer->ModifyIndexData(6 * i, sizeof(unsigned int) * 6, index);
+			m_IndexBuffer->ModifyIndexData(6 * i, sizeof(unsigned int) * 6, index);
 		}
 	}
 

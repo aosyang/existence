@@ -1,9 +1,9 @@
 //-----------------------------------------------------------------------------------
-/// ITexture.h 纹理接口，提供纹理操作的公共方法
+/// Texture.h 纹理类，提供纹理操作的公共方法
 /// 
 /// File Encoding : GB2312
 /// 
-/// Copyright (c) 2009 by Mwolf
+/// Copyright (c) 2009 - 2010 by Mwolf
 //-----------------------------------------------------------------------------------
 #ifndef _ITEXTURE_H
 #define _ITEXTURE_H
@@ -11,11 +11,15 @@
 #include "Matrix4.h"
 #include "EString.h"
 #include "IGpuProgram.h"
+#include "Resource.h"
+#include "IDeviceTexture.h"
 
 using namespace std;
 
 namespace Gen
 {
+	class TextureManager;
+
 	// 纹理环绕模式
 	// 超出纹理边缘以后的采样方式
 	enum TextureWrapType
@@ -23,6 +27,7 @@ namespace Gen
 		WRAP_TYPE_CLAMP,
 		WRAP_TYPE_REPEAT,
 		WRAP_TYPE_CLAMP_TO_EDGE,
+		WRAP_TYPE_COUNT,
 	};
 
 	// 纹理过滤模式
@@ -37,8 +42,8 @@ namespace Gen
 		FILTER_TYPE_LINEAR_MIPMAP_LINEAR,
 	};
 
-	// 纹理混合因子
-	enum TextureBlendFactor
+	// 颜色混合因子
+	enum BlendFactor
 	{
 		BLEND_FACTOR_ZERO,
 		BLEND_FACTOR_ONE,
@@ -69,18 +74,12 @@ namespace Gen
 		ENV_MODE_ADD,
 	};
 
-	enum TextureType
-	{
-		TEXTURE_TYPE_2D,
-		TEXTURE_TYPE_CUBE,
-	};
-
-	class ITexture;
+	class BaseTexture;
 
 	// 纹理渲染状态
 	typedef struct TextureRenderStateType
 	{
-		ITexture*			texture;			///< 纹理
+		IDeviceTexture*		texture;			///< 纹理
 		String				textureName;		///< 纹理名称		NOTE: 这个变量是为了记录只有纹理名称而没有数据的情况
 
 		TextureWrapType		wrapType;			///< 纹理环绕模式
@@ -93,11 +92,6 @@ namespace Gen
 		//bool				useEyeSpaceTex;
 		Matrix4				eyeSpaceMatrix;		///< 视点空间矩阵
 
-		// Blending
-		bool				useBlending;		///< 采用纹理混合
-		TextureBlendFactor	srcBlendFactor;		///< 源混合因子
-		TextureBlendFactor	dstBlendFactor;		///< 目标混合因子
-
 		TextureEnvMode		envMode;
 
 		TextureRenderStateType()
@@ -105,7 +99,7 @@ namespace Gen
 			InitValues();
 		}
 
-		TextureRenderStateType(ITexture* tex)
+		TextureRenderStateType(IDeviceTexture* tex)
 		{
 			InitValues();
 			texture = tex;
@@ -120,59 +114,76 @@ namespace Gen
 			magFilterType = FILTER_TYPE_LINEAR;
 			genMode = GEN_MODE_TEXCOORD;
 			//useEyeSpaceTex = false;
-			useBlending = true;
-			srcBlendFactor = BLEND_FACTOR_SRC_ALPHA;
-			dstBlendFactor = BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
 
 			envMode = ENV_MODE_MODULATE;
 		}
 
 	} TextureRenderState;
 
-	class ITexture
+	// 引擎纹理基类
+	// 引擎纹理用于资源的索引，并记录设备纹理的指针
+	class BaseTexture : public Resource
 	{
+		friend class TextureManager;
 	public:
-		virtual ~ITexture() {}
+		BaseTexture(const String& filename);
 
-		// 纹理修改相关
-		//virtual void Create(unsigned int width, unsigned int height, unsigned int bpp, unsigned char* data) = 0;
+		// ----- Overwrite Resource
+		//bool Load();
+		void UnloadImpl();
 
-		// 修改纹理上指定的一个矩形区域数据
-		virtual void ModifyRectData(int xoffset, int yoffset, int width, int heigh, void* data) = 0;
-
-		// 使用一个纹理
-		virtual void BindTexture() = 0;
-
-		// TODO: 添加纹理相关的方法，如获取纹理尺寸等
-		virtual unsigned int GetWidth() const = 0;
-		virtual unsigned int GetHeight() const = 0;
-		virtual unsigned int GetBpp() const = 0;
-
-		virtual String GetName() const = 0;
-
-		virtual TextureType GetTextureType() const = 0;
-
-		// 纹理过滤
-	};
-
-	class BaseTexture : public ITexture
-	{
-	public:
-		~BaseTexture() {}
-
-		unsigned int GetWidth() const { return m_Width; }
-		unsigned int GetHeight() const { return m_Height; }
-		unsigned int GetBpp() const { return m_Bpp; }
-
-		String GetName() const { return *m_Name; }
-		void SetName(const String* name) { m_Name = name; }
+		// 获取设备纹理
+		IDeviceTexture* GetDeviceTexture() const { return m_DeviceTexture; }
 
 	protected:
-		const String*	m_Name;
+		IDeviceTexture*		m_DeviceTexture;		///< 设备纹理
 
-		unsigned int	m_Width;
-		unsigned int	m_Height;
-		unsigned int	m_Bpp;
+	};
+
+	class Texture2D : public BaseTexture
+	{
+	public:
+		Texture2D(const String& filename);
+
+		// ----- Texture2D Methods
+
+		// 创建纹理
+		void Create(unsigned int width, unsigned int height, unsigned int bpp, unsigned char* data);
+
+		// 修改纹理内容
+		void ModifyRectData(int xoffset, int yoffset, int width, int height, void* data);
+	protected:
+		// ----- Overwrite Resource
+		bool LoadImpl();
+
+		// ----- Texture2D Methods
+
+	};
+
+	// 立方体纹理的位置
+	enum CubeMapSide
+	{
+		CUBE_MAP_POS_X = 0,
+		CUBE_MAP_NEG_X,
+		CUBE_MAP_POS_Y,
+		CUBE_MAP_NEG_Y,
+		CUBE_MAP_POS_Z,
+		CUBE_MAP_NEG_Z,
+	};
+
+	// 立方体纹理
+	class CubeTexture : public BaseTexture
+	{
+		//friend class TextureManager;
+	public:
+		CubeTexture(const String& filename);
+
+		// 创建纹理
+		void Create(unsigned int width, unsigned int height, unsigned int bpp, unsigned char* data, int cubeSide);
+
+	protected:
+		// ----- Overwrite Resource
+		bool LoadImpl();
 	};
 }
 

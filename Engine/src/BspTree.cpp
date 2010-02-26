@@ -9,6 +9,7 @@
 
 //#include <template.h>
 #include "BspTree.h"
+#include "MeshElement.h"
 
 #include <assert.h>
 
@@ -642,7 +643,7 @@ namespace Gen
 	}
 
 
-	bool BuildBspTreeFromMesh(BspTree* bsp, IMesh* mesh)
+	bool BuildBspTreeFromMesh(BspTree* bsp, BaseMesh* mesh)
 	{
 		if (!bsp || !mesh)
 			return false;
@@ -657,9 +658,9 @@ namespace Gen
 				unsigned int v1, v2, v3;
 				elem->GetFaceByIndex(i, v1, v2, v3);
 
-				triangle.vertices[0] = elem->GetVertexByIndex(v1);
-				triangle.vertices[1] = elem->GetVertexByIndex(v2);
-				triangle.vertices[2] = elem->GetVertexByIndex(v3);
+				triangle.vertices[0] = mesh->GetVertexByIndex(v1);
+				triangle.vertices[1] = mesh->GetVertexByIndex(v2);
+				triangle.vertices[2] = mesh->GetVertexByIndex(v3);
 				triangle.Setup();
 
 				triList.push_back(triangle);

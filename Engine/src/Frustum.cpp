@@ -23,49 +23,14 @@ namespace Gen
 	{
 		float range = _near * tan(DEG_TO_RAD(fovy / 2));
 
-		m_ProjMatrix = BuildProjectionMatrix(-range * aspect, range * aspect, -range, range, _near, _far);
-		return m_ProjMatrix;
-	}
-
-	Matrix4 Frustum::BuildOrthographicProjMatrix(float left, float right, float bottom, float top, float znear, float zfar)
-	{
-		float m00 = 2.0f / (right - left);
-		float m11 = 2.0f / (top - bottom);
-		float m22 = -2.0f / (zfar - znear);
-
-		float tx = -(right + left) / (right - left);
-		float ty = -(top + bottom) / (top - bottom);
-		float tz = -(zfar + znear) / (zfar - znear);
-
-		return Matrix4(m00, 0.0f, 0.0f, tx,
-			0.0f, m11, 0.0f, ty,
-			0.0f, 0.0f, m22, tz,
-			0.0f, 0.0f, 0.0f, -1.0f);
-	}
-
-
-	Matrix4 Frustum::BuildProjectionMatrix(float left, float right, float bottom, float top, float znear, float zfar)
-	{
 		// 保存这些值，方便计算视截体的范围
-		m_Left = left;
-		m_Right = right;
-		m_Bottom = bottom;
-		m_Top = top;
-		//m_Near = znear;
-		//m_Far = zfar;
+		//m_Left = -range * aspect;
+		//m_Right = range * aspect;
+		//m_Bottom = -range;
+		//m_Top = range;
 
-		float m00 = 2 * znear / (right - left);
-		float m11 = 2 * znear / (top - bottom);
-
-		float m02 = (right + left) / (right - left);
-		float m12 = (top + bottom) / (top - bottom);
-		float m22 = -(zfar + znear) / (zfar - znear);
-		float m23 = - 2 * zfar * znear / (zfar - znear);
-
-		return Matrix4(m00,  0.0f, m02,  0.0f,
-			0.0f, m11,  m12,  0.0f,
-			0.0f, 0.0f, m22,  m23,
-			0.0f, 0.0f,-1.0f, 0.0f);
+		m_ProjMatrix = Matrix4::BuildPerspectiveProjection(-range * aspect, range * aspect, -range, range, _near, _far);
+		return m_ProjMatrix;
 	}
 
 	// 这些代码从这里复制过来：http://www.racer.nl/reference/vfc_markmorley.htm

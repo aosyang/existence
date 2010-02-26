@@ -9,7 +9,13 @@
 #include "FileEnumerator.h"
 #include "Debug.h"
 
-#if defined __PLATFORM_LINUX
+#include <vector>
+using namespace std;
+
+#if defined __PLATFORM_WIN32
+#include <shlwapi.h>
+#pragma comment(lib, "shlwapi.lib")
+#elif defined __PLATFORM_LINUX
 #include <unistd.h>
 #include <stdlib.h>
 #include <linux/limits.h>
@@ -38,6 +44,113 @@ namespace Gen
 		}
 	}
 
+	String CanonicalizePath(const String& path)
+	{
+#if defined __PLATFORM_WIN32
+		char result[MAX_PATH];
+		PathCanonicalize(result, path.Data());
+		return result;
+
+#elif defined __PLATFORM_LINUX
+		String s;
+		vector<String> tab;
+
+		size_t len = path.Size();
+		size_t i;
+
+		bool ignore = false;
+
+		for (i=0; i<len; i++)
+		{
+			switch (path[i])
+			{
+			case CORRECT_SLASH_CHAR:
+				if (!ignore)
+				{
+					if (s.Size())
+					{
+						tab.push_back(s);
+						s = "";
+					}
+					tab.push_back(CORRECT_SLASH);
+				}
+				else
+				{
+					ignore = false;
+				}
+				break;
+			case '.':
+				if (!s.Size())
+				{
+					if (++i<len && path[i]=='.')
+					{
+						if (++i<len && path[i]=='.')
+						{
+							s += "...";
+							break;
+						}
+						i--;
+
+						// 退一级路径
+						if (tab.size()>=2)
+						{
+							tab.pop_back();
+							tab.pop_back();
+							ignore = true;
+						}
+						//else
+						//	tab.push_back("..");
+						break;
+					}
+					i--;
+
+					if (tab.size())
+					{
+						tab.pop_back();
+						//tab.push_back(".");
+					}
+					else
+						ignore = true;
+					break;
+				}
+				// 继续当作常规字符处理
+			default:
+				s += path[i];
+				break;
+			}
+		}
+
+		if (s.Size())
+		{
+			tab.push_back(s);
+			s = "";
+		}
+
+		if (ignore && tab.size())
+			tab.pop_back();
+
+		if (!tab.size())
+			tab.push_back(CORRECT_SLASH);
+
+		for (vector<String>::iterator iter=tab.begin();
+			iter!=tab.end();
+			iter++)
+		{
+			s += *iter;
+		}
+
+		return s;
+#endif
+	}
+
+	String GetPathName(const String& pathFilename)
+	{
+		size_t pos = pathFilename.FindLastOf(CORRECT_SLASH);
+
+		if (pos == String::npos) return "";
+
+		return pathFilename.Substr(0, pos + 1);
+	}
 
 	FileSystem::FileSystem()
 	{
@@ -129,20 +242,12 @@ namespace Gen
 				resNameInfo.ext = GetExtension(info.filename);
 				resNameInfo.ext.ToLowerCase();
 
-				// hack: 这将防止材质优先于纹理载入
-				if (resNameInfo.ext==".emt")
-					resNameInfo.period = 2;
-				else if (resNameInfo.ext==".emd")
-					resNameInfo.period = 3;
-				else
-					resNameInfo.period = 0;
-
 				foundFileList.push_back(resNameInfo);
 			}
 		} while (fileEnum.EnumerateNextFileInDir(info));
 	}
 
-	const String FileSystem::GetExtension(const String& filename)
+	const String FileSystem::GetExtension(const String& filename) const
 	{
 		// TODO: 路径名里面有扩展名且文件名不带扩展名的情况
 		size_t pos = filename.FindLastOf(".");

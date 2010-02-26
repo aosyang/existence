@@ -34,16 +34,11 @@ namespace Gen
 
 		void Shutdown() {}
 
-		bool LoadAudioBufferFromFile(const String& bufferName, const String& filename) { return true; }
-
-		IAudioBuffer* GetAudioBuffer(const String& bufferName) { return NULL; }
+		IDeviceAudioBuffer* LoadAudioBufferFromFile(const String& filename) { return NULL; }
 
 		void SetListenerTransform(const Matrix4& transform, const Vector3f& velocity) {}
 
-		IAudioSource* CreateSourceInstance(IAudioBuffer* buffer, const Vector3f& position, bool autoRemove) { return NULL; }
-
-		void RemoveSource(IAudioSource* source) {}
-		void Update() {}
+		IAudioSource* CreateAudioSource() { return NULL; }
 	};
 }
 

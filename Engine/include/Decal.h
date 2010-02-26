@@ -36,7 +36,7 @@ namespace Gen
 
 		// ²ÄÖÊ
 		inline Material* GetMaterial() const { return m_Material; }
-		inline void SetMaterial(Material* mat) { m_Material = mat; }
+		void SetMaterial(Material* mat);
 
 		void SetDirection(const Vector3f normal);
 
@@ -56,6 +56,7 @@ namespace Gen
 		//float			m_NormalArray[3 * 4];
 		//float			m_TexCoordArray[2 * 4];
 		IVertexBuffer*	m_VertexBuffer;
+		IIndexBuffer*	m_IndexBuffer;
 
 		float			m_Size;
 	};

@@ -17,33 +17,12 @@
 #include "GLVertexArray.h"
 #include "GLVertexBufferObject.h"
 #include "GLRenderTargetFBO.h"
+#include "GLRenderTargetTexture.h"
 
 #include "GL/glu.h"
 
 namespace Gen
 {
-#if defined __PLATFORM_LINUX
-
-	/* attributes for a single buffered visual in RGBA format with at least
-	* 4 bits per color and a 16 bit depth buffer */
-	static int attrListSgl[] = {GLX_RGBA, GLX_RED_SIZE, 4,
-		GLX_GREEN_SIZE, 4,
-		GLX_BLUE_SIZE, 4,
-		GLX_DEPTH_SIZE, 16,
-		None
-	};
-
-	/* attributes for a double buffered visual in RGBA format with at least
-	* 4 bits per color and a 16 bit depth buffer */
-	static int attrListDbl[] = { GLX_RGBA, GLX_DOUBLEBUFFER,
-		GLX_RED_SIZE, 4,
-		GLX_GREEN_SIZE, 4,
-		GLX_BLUE_SIZE, 4,
-		GLX_DEPTH_SIZE, 16,
-		None
-	};
-#endif
-
 	// gpu插件句柄
 	Module_t	g_GpuPluginHandle = NULL;
 
@@ -56,17 +35,17 @@ namespace Gen
 
 
 	GLRenderer::GLRenderer()
-		:
+	:
 #if defined __PLATFORM_WIN32
-	m_WindowHandle(0),
+		m_WindowHandle(0),
 		m_hDC(0), m_hRC(0),
 #elif defined __PLATFORM_LINUX
-	m_Context(0),
+		m_Context(0),
 #endif
-		m_WindowWidth(0), m_WindowHeight(0), // m_FullScreen(false),
-		m_Active(true),
 		m_DepthWriting(true),
-		m_VertexBufferFactoryFunc(NULL)
+		m_RenderTarget(NULL),
+		m_VertexBufferFactoryFunc(NULL),
+		m_IndexBufferFactoryFunc(NULL)
 	{
 		m_ViewMatrix.MakeIdentity();
 	}
@@ -123,6 +102,25 @@ namespace Gen
 
 #elif defined __PLATFORM_LINUX
 
+		/* attributes for a single buffered visual in RGBA format with at least
+		* 4 bits per color and a 16 bit depth buffer */
+		static int attrListSgl[] = {GLX_RGBA, GLX_RED_SIZE, 4,
+			GLX_GREEN_SIZE, 4,
+			GLX_BLUE_SIZE, 4,
+			GLX_DEPTH_SIZE, 16,
+			None
+		};
+
+		/* attributes for a double buffered visual in RGBA format with at least
+		* 4 bits per color and a 16 bit depth buffer */
+		static int attrListDbl[] = { GLX_RGBA, GLX_DOUBLEBUFFER,
+			GLX_RED_SIZE, 4,
+			GLX_GREEN_SIZE, 4,
+			GLX_BLUE_SIZE, 4,
+			GLX_DEPTH_SIZE, 16,
+			None
+		};
+
 		// TODO: 目前只针对窗口模式有效
 		XVisualInfo *vi;
 
@@ -159,8 +157,6 @@ namespace Gen
 			}
 		}
 
-		ResizeRenderWindow(windowParam->width, windowParam->height);							// Set Up Our Perspective GL Screen
-
 		glShadeModel(GL_SMOOTH);								// Enable Smooth Shading
 		glClearDepth(1.0f);										// Depth Buffer Setup
 
@@ -190,17 +186,22 @@ namespace Gen
 		//glLightModeli(GL_LIGHT_MODEL_COLOR_CONTROL, GL_SEPARATE_SPECULAR_COLOR);
 
 
-		//#define FORCE_VERTEX_ARRAY
+//#define FORCE_VERTEX_ARRAY
 
+		// 如果硬件支持，使用VBO，否则使用顶点数组
 #ifndef FORCE_VERTEX_ARRAY
 		if (m_HardwareFeature.supportedVBO)
 		{
-			GLVertexBufferObject::ChooseFunc(__GLEW_VERSION_1_5==GL_TRUE);
-			m_VertexBufferFactoryFunc = FactoryCreateVertexBufferObject;
+			ChooseVBOMethods(__GLEW_VERSION_1_5==GL_TRUE);
+			m_VertexBufferFactoryFunc = FactoryCreateVBOVertexBuffer;
+			m_IndexBufferFactoryFunc = FactoryCreateVBOIndexBuffer;
 		}
 		else
 #endif
+		{
 			m_VertexBufferFactoryFunc = FactoryCreateVertexArray;
+			m_IndexBufferFactoryFunc = FactoryCreateIndexArray;
+		}
 
 		if (!m_HardwareFeature.supportedNonPowOf2Texture)
 			GLTexture::m_sForcePowOfTwo = true;
@@ -210,7 +211,6 @@ namespace Gen
 
 	void GLRenderer::Shutdown()
 	{
-		UnloadAllTextures();
 		UnloadGpuPrograms();
 
 		if (g_GpuPluginHandle)
@@ -231,12 +231,6 @@ namespace Gen
 			m_hDC = NULL;
 		}
 
-		// hWnd不要擅自删除，交由System完成
-		//if (m_WindowHandle)
-		//{
-		//	AssertFatal(DestroyWindow(m_WindowHandle), "GLRenderer::Shutdown() : Could Not Release hWnd.");
-		//	m_WindowHandle = NULL;
-		//}
 #elif defined __PLATFORM_LINUX
 		if (m_Context)
 		{
@@ -259,47 +253,30 @@ namespace Gen
 
 	void GLRenderer::SetViewport(int left, int bottom, unsigned int width, unsigned int height)
 	{
-		if (height)
-			glViewport(left, bottom, width, height);
-		else
-			glViewport(left, bottom, m_WindowWidth, m_WindowHeight);
+		glViewport(left, bottom, width, height);
 	}
 
-	void GLRenderer::ResizeRenderWindow(unsigned int width, unsigned int height)
+	void GLRenderer::SetViewMatrix(const Matrix4& viewMat)
 	{
-		if (width != 0 && height != 0)
-		{
-			m_WindowWidth = width;
-			m_WindowHeight = height;
-		}
+		glMatrixMode(GL_MODELVIEW);
 
-		if (m_WindowHeight == 0) m_WindowHeight = 1;
+		float glMat[16];
+		BuildGLMatrix(viewMat, glMat);
+		glLoadMatrixf(glMat);
+
+		// hack: 当RenderState移至Renderer中以后，删除这里
+		m_ViewMatrix = viewMat;
 	}
 
-	void GLRenderer::SetProjectionMode(ProjectionMatrixMode mode)
+	void GLRenderer::SetProjectionMatrix(const Matrix4& projMat)
 	{
 		glMatrixMode(GL_PROJECTION);
-		glLoadIdentity();
 
-		switch (mode)
-		{
-		case PROJECTION_MODE_PERSPECTIVE:
-			{
-				float projMat[16];
-				BuildGLMatrix(m_ProjMatrix, projMat);
-				glLoadMatrixf(projMat);
-				return;
-			}
-		case PROJECTION_MODE_ORTHO:
-			{
-				float w = (GLfloat)m_WindowWidth/(GLfloat)m_WindowHeight;
-				gluOrtho2D(-w, w, -1.0f, 1.0f);
-				return;
-			}
-		default:
-			AssertFatal(0, "GLRenderer::SetProjectionMode() : Invalid projection matrix mode.");
-		}
+		float glMat[16];
+		BuildGLMatrix(projMat, glMat);
+		glLoadMatrixf(glMat);
 	}
+
 
 	void GLRenderer::ClearBuffer(bool color, bool depth, bool stencil)
 	{
@@ -333,7 +310,7 @@ namespace Gen
 
 		if (index>=8) return;
 
-		glActiveTexture(GL_TEXTURE0 + index);
+		ActiveTextureUnit(index);
 		if (enable && !texture[index])
 		{
 			glEnable(GL_TEXTURE_2D);
@@ -399,7 +376,35 @@ namespace Gen
 		}
 	}
 
-	void GLRenderer::ToggleBlend(bool enable)
+	void GLRenderer::ToggleAlphaTest(bool enable)
+	{
+		static bool alphaTest = false;
+
+		if (enable && !alphaTest)
+		{
+			glEnable(GL_ALPHA_TEST);
+			alphaTest = true;
+		}
+		else if (!enable && alphaTest)
+		{
+			glDisable(GL_ALPHA_TEST);
+			alphaTest = false;
+		}
+	}
+
+	void GLRenderer::SetAlphaReference(float ref)
+	{
+		static float alphaRef = 0.0f;
+
+		if (!FLOAT_EQUAL(alphaRef, ref))
+		{
+			// TODO: 指定比较方式
+			glAlphaFunc(GL_GEQUAL, ref);
+			alphaRef = ref;
+		}
+	}
+
+	void GLRenderer::ToggleBlending(bool enable)
 	{
 		static bool blend = false;
 
@@ -415,13 +420,30 @@ namespace Gen
 		}
 	}
 
+	void GLRenderer::SetBlendFactor(BlendFactor src, BlendFactor dst)
+	{
+		glBlendFunc(GetBlendFactor(src), GetBlendFactor(dst));
+	}
+
+	// 切换到指定纹理单元
+	void GLRenderer::ActiveTextureUnit(unsigned int index)
+	{
+		static unsigned int texUnit = 0;
+
+		if (index!=texUnit)
+		{
+			glActiveTexture(GL_TEXTURE0 + index);
+			texUnit = index;
+		}
+	}
+
 	void GLRenderer::BeginRender()
 	{
-		glMatrixMode(GL_MODELVIEW);
+		//glMatrixMode(GL_MODELVIEW);
 
-		float viewMat[16];
-		BuildGLMatrix(m_ViewMatrix, viewMat);
-		glLoadMatrixf(viewMat);
+		//float viewMat[16];
+		//BuildGLMatrix(m_ViewMatrix, viewMat);
+		//glLoadMatrixf(viewMat);
 
 		// 灯光位置
 		// 注：必须在每次更新了ViewMatrix之后也更新灯光位置，否则灯光位置就会相对视点固定
@@ -443,12 +465,9 @@ namespace Gen
 #endif	// #if defined __PLATFORM_WIN32
 	}
 
-	void GLRenderer::RenderVertexBuffer(IVertexBuffer* vbuffer, Material* material, const Matrix4& transform)
+	void GLRenderer::RenderVertexBuffer(IVertexBuffer* vbuffer, IIndexBuffer* ibuffer, const Matrix4& transform)
 	{
 		m_ModelMatrix = transform;
-
-		// 指定材质
-		SetupMaterial(material);
 
 		glMatrixMode(GL_MODELVIEW);
 		glPushMatrix();
@@ -458,7 +477,8 @@ namespace Gen
 
 		glMultMatrixf(mat);
 
-		vbuffer->RenderBuffer();
+		vbuffer->SetAsVertexDataSource();
+		ibuffer->RenderPrimitive();
 		glPopMatrix();
 
 		//glMatrixMode(GL_TEXTURE);
@@ -466,12 +486,8 @@ namespace Gen
 		//glMatrixMode(GL_MODELVIEW);
 	}
 
-	void GLRenderer::RenderBox(const Vector3f& vMin, const Vector3f& vMax, const Color4f& color, const Matrix4& transform)
+	void GLRenderer::RenderBox(const Vector3f& vMin, const Vector3f& vMax, const Matrix4& transform)
 	{
-		SetupMaterialWhite();
-
-		glColor4fv(color.GetArray());
-
 		glMatrixMode(GL_MODELVIEW);
 		glPushMatrix();
 
@@ -514,12 +530,8 @@ namespace Gen
 		glPopMatrix();
 	}
 
-	void GLRenderer::RenderSphere(const Vector3f& point, float radius, const Color4f& color, unsigned int segment)
+	void GLRenderer::RenderSphere(const Vector3f& point, float radius, unsigned int segment)
 	{
-		SetupMaterialWhite();
-
-		glColor4fv(color.GetArray());
-
 		glBegin(GL_LINE_LOOP);
 		for (unsigned int i=0; i<segment; i++)
 		{
@@ -542,99 +554,11 @@ namespace Gen
 		glEnd();
 	}
 
-	void GLRenderer::RenderLine(const Vector3f& begin, const Vector3f& end, const Color4f& color)
+	void GLRenderer::RenderLine(const Vector3f& begin, const Vector3f& end)
 	{
-		SetupMaterialWhite();
-		glColor4fv(color.GetArray());
-
 		glBegin(GL_LINES);
 		glVertex3fv(begin.GetArray());
 		glVertex3fv(end.GetArray());
-		glEnd();
-	}
-
-	void GLRenderer::RenderScreenQuad(float left, float top, float right, float bottom, ITexture* texture, const Color4f& color)
-	{
-		for (int i=1; i<8; i++)
-			ToggleTexture(false, i);
-		ToggleTexture(true);
-		UnbindGpuProgram(GPU_VERTEX_PROGRAM);
-		UnbindGpuProgram(GPU_FRAGMENT_PROGRAM);
-
-		glColor4f(color.r, color.g, color.b, color.a);
-
-		BindTextureRenderState(TextureRenderState(texture));
-
-		glBegin(GL_QUADS);
-		//glBegin(GL_TRIANGLES);
-		glVertex3f(left, bottom, -1.0f);
-		glTexCoord2f(1.0f, 0.0f);
-
-		glVertex3f(right, bottom, -1.0f);
-		glTexCoord2f(1.0f, 1.0f);
-
-		glVertex3f(right, top, -1.0f);
-		glTexCoord2f(0.0f, 1.0f);
-
-
-		glVertex3f(left, top, -1.0f);
-		glTexCoord2f(0.0f, 0.0f);
-
-
-		//glVertex3f(-1.0f, -1.0f, -1.0f);
-		//glTexCoord2f(0.0f, 1.0f);
-
-		//glVertex3f(-1.0f, 1.0f, -1.0f);
-		//glTexCoord2f(1.0f, 1.0f);
-
-		//glVertex3f(1.0f, 1.0f, -1.0f);
-		//glTexCoord2f(1.0f, 0.0f);
-
-		//glVertex3f(1.0f, -1.0f, -1.0f);
-		//glTexCoord2f(0.0f, 0.0f);*/
-
-
-		glEnd();
-	}
-
-	void GLRenderer::RenderScreenQuad(int x1, int y1, int x2, int y2, ITexture* texture, const Color4f& color)
-	{
-		for (int i=1; i<8; i++)
-			ToggleTexture(false, i);
-		ToggleTexture(true);
-		UnbindGpuProgram(GPU_VERTEX_PROGRAM);
-		UnbindGpuProgram(GPU_FRAGMENT_PROGRAM);
-
-		glColor4f(color.r, color.g, color.b, color.a);
-
-		BindTextureRenderState(TextureRenderState(texture));
-
-		float aspect = (float)m_WindowWidth / m_WindowHeight;
-
-		//(x1 / m_WindowWidth * 2 - 1) * aspect;
-
-		float nx1 = ((float)x1 / m_WindowWidth * 2 - 1) * aspect;
-		float nx2 = ((float)x2 / m_WindowWidth * 2 - 1) * aspect;
-		float ny1 = (-(float)y1 / m_WindowHeight * 2 + 1);
-		float ny2 = (-(float)y2 / m_WindowHeight * 2 + 1);
-		//float nx1 = 2.0f * aspect * x1 / m_WindowWidth;
-		//float nx2 = 2.0f * aspect * x2 / m_WindowWidth;
-		//float ny1 = -2.0f * y1 / m_WindowHeight;
-		//float ny2 = -2.0f * y2 / m_WindowHeight;
-
-		glBegin(GL_QUADS);
-		glVertex3f(nx1, ny2, -1.0f);
-		glTexCoord2f(1.0f, 0.0f);
-
-		glVertex3f(nx2, ny2, -1.0f);
-		glTexCoord2f(1.0f, 1.0f);
-
-		glVertex3f(nx2, ny1, -1.0f);
-		glTexCoord2f(0.0f, 1.0f);
-
-		glVertex3f(nx1, ny1, -1.0f);
-		glTexCoord2f(0.0f, 0.0f);
-
 		glEnd();
 	}
 
@@ -643,79 +567,94 @@ namespace Gen
 		glLightModelfv(GL_LIGHT_MODEL_AMBIENT, color.GetArray());
 	}
 
-	const Color4f GLRenderer::GetAmbientColor()
+
+	IDeviceTexture* GLRenderer::BuildTexture()
 	{
-		float ambientColor[4];
-		glGetFloatv(GL_LIGHT_MODEL_AMBIENT, ambientColor);
-		return Color4f(ambientColor);
+		return new GLTexture();
 	}
 
-	ITexture* GLRenderer::BuildTexture(const String& textureName, unsigned int width, unsigned int height, unsigned int bpp, unsigned char* data)
+	IDeviceTexture* GLRenderer::BuildCubeTexture()
 	{
-		if (width==0 || height==0)
-			return NULL;
-
-		AssertFatal(m_TextureList.find(textureName)==m_TextureList.end(), "GLRenderer::BuildTexture(): Same texture name is already in use.");
-
-		GLTexture* tex = new GLTexture();
-
-		tex->Create(width, height, bpp, data);
-
-		//store the texture ID mapping
-		m_TextureList[textureName] = tex;
-		tex->SetName(&(m_TextureList.find(textureName)->first));
-		return tex;
+		return new GLCubeTexture();
 	}
 
-	ITexture* GLRenderer::BuildCubeTexture(const String& textureName, unsigned int width, unsigned int height, unsigned int bpp, unsigned char* data[6])
+	IDeviceTexture* GLRenderer::BuildDepthTexture(const String& textureName, unsigned int width, unsigned int height)
 	{
-		if (width==0 || height==0)
-			return NULL;
+		//// TODO: 纹理类结构发生变化，这里需要修改
+		//if(m_TextureList.find(textureName) != m_TextureList.end())
+		//{
+		//	delete m_TextureList[textureName];
+		//}
 
-		//if this texture ID is in use, unload the current texture
-		if(m_TextureList.find(textureName) != m_TextureList.end())
-		{
-			delete m_TextureList[textureName];
-			//glDeleteTextures(1, &(m_TextureList[textureName]));
-		}
+		//GLTexture* tex = new GLTexture();
 
-		GLCubeTexture* tex = new GLCubeTexture();
+		//m_TextureList[textureName] = tex;
+		//glBindTexture(GL_TEXTURE_2D, tex->GetGLTextureID());
+		//glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, width, height, 0,
+		//	GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, NULL);
 
-		for (int i=0; i<6; i++)
-			tex->Create(width, height, bpp, data[i], i);
-
-		//store the texture ID mapping
-		m_TextureList[textureName] = tex;
-		tex->SetName(&(m_TextureList.find(textureName)->first));
-		return tex;
-	}
-
-	ITexture* GLRenderer::BuildDepthTexture(const String& textureName, unsigned int width, unsigned int height)
-	{
-		// TODO: 纹理类结构发生变化，这里需要修改
-		if(m_TextureList.find(textureName) != m_TextureList.end())
-		{
-			delete m_TextureList[textureName];
-		}
-
-		GLTexture* tex = new GLTexture();
-
-		m_TextureList[textureName] = tex;
-		glBindTexture(GL_TEXTURE_2D, tex->GetGLTextureID());
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, width, height, 0,
-			GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, NULL);
-
-		return tex;
-	}
-
-	ITexture* GLRenderer::GetTexture(const String& textureName)
-	{
-		TextureList::iterator iter;
-
-		if ((iter = m_TextureList.find(textureName)) != m_TextureList.end())
-			return iter->second;
-
+		//return tex;
 		return NULL;
+	}
+
+	void GLRenderer::SetVertexColor(const Color4f& color)
+	{
+		glColor4fv(color.GetArray());
+	}
+
+	void GLRenderer::SetMaterialAmbientColor(const Color4f& color)
+	{
+		static Color4f ambient(0.2f, 0.2f, 0.2f);
+
+		if (color!=ambient)
+		{
+			glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, color.GetArray());
+			ambient = color;
+		}
+	}
+
+	void GLRenderer::SetMaterialDiffuseColor(const Color4f& color)
+	{
+		static Color4f diffuse(0.8f, 0.8f, 0.8f);
+
+		if (color!=diffuse)
+		{
+			glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, color.GetArray());
+			diffuse = color;
+		}
+	}
+
+	void GLRenderer::SetMaterialSpecularColor(const Color4f& color)
+	{
+		static Color4f specular(0.0f, 0.0f, 0.0f);
+
+		if (color!=specular)
+		{
+			glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, color.GetArray());
+			specular = color;
+		}
+	}
+
+	void GLRenderer::SetMaterialEmissiveColor(const Color4f& color)
+	{
+		static Color4f emissive(0.0f, 0.0f, 0.0f);
+
+		if (color!=emissive)
+		{
+			glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, color.GetArray());
+			emissive = color;
+		}
+	}
+
+	void GLRenderer::SetMaterialSpecularLevel(float level)
+	{
+		static float specularLevel = 0.0f;
+
+		if (!FLOAT_EQUAL(specularLevel, level))
+		{
+			glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, level);
+			specularLevel = level;
+		}
 	}
 
 	IGpuProgram* GLRenderer::LoadGpuProgram(const String& filename, const String& entry, GpuProgramType type)
@@ -814,25 +753,36 @@ namespace Gen
 		return (*m_VertexBufferFactoryFunc)();
 	}
 
+	IIndexBuffer* GLRenderer::BuildIndexBuffer()
+	{
+		return (*m_IndexBufferFactoryFunc)();
+	}
+
 	// 创建一个新的渲染目标
 	IRenderTarget* GLRenderer::CreateRenderTarget()
 	{
 		if (m_HardwareFeature.supportedFBO)
 			return new GLRenderTargetFBO();
-		return NULL;
+		return new GLRenderTargetTexture();
 	}
 
 	// 指定渲染目标
-	void GLRenderer::SetRenderTarget(IRenderTarget* rt)
+	void GLRenderer::BindRenderTarget(IRenderTarget* rt)
 	{
-		if (GLEW_EXT_framebuffer_object)
-		{
-			if (rt)
-				rt->BindRenderTarget();
-			else
-				// 取消RT绑定，渲染到后台缓冲
-				glBindFramebufferEXT(GL_FRAMEBUFFER, 0);
-		}
+		AssertFatal(!m_RenderTarget, "GLRenderer::BindRenderTarget(): A render target has been assigned already.");
+		AssertFatal(rt, "GLRenderer::BindRenderTarget(): Unable to deal with a null render target.");
+
+		m_RenderTarget = rt;
+		rt->BindRenderTarget();
+	}
+
+	// 解除渲染目标，重新渲染到后台缓冲
+	void GLRenderer::UnbindRenderTarget()
+	{
+		AssertFatal(m_RenderTarget, "GLRenderer::UnbindRenderTarget(): Function called without a render target being assigned.");
+
+		m_RenderTarget->UnbindRenderTarget();
+		m_RenderTarget = NULL;
 	}
 
 	//-----------------------------------------------------------------------------------
@@ -867,170 +817,169 @@ namespace Gen
 			}
 	}
 
-	void GLRenderer::BindTextureRenderState(const TextureRenderState& texState)
+	void GLRenderer::BindTextureRenderState(const TextureRenderState& texState, unsigned int texUnit)
 	{
-		ITexture* texture;
+		// TODO: 将这个函数移植Renderer中
+		ToggleTexture(true, texUnit);
+
+		IDeviceTexture* texture;
 		if (texState.texture)
+		{
 			texture = texState.texture;
-		else
-		{
-			texture = GetTexture("no_material.bmp");
-			AssertFatal(texture, "GLRenderer::BindTextureRenderState() : Unable to find 'no_material.bmp', put it in your data path.");
-		}
+			//}
+			//else
+			//{
+			//	texture = GetTexture("no_material.bmp");
+			//	AssertFatal(texture, "GLRenderer::BindTextureRenderState() : Unable to find 'no_material.bmp', put it in your data path.");
+			//}
+			texture->BindTexture();
 
-		texture->BindTexture();
+			// TODO: 给一个单独的状态设置
+			// NOTE: 参考http://www.opengl.org/wiki/Texture_Combiners
+			//glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
+			//glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB, GetTextureEnvironmentMode(texState.envMode));
 
-		// 纹理环绕模式
-		GLint wrapMode = GL_CLAMP;
+			glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GetTextureEnvironmentMode(texState.envMode));
 
-		switch(texState.wrapType)
-		{
-		case WRAP_TYPE_CLAMP:
-			wrapMode = GL_CLAMP;
-			break;
-		case WRAP_TYPE_REPEAT:
-			wrapMode = GL_REPEAT;
-			break;
-		case WRAP_TYPE_CLAMP_TO_EDGE:
-			wrapMode = GL_CLAMP_TO_EDGE;
-			break;
-		}
 
-		GLenum target;
-		switch (texture->GetTextureType())
-		{
-		case TEXTURE_TYPE_CUBE:
-			target = GL_TEXTURE_CUBE_MAP;
-		case TEXTURE_TYPE_2D:
-		default:
-			target = GL_TEXTURE_2D;
-		}
+			// 纹理环绕模式
+			GLint wrapMode = GL_CLAMP;
 
-		glTexParameteri(target, GL_TEXTURE_WRAP_S, wrapMode);
-		glTexParameteri(target, GL_TEXTURE_WRAP_T, wrapMode);
-
-		// TODO: 纹理过滤模式(是否使用mipmap)应当由纹理类决定
-		GLint minFilterType = GetFilterType(texState.minFilterType);
-		GLint magFilterType = GetFilterType(texState.magFilterType);
-
-		glTexParameteri(target, GL_TEXTURE_MIN_FILTER, minFilterType);
-		glTexParameteri(target, GL_TEXTURE_MAG_FILTER, magFilterType);
-
-		//glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-		//glEnable(GL_TEXTURE_CUBE_MAP);
-
-		//glDisable(GL_TEXTURE_CUBE_MAP);
-		glMatrixMode(GL_TEXTURE);
-		glLoadIdentity();
-
-		// 使用视点空间纹理坐标，用于生成Projective Decal]
-		switch (texState.genMode)
-		{
-		case GEN_MODE_EYE_LINEAR:
+			switch(texState.wrapType)
 			{
-				glDisable(GL_TEXTURE_CUBE_MAP);
-
-				// 启用自动纹理坐标生成功能
-				// 注：R与Q在普通投影纹理中可能不需要，但在做阴影映射时会用到
-				glEnable(GL_TEXTURE_GEN_S);
-				glEnable(GL_TEXTURE_GEN_T);
-				glEnable(GL_TEXTURE_GEN_R);
-				glEnable(GL_TEXTURE_GEN_Q);
-
-				// 这里的视点空间矩阵的指定必须在对MODELVIEW矩阵乘以模型矩阵之前进行，
-				// 否则纹理矩阵也会受到影响
-				Matrix4 eyeMat;
-				eyeMat = texState.eyeSpaceMatrix;
-
-				glTexGenfv(GL_S, GL_EYE_PLANE, eyeMat.m[0]); // Row 0
-				glTexGenfv(GL_T, GL_EYE_PLANE, eyeMat.m[1]); // Row 1
-				glTexGenfv(GL_R, GL_EYE_PLANE, eyeMat.m[2]); // Row 2
-				glTexGenfv(GL_Q, GL_EYE_PLANE, eyeMat.m[3]); // Row 3
-
-				glTexGeni(GL_S, GL_TEXTURE_GEN_MODE, GL_EYE_LINEAR);
-				glTexGeni(GL_T, GL_TEXTURE_GEN_MODE, GL_EYE_LINEAR);
-				glTexGeni(GL_R, GL_TEXTURE_GEN_MODE, GL_EYE_LINEAR);
-				glTexGeni(GL_Q, GL_TEXTURE_GEN_MODE, GL_EYE_LINEAR);
+			case WRAP_TYPE_CLAMP:
+				wrapMode = GL_CLAMP;
+				break;
+			case WRAP_TYPE_REPEAT:
+				wrapMode = GL_REPEAT;
+				break;
+			case WRAP_TYPE_CLAMP_TO_EDGE:
+				wrapMode = GL_CLAMP_TO_EDGE;
+				break;
 			}
-			break;
-		case GEN_MODE_SPHERE:
+
+			GLenum target;
+			switch (texture->GetType())
 			{
-				glDisable(GL_TEXTURE_CUBE_MAP);
-
-				glEnable(GL_TEXTURE_GEN_S);
-				glEnable(GL_TEXTURE_GEN_T);
-				glDisable(GL_TEXTURE_GEN_R);
-				glDisable(GL_TEXTURE_GEN_Q);
-
-				glTexGeni(GL_S, GL_TEXTURE_GEN_MODE, GL_SPHERE_MAP);
-				glTexGeni(GL_T, GL_TEXTURE_GEN_MODE, GL_SPHERE_MAP);
+			case TEXTURE_TYPE_CUBE:
+				target = GL_TEXTURE_CUBE_MAP;
+			case TEXTURE_TYPE_2D:
+			default:
+				target = GL_TEXTURE_2D;
 			}
-			break;
-		case GEN_MODE_CUBE_MAP:
+
+			glTexParameteri(target, GL_TEXTURE_WRAP_S, wrapMode);
+			glTexParameteri(target, GL_TEXTURE_WRAP_T, wrapMode);
+
+			// TODO: 纹理过滤模式(是否使用mipmap)应当由纹理类决定
+			GLint minFilterType = GetFilterType(texState.minFilterType);
+			GLint magFilterType = GetFilterType(texState.magFilterType);
+
+			glTexParameteri(target, GL_TEXTURE_MIN_FILTER, minFilterType);
+			glTexParameteri(target, GL_TEXTURE_MAG_FILTER, magFilterType);
+
+			glMatrixMode(GL_TEXTURE);
+			glLoadIdentity();
+
+			// 使用视点空间纹理坐标，用于生成Projective Decal
+			switch (texState.genMode)
 			{
-				glEnable(GL_TEXTURE_CUBE_MAP);
+			case GEN_MODE_EYE_LINEAR:
+				{
+					glDisable(GL_TEXTURE_CUBE_MAP);
 
-				glEnable(GL_TEXTURE_GEN_S);
-				glEnable(GL_TEXTURE_GEN_T);
-				glEnable(GL_TEXTURE_GEN_R);
-				glDisable(GL_TEXTURE_GEN_Q);
+					// 启用自动纹理坐标生成功能
+					// 注：R与Q在普通投影纹理中可能不需要，但在做阴影映射时会用到
+					glEnable(GL_TEXTURE_GEN_S);
+					glEnable(GL_TEXTURE_GEN_T);
+					glEnable(GL_TEXTURE_GEN_R);
+					glEnable(GL_TEXTURE_GEN_Q);
 
-				// 使Cube Mapping使用视点旋转，这个方法潜在可能影响到纹理坐标，需要注意
-				glMatrixMode(GL_TEXTURE);
-				//glPushMatrix();
-				glLoadIdentity();
+					// 这里的视点空间矩阵的指定必须在对MODELVIEW矩阵乘以模型矩阵之前进行，
+					// 否则纹理矩阵也会受到影响
+					Matrix4 eyeMat;
+					eyeMat = texState.eyeSpaceMatrix;
 
-				Matrix4 m, invert;
-				m.MakeIdentity();
-				m.SetRotation(m_ViewMatrix.GetRotationMatrix());
-				invert = m.GetInverseMatrix();
-				float inv[16];
-				BuildGLMatrix(invert, inv);
-				glMultMatrixf(inv);
+					glTexGenfv(GL_S, GL_EYE_PLANE, eyeMat.m[0]); // Row 0
+					glTexGenfv(GL_T, GL_EYE_PLANE, eyeMat.m[1]); // Row 1
+					glTexGenfv(GL_R, GL_EYE_PLANE, eyeMat.m[2]); // Row 2
+					glTexGenfv(GL_Q, GL_EYE_PLANE, eyeMat.m[3]); // Row 3
 
-				glTexGeni(GL_S, GL_TEXTURE_GEN_MODE, GL_REFLECTION_MAP);
-				glTexGeni(GL_T, GL_TEXTURE_GEN_MODE, GL_REFLECTION_MAP);
-				glTexGeni(GL_R, GL_TEXTURE_GEN_MODE, GL_REFLECTION_MAP);
+					glTexGeni(GL_S, GL_TEXTURE_GEN_MODE, GL_EYE_LINEAR);
+					glTexGeni(GL_T, GL_TEXTURE_GEN_MODE, GL_EYE_LINEAR);
+					glTexGeni(GL_R, GL_TEXTURE_GEN_MODE, GL_EYE_LINEAR);
+					glTexGeni(GL_Q, GL_TEXTURE_GEN_MODE, GL_EYE_LINEAR);
+				}
+				break;
+			case GEN_MODE_SPHERE:
+				{
+					glDisable(GL_TEXTURE_CUBE_MAP);
 
-				//glPopMatrix();
+					glEnable(GL_TEXTURE_GEN_S);
+					glEnable(GL_TEXTURE_GEN_T);
+					glDisable(GL_TEXTURE_GEN_R);
+					glDisable(GL_TEXTURE_GEN_Q);
+
+					glTexGeni(GL_S, GL_TEXTURE_GEN_MODE, GL_SPHERE_MAP);
+					glTexGeni(GL_T, GL_TEXTURE_GEN_MODE, GL_SPHERE_MAP);
+				}
+				break;
+			case GEN_MODE_CUBE_MAP:
+				{
+					glEnable(GL_TEXTURE_CUBE_MAP);
+
+					glEnable(GL_TEXTURE_GEN_S);
+					glEnable(GL_TEXTURE_GEN_T);
+					glEnable(GL_TEXTURE_GEN_R);
+					glDisable(GL_TEXTURE_GEN_Q);
+
+					// 使Cube Mapping使用视点旋转，这个方法潜在可能影响到纹理坐标，需要注意
+					glMatrixMode(GL_TEXTURE);
+					//glPushMatrix();
+					glLoadIdentity();
+
+					Matrix4 m, invert;
+					m.MakeIdentity();
+					m.SetRotation(m_ViewMatrix.GetRotationMatrix());
+					invert = m.GetInverseMatrix();
+					float inv[16];
+					BuildGLMatrix(invert, inv);
+					glMultMatrixf(inv);
+
+					glTexGeni(GL_S, GL_TEXTURE_GEN_MODE, GL_REFLECTION_MAP);
+					glTexGeni(GL_T, GL_TEXTURE_GEN_MODE, GL_REFLECTION_MAP);
+					glTexGeni(GL_R, GL_TEXTURE_GEN_MODE, GL_REFLECTION_MAP);
+
+					//glPopMatrix();
+				}
+				break;
+			case GEN_MODE_TEXCOORD:
+				{
+					glDisable(GL_TEXTURE_CUBE_MAP);
+
+					glDisable(GL_TEXTURE_GEN_S);
+					glDisable(GL_TEXTURE_GEN_T);
+					glDisable(GL_TEXTURE_GEN_R);
+					glDisable(GL_TEXTURE_GEN_Q);
+				}
+				break;
 			}
-			break;
-		case GEN_MODE_TEXCOORD:
-			{
-				glDisable(GL_TEXTURE_CUBE_MAP);
-
-				glDisable(GL_TEXTURE_GEN_S);
-				glDisable(GL_TEXTURE_GEN_T);
-				glDisable(GL_TEXTURE_GEN_R);
-				glDisable(GL_TEXTURE_GEN_Q);
-			}
-			break;
 		}
+		//else
+		//{
+		//	glDisable(GL_TEXTURE_2D);
+		//}
 
-		if (texState.useBlending)
-		{
-			ToggleBlend(true);
-			glBlendFunc(GetBlendFactor(texState.srcBlendFactor),
-				GetBlendFactor(texState.dstBlendFactor));
-		}
-		else
-		{
-			ToggleBlend(false);
-		}
-
-		// TODO: 给一个单独的状态设置
-		glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
-		glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB, GetTextureEnvironmentMode(texState.envMode));
 	}
 
 	void GLRenderer::BindGpuProgram(IGpuProgram* program, GpuProgramType type)
 	{
 		if (g_GpuPluginHandle)
 		{
-			Matrix4 mvp = m_ProjMatrix * m_ViewMatrix * m_ModelMatrix;
-			program->SetMatrix4Param("autoMatModelViewProj", mvp);
+			//Matrix4 mvp = m_ProjMatrix * m_ViewMatrix * m_ModelMatrix;
+			//program->SetMatrix4Param("autoMatModelViewProj", mvp);
 
-			(g_BindGpuProgramFunc)(program, type);
+			//(g_BindGpuProgramFunc)(program, type);
 		}
 	}
 
@@ -1112,170 +1061,24 @@ namespace Gen
 		return GL_MODULATE;
 	}
 
+	//void GLRenderer::SetupMaterialWhite()
+	//{
+	//	for (int i=1; i<8; i++)
+	//	{
+	//		ToggleTexture(false, i);
+	//	}
+	//	UnbindGpuProgram(GPU_VERTEX_PROGRAM);
+	//	UnbindGpuProgram(GPU_FRAGMENT_PROGRAM);
 
-	void GLRenderer::SetupMaterial(Material* material)
-	{
-		if (material)
-		{
-			//glColor4fv(mat->GetColor().GetArray());
-			bool lighting = material->GetLighting();
+	//	//ToggleTexture(true);
 
-			ToggleLighting(lighting);
-			if (!lighting)
-			{
-				glColor4fv(material->GetColor().GetArray());
-			}
+	//	ToggleLighting(false);
+	//	ToggleDepthWriting(true);
+	//	ToggleDepthTest(true);
 
-			static Color4f ambient(0.2f, 0.2f, 0.2f);
-			static Color4f diffuse(0.8f, 0.8f, 0.8f);
-			static Color4f specular(0.0f, 0.0f, 0.0f);
-			static Color4f emissive(0.0f, 0.0f, 0.0f);
-			static float specularLevel = 0.0f;
-
-			if (material->GetAmbient() != ambient)
-			{
-				glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, material->GetAmbient().GetArray());
-				ambient = material->GetAmbient();
-			}
-
-			if (material->GetDiffuse() != diffuse)
-			{
-				glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, material->GetDiffuse().GetArray());
-				diffuse = material->GetDiffuse();
-			}
-
-			if (material->GetSpecular() != specular)
-			{
-				glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, material->GetSpecular().GetArray());
-				specular = material->GetSpecular();
-			}
-
-			if (material->GetEmissive() != emissive)
-			{
-				glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, material->GetEmissive().GetArray());
-				emissive = material->GetEmissive();
-			}
-
-			if (material->GetSpecularLevel() != specularLevel)
-			{
-				glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, material->GetSpecularLevel());
-				specularLevel = material->GetSpecularLevel();
-			}
-
-			ToggleDepthWriting(material->GetDepthWriting());
-
-			ToggleDepthTest(material->GetDepthTest());
-			if (material->GetAlphaTest())
-			{
-				glEnable(GL_ALPHA_TEST);
-				glAlphaFunc(GL_GEQUAL, material->GetAlphaRef());
-			}
-			else
-				glDisable(GL_ALPHA_TEST);
-
-			for (int i=0; i<8; i++)
-			{
-				if (material->GetTextureLayerEnabled(i))
-				{
-					ToggleTexture(true, i);
-					//glActiveTexture(GL_TEXTURE0 + i);
-					//glEnable(GL_TEXTURE_2D);
-
-					BindTextureRenderState(*material->GetTextureRenderState(i));
-				}
-				else
-				{
-					// 没有使用该纹理层，关闭多重纹理
-					ToggleTexture(false, i);
-					//glActiveTexture(GL_TEXTURE0 + i);
-					//glDisable(GL_TEXTURE_2D);
-				}
-			}
-
-			if (material->GetVertexProgram())
-				BindGpuProgram(material->GetVertexProgram(), GPU_VERTEX_PROGRAM);
-			else
-				UnbindGpuProgram(GPU_VERTEX_PROGRAM);
-
-			if (material->GetFragmentProgram())
-				BindGpuProgram(material->GetFragmentProgram(), GPU_FRAGMENT_PROGRAM);
-			else
-				UnbindGpuProgram(GPU_FRAGMENT_PROGRAM);
-		}
-		else
-		{
-			for (int i=1; i<8; i++)
-			{
-				ToggleTexture(false, i);
-			}
-			ToggleTexture(true);
-
-			UnbindGpuProgram(GPU_VERTEX_PROGRAM);
-			UnbindGpuProgram(GPU_FRAGMENT_PROGRAM);
-
-			// 绑定默认材质
-			ToggleLighting(false);
-			glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-			ToggleDepthWriting(true);
-			ToggleDepthTest(true);
-
-			BindTextureRenderState(TextureRenderState(NULL));
-		}
-	}
-
-	void GLRenderer::SetupMaterialWhite()
-	{
-		for (int i=1; i<8; i++)
-		{
-			ToggleTexture(false, i);
-		}
-		UnbindGpuProgram(GPU_VERTEX_PROGRAM);
-		UnbindGpuProgram(GPU_FRAGMENT_PROGRAM);
-
-		ToggleTexture(true);
-
-		ToggleLighting(false);
-		ToggleDepthWriting(true);
-		ToggleDepthTest(true);
-
-		ITexture* null_texture = GetTexture("#white");
-		BindTextureRenderState(TextureRenderState(null_texture));
-	}
-
-
-	bool GLRenderer::UnloadTexture(const String& textureName)
-	{
-		bool result(true);
-		//if this texture ID mapped, unload it's texture, and remove it from the map
-		if(m_TextureList.find(textureName) != m_TextureList.end())
-		{
-			delete m_TextureList[textureName];
-			m_TextureList.erase(textureName);
-		}
-		//otherwise, unload failed
-		else
-		{
-			result = false;
-		}
-
-		return result;
-	}
-
-	void GLRenderer::UnloadAllTextures()
-	{
-		//start at the begginning of the texture map
-		TextureList::iterator i = m_TextureList.begin();
-
-		//Unload the textures untill the end of the texture map is found
-		while(i != m_TextureList.end())
-		{
-			UnloadTexture(i->first);
-			i = m_TextureList.begin();
-		}
-
-		//clear the texture map
-		m_TextureList.clear();
-	}
+	//	//IDeviceTexture* null_texture = GetTexture("#white");
+	//	BindTextureRenderState(TextureRenderState(NULL));
+	//}
 
 	void GLRenderer::UnloadGpuPrograms()
 	{
@@ -1288,7 +1091,7 @@ namespace Gen
 		m_GpuPrograms.clear();
 	}
 
-	IRenderer* CreateRenderSystem()
+	IRenderDevice* CreateRenderSystem()
 	{
 		return new GLRenderer;
 	}

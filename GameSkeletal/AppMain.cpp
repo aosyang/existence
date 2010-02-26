@@ -3,10 +3,14 @@
 #include "GameSkeletal.h"
 
 
+#if defined __PLATFORM_WIN32
 int WINAPI WinMain(	HINSTANCE hInstance,
 				   HINSTANCE hPrevInstance,
 				   LPSTR	lpCmdLine,
 				   int		nCmdShow)
+#elif defined __PLATFORM_LINUX
+int main()
+#endif
 {
 	Debug::EnableBreakOnAlloc();
 

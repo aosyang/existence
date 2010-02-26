@@ -28,6 +28,7 @@ namespace Gen
 		float u, v;
 	} D3DVertex;
 
+	// d3d9顶点缓冲
 	class D3D9VertexBuffer : public IVertexBuffer
 	{
 		friend class D3D9Renderer;
@@ -36,34 +37,58 @@ namespace Gen
 		~D3D9VertexBuffer();
 
 		bool CreateBuffer(int vertexFormat,
-			const float* vertexArray,
-			const float* normalArray,
-			const float* colorArray,
-			const float* textureCoordArray,
-			unsigned int vertexNum,
-			unsigned int* faceArray,
-			unsigned int faceNum);
+						  const float* vertexArray,
+						  const float* normalArray,
+						  const float* colorArray,
+						  const float* textureCoordArray,
+						  unsigned int vertexNum);
 		void Clear();
 
 		// 锁定缓冲，以进行修改
 		void Lock();
 		void Unlock();
 		void SetVertexData(void* vertexData, unsigned int vertexNum);
-		void SetIndexData(void* indexData, unsigned int indexNum);
 
 		void ModifyVertexData(VertexFormat dataFormat, int offset,  int size, void* data);
+		void SetAsVertexDataSource();
+
+		UINT GetVertexNum() const { return m_VertexNum; }
+	private:
+		IDirect3DVertexBuffer9*		m_D3DVertexBuffer;
+
+		int							m_VertexFormat;
+		void*						m_Vertices;
+		UINT						m_VertexNum;
+
+		bool						m_Locked;	///< 标识缓冲是否已锁定
+	};
+
+	// d3d9索引缓冲
+	class D3D9IndexBuffer : public IIndexBuffer
+	{
+	public:
+		D3D9IndexBuffer();
+
+		bool CreateBuffer(	unsigned int* faceArray,
+							unsigned int faceNum );
+
+		void Clear();
+
+		void Lock();
+		void Unlock();
+
+		void SetIndexData(void* indexData, unsigned int indexNum);
 		void ModifyIndexData(int offset, int size, void* data);
 		void SetIndexSize(int size);
 
-		void RenderBuffer();
+		void RenderPrimitive();
 
-	protected:
-		IDirect3DVertexBuffer9*		m_D3DVertexBuffer;
+		void SetVertexNum(UINT vertNum) { m_VertexNum = vertNum; }
+
+	private:
 		IDirect3DIndexBuffer9*		m_D3DIndexBuffer;
 
-		void*						m_Vertices;
 		void*						m_Indices;
-
 		UINT						m_VertexNum;
 		UINT						m_FaceNum;
 

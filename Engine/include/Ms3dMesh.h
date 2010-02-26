@@ -75,10 +75,12 @@ namespace Gen
 	{
 		friend class MeshManager;
 	public:
-		static IMesh* ManagerLoad(const String& filename);
-		bool LoadFromFile(const String& filename);
-	private:
-		Ms3dMesh();
+	protected:
+		// ----- Overwrite Resource
+		bool LoadImpl();
+
+		// ----- Ms3dMesh Methods
+		Ms3dMesh(const String& filename);
 	};
 }
 

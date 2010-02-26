@@ -10,30 +10,26 @@
 #define _GLRENDERTARGETFBO_H
 
 #include "IRenderTarget.h"
+#include "GLBaseRenderTarget.h"
 #include "GLTexture.h"
 
 namespace Gen
 {
-	class GLRenderTargetFBO : public IRenderTarget
+	class GLRenderTargetFBO : public BaseRenderTarget
 	{
 	public:
 		GLRenderTargetFBO();
 		~GLRenderTargetFBO();
 
 		// ----- Overwrite IRenderTarget
-		void SetTexture(ITexture* texture);
-		ITexture* GetTexture() const { return m_Texture; }
+		void SetTexture(DeviceTexture2D* texture);
 
 		void BindRenderTarget();
-		void GenerateMipmap();
+		void UnbindRenderTarget();
 
 		// ----- GLRenderTargetFBO methods
 
 	private:
-		GLTexture*		m_Texture;
-		unsigned int	m_Width;
-		unsigned int	m_Height;
-
 		GLuint			m_FBO;
 		GLuint			rboId;
 	};

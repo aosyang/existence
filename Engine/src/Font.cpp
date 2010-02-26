@@ -10,156 +10,140 @@
 
 #include "Debug.h"
 #include "Engine.h"
+#include "TextureManager.h"
+#include "FileSystem.h"
 
 namespace Gen
 {
+	static FT_Library	g_FTLibrary;
+
 	FontManager::FontManager()
 	{
+	}
+
+	FontManager::~FontManager()
+	{
+
 	}
 
 	void FontManager::Initialize()
 	{
 		Log.MsgLn("Initializing font manager");
 		// 初始化FreeType
-		AssertFatal(!FT_Init_FreeType(&m_Library), "FontManager::Initialize() : FT_Init_FreeType failed.");
+		AssertFatal(!FT_Init_FreeType(&g_FTLibrary), "FontManager::Initialize() : Failed to initialize freetype.");
 	}
 
 	void FontManager::Shutdown()
 	{
 		Log.MsgLn("Shutting down font manager");
-		UnloadAllFonts();
-		FT_Done_FreeType(m_Library);
+		FT_Done_FreeType(g_FTLibrary);
 	}
-
-	void FontManager::UnloadAllFonts()
+	
+	bool FontManager::CreateResourceHandles(ResourceFileNameInfo* resName)
 	{
-		FontMap::iterator iter;
-		for (iter=m_FontMap.begin(); iter!=m_FontMap.end(); iter++)
-		{
-			delete (*iter).second;
-		}
-	}
+		String relativePathName = resName->path + CORRECT_SLASH + resName->filename;
 
-	bool FontManager::LoadFont(const String& fontName, const String& filename)
-	{
-		if (m_FontMap.find(fontName) != m_FontMap.end())
-		{
-			// 已经存在的字体名
-			return false;
-		}
+		// 获取字体信息
+		FT_Face ft_face;
+		FT_New_Face(g_FTLibrary, relativePathName.Data(), 0, &ft_face);
 
-		Font* font = new Font();
+		Font* font = new Font(relativePathName);
 
-		if (FT_New_Face(m_Library, filename.Data(), 0, &font->m_Face))
-		{
-			//cout << "FT_New_Face failed (there is probably a problem with your font file)" << endl;
-			delete font;
-			return false;
-		}
+		AssertFatal(m_ResourceMap.find(ft_face->family_name)==m_ResourceMap.end(),
+					"FontManager::CreateResourceHandles(): Specified resource name already exists.");
+		m_ResourceMap[ft_face->family_name] = font;
+		font->m_ResourceName = resName->filename;
 
-		m_FontMap[fontName] = font;
+		FT_Done_Face(ft_face);
+
 		return true;
 	}
-
-	bool FontManager::GetCharacter(const String& fontName, const wchar_t wch, unsigned int charHeight, CharacterInfo* info)
+	
+	Font* FontManager::GetByName(const String& resName)
 	{
-		if (m_FontMap.find(fontName) == m_FontMap.end())
-			return false;
+		return static_cast<Font*>(GetResourceByName(resName));
+	}
 
-		// hacks: return if wch==0
-		if (!wch)
-			return false;
+	bool FontManager::BuildTexture(Font* font, const wchar_t wch, unsigned int pixelSize, unsigned int x, unsigned int y, DeviceTexture2D* tex, CharGlyphInfo* charInfo)
+	{
+		if (!font) return false;
 
-		Font* font = m_FontMap[fontName];
+		// 获取该字符的象素信息，写入纹理
+		FT_GlyphSlot slot;
 
-		// TODO: 将所有集中字体缓存在几张纹理中
+		// 设置象素尺寸
+		FT_Set_Pixel_Sizes(font->m_Face, pixelSize, 0);
 
-		char name[256];
-		sprintf(name, "#Font_%s_%d_d", fontName.Data(), wch, charHeight);
-
-		if (m_CharacterMap.find(name) == m_CharacterMap.end())
-
-			//if (!(info->texture = renderer->GetTexture(name)))
+		if (FT_Load_Char(font->m_Face, wch, FT_LOAD_RENDER))
 		{
-			CharacterInfo newInfo;
+			return false;
+		}
 
+		slot = font->m_Face->glyph;
 
-			//static unsigned int h = 16;
-			//static unsigned int h = 32;
-			//unsigned int h = CharacterInfo::charHeight;
+		FT_Bitmap& bitmap = slot->bitmap;
 
-			FT_Set_Char_Size(font->m_Face, charHeight << 6, charHeight << 6, 96, 96);
+		charInfo->wchar = wch;
+		charInfo->advance_x = slot->advance.x >> 6;
+		charInfo->height = bitmap.rows;
+		charInfo->width = bitmap.width;
+		charInfo->left = slot->bitmap_left;
+		charInfo->top = slot->bitmap_top;
 
-			if (FT_Load_Glyph(font->m_Face, FT_Get_Char_Index(font->m_Face, wch), FT_LOAD_DEFAULT))
+		if (bitmap.width && bitmap.rows)
+		{
+			unsigned char* buf = new unsigned char[pixelSize * pixelSize * 4];
+			for(int j=0; j  < pixelSize ; j++)
 			{
-				return false;
-			}
-
-			FT_Glyph glyph;
-			if (FT_Get_Glyph(font->m_Face->glyph, &glyph))
-			{
-				return false;
-			}
-
-			FT_Glyph_To_Bitmap(&glyph, FT_RENDER_MODE_NORMAL, 0, 1);
-			FT_BitmapGlyph bitmap_glyph = (FT_BitmapGlyph)glyph;
-
-			FT_Bitmap& bitmap = bitmap_glyph->bitmap;
-
-			if (bitmap.width && bitmap.rows)
-			{
-
-				int width = bitmap.width;
-				int height = bitmap.rows;
-
-				unsigned char* buf = new unsigned char[width * height * 4];
-				for(int j=0; j  < height ; j++)
+				for(int i=0; i < pixelSize; i++)
 				{
-					for(int i=0; i < width; i++)
-					{
-						int index = 4 * i + (height - j - 1) * width * 4;
-						unsigned char alpha_val =  (i>=bitmap.width || j>=bitmap.rows) ? 0 : bitmap.buffer[i + bitmap.width*j];
+					int index = 4 * i + (pixelSize - j - 1) * pixelSize * 4;
+					unsigned char alpha_val =  (i>=bitmap.width || j>=bitmap.rows) ? 0 : bitmap.buffer[i + bitmap.width*j];
 
-						// 白色字体，使用Alpha通道描绘字形
-						buf[index] = 0xff;
-						buf[index + 1] = 0xff;
-						buf[index + 2] = 0xff;
-						buf[index + 3] = alpha_val;
-					}
+					// 白色字体，使用Alpha通道描绘字形
+					buf[index] = 0xff;
+					buf[index + 1] = 0xff;
+					buf[index + 2] = 0xff;
+					buf[index + 3] = alpha_val;
 				}
-
-				// 宽高必须是2的n次幂
-				newInfo.texture = renderer->BuildTexture(name, width, height, 32, buf);
-
-				// 使用nearest过滤效果不佳
-				//newInfo.texture->SetMagFilterType(FILTER_TYPE_NEAREST);
-				//newInfo.texture->SetMinFilterType(FILTER_TYPE_NEAREST);
-
-				delete [] buf;
 			}
-			else 
-				newInfo.texture = NULL;
 
-			newInfo.wchar = wch;
-			newInfo.charHeight = charHeight;
-			newInfo.advance_x = font->m_Face->glyph->advance.x >> 6;
-			//newInfo.advance_y = font->m_Face->glyph->advance.y >> 6;
-			newInfo.height = bitmap.rows;
-			newInfo.width = bitmap.width;
-			newInfo.left = bitmap_glyph->left;
-			newInfo.top = bitmap_glyph->top;
-			m_CharacterMap[name] = newInfo;
+			tex->ModifyRectData(x, y, pixelSize, pixelSize, buf);
 
+			delete [] buf;
+
+			return true;
 		}
 
-		*info = m_CharacterMap[name];
+		// 没有这个字符的数据，不绘制到纹理，但保留字符的前进信息
+		return false;
+	}
 
-		return true;
+	// ----------------------------------- Font
 
+	Font::Font(const String& filename)
+		: Resource(filename)
+	{
 	}
 
 	Font::~Font()
 	{
+	}
+
+	bool Font::LoadImpl()
+	{
+		if (FT_New_Face(g_FTLibrary, m_Filename.Data(), 0, &m_Face))
+		{
+			//cout << "FT_New_Face failed (there is probably a problem with your font file)" << endl;
+			return false;
+		}
+
+		return true;
+	}
+	
+	void Font::UnloadImpl()
+	{
 		FT_Done_Face(m_Face);
 	}
+
 }

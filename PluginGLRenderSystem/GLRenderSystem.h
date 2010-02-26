@@ -9,7 +9,7 @@
 #ifndef _GLRENDERSYSTEM_H
 #define _GLRENDERSYSTEM_H
 
-#include "IRenderer.h"
+#include "IRenderDevice.h"
 #include "GLHardwareFeature.h"
 
 #include "GL/glew.h"
@@ -21,6 +21,7 @@
 namespace Gen
 {
 	typedef IVertexBuffer*(*FactoryCreateVertexBufferFunc)();
+	typedef IIndexBuffer*(*FactoryCreateIndexBufferFunc)();
 
 	typedef void(*CREATEGPUPLUGIN)();
 	typedef void(*DESTROYGPUPLUGIN)();
@@ -50,7 +51,7 @@ namespace Gen
 
 	typedef map<GpuProgramInfo, IGpuProgram*> GpuPrograms;
 
-	class GLRenderer : public IRenderer
+	class GLRenderer : public IRenderDevice
 	{
 	public:
 		GLRenderer();
@@ -65,9 +66,6 @@ namespace Gen
 		//inline HWND GetHwnd() { return m_hWnd; }
 		//void* GetHwnd();
 
-		void SetActive(bool active) { m_Active = active; }
-		bool GetActive() { return m_Active; }
-
 		void SetGpuPluginName(const String& filename);
 
 		bool Initialize(RenderWindowParam* windowParam);
@@ -79,17 +77,8 @@ namespace Gen
 
 		void SetViewport(int left, int bottom, unsigned int width, unsigned int height);
 
-		//void SetViewMatrix(const Matrix4& mat) { m_ViewMatrix = mat; }
-		Matrix4& ViewMatrix() { return m_ViewMatrix; }
-		Matrix4& ProjectionMatrix() { return m_ProjMatrix; }
-
-		//void NotifyUpdateProjectionMatrix();
-
-		// 调整渲染窗口尺寸，并重设投影矩阵纵横比
-		//   使用默认参数调用时将仅重置投影矩阵纵横比
-		void ResizeRenderWindow(unsigned int width = 0, unsigned int height = 0);
-
-		void SetProjectionMode(ProjectionMatrixMode mode);
+		void SetViewMatrix(const Matrix4& viewMat);
+		void SetProjectionMatrix(const Matrix4& projMat);
 
 		void ClearBuffer(bool color, bool depth, bool stencil);
 
@@ -97,33 +86,41 @@ namespace Gen
 		void ToggleDepthWriting(bool enable);
 		void ToggleDepthTest(bool enable);
 		void ToggleLighting(bool enable);
-		void ToggleBlend(bool enable);
+		void ToggleAlphaTest(bool enable);
+		void SetAlphaReference(float ref);
+		void ToggleBlending(bool enable);
+		void SetBlendFactor(BlendFactor src, BlendFactor dst);
+
+		// 切换到指定纹理单元
+		void ActiveTextureUnit(unsigned int index);
 
 		void BeginRender();
 		void EndRender();
 		void SwapBuffer();
 
-		void RenderVertexBuffer(IVertexBuffer* vbuffer, Material* material, const Matrix4& transform);
+		void BindTextureRenderState(const TextureRenderState& texState, unsigned int texUnit = 0);
 
-		void RenderBox(const Vector3f& vMin, const Vector3f& vMax, const Color4f& color, const Matrix4& transform);
-		void RenderSphere(const Vector3f& point, float radius, const Color4f& color, unsigned int segment);
-		void RenderLine(const Vector3f& begin, const Vector3f& end, const Color4f& color);
+		void RenderVertexBuffer(IVertexBuffer* vbuffer, IIndexBuffer* ibuffer, const Matrix4& transform);
 
-		void RenderScreenQuad(float left, float top, float right, float bottom, ITexture* texture, const Color4f& color);
-
-		// 屏幕坐标
-		void RenderScreenQuad(int x1, int y1, int x2, int y2, ITexture* texture, const Color4f& color);
+		void RenderBox(const Vector3f& vMin, const Vector3f& vMax, const Matrix4& transform);
+		void RenderSphere(const Vector3f& point, float radius, unsigned int segment);
+		void RenderLine(const Vector3f& begin, const Vector3f& end);
 
 		void SetAmbientColor(const Color4f& color);
-		const Color4f GetAmbientColor();
 
-		ITexture* BuildTexture(const String& textureName, unsigned int width, unsigned int height, unsigned int bpp, unsigned char* data);
-		ITexture* BuildCubeTexture(const String& textureName, unsigned int width, unsigned int height, unsigned int bpp, unsigned char* data[6]);
+		IDeviceTexture* BuildTexture();
+		IDeviceTexture* BuildCubeTexture();
 
 		// 构造阴影映射用的贴图 for test only
-		ITexture* BuildDepthTexture(const String& textureName, unsigned int width, unsigned int height);
+		IDeviceTexture* BuildDepthTexture(const String& textureName, unsigned int width, unsigned int height);
 
-		ITexture* GetTexture(const String& textureName);
+		// Materials
+		void SetVertexColor(const Color4f& color);
+		void SetMaterialAmbientColor(const Color4f& color);
+		void SetMaterialDiffuseColor(const Color4f& color);
+		void SetMaterialSpecularColor(const Color4f& color);
+		void SetMaterialEmissiveColor(const Color4f& color);
+		void SetMaterialSpecularLevel(float level);
 
 		// Shaders
 
@@ -133,34 +130,31 @@ namespace Gen
 		// 获取一个已有Shader
 		IGpuProgram* GetGpuProgram(const String& filename, const String& entry, GpuProgramType type);
 
+		void BindGpuProgram(IGpuProgram* program, GpuProgramType type);
+		void UnbindGpuProgram(GpuProgramType type);
+
 		int GetMaxLightsNumber();
 
 		void SetupLight(int index, ILight* light);
 
 		IVertexBuffer* BuildVertexBuffer();
+		IIndexBuffer* BuildIndexBuffer();
 
 		// Render target
 		IRenderTarget* CreateRenderTarget();
-		void SetRenderTarget(IRenderTarget* rt);
+		void BindRenderTarget(IRenderTarget* rt);
+		void UnbindRenderTarget();
 	protected:
 
 		// 创建OpenGL矩阵
 		//   从Matrix4转换为OpenGL所使用的float[16]
 		void BuildGLMatrix(const Matrix4& mat, float* glMat);
 
-		void BindTextureRenderState(const TextureRenderState& texState);
-
-		void BindGpuProgram(IGpuProgram* program, GpuProgramType type);
-		void UnbindGpuProgram(GpuProgramType type);
-
 		GLint GetFilterType(int type);
 		GLint GetBlendFactor(int factor);
 		GLint GetTextureEnvironmentMode(int mode);
-		void SetupMaterial(Material* material);
-		void SetupMaterialWhite();
+		//void SetupMaterialWhite();
 
-		bool UnloadTexture(const String& textureName);
-		void UnloadAllTextures();
 		void UnloadGpuPrograms();
 	protected:
 		RenderWindowHandle	m_WindowHandle;
@@ -171,31 +165,23 @@ namespace Gen
 		GLXContext      m_Context;
 #endif	// #if defined __PLATFORM_WIN32
 
-		unsigned int	m_WindowWidth;
-		unsigned int	m_WindowHeight;
-		//unsigned int	m_Bits;
-
-		bool			m_Active;
-
 		String			m_PluginName;
 
 		Matrix4			m_ModelMatrix;
 		Matrix4			m_ViewMatrix;
-		Matrix4			m_ProjMatrix;
 
-		typedef map<String, ITexture*>	TextureList;
-		TextureList		m_TextureList;
+		GpuPrograms		m_GpuPrograms;				///< Shader列表
 
-		GpuPrograms		m_GpuPrograms;
+		bool			m_DepthWriting;				///< 是否开启深度写入
+		IRenderTarget*	m_RenderTarget;				///< 渲染器当前使用的渲染目标
 
-		bool			m_DepthWriting;
+		GLHardwareFeature	m_HardwareFeature;		///< 硬件特性查询
 
-		GLHardwareFeature	m_HardwareFeature;
-
-		FactoryCreateVertexBufferFunc	m_VertexBufferFactoryFunc;
+		FactoryCreateVertexBufferFunc	m_VertexBufferFactoryFunc;		///< 顶点缓冲工厂函数
+		FactoryCreateIndexBufferFunc	m_IndexBufferFactoryFunc;		///< 索引缓冲工厂函数
 	};
 
-	extern "C" DLLEXPORT IRenderer* CreateRenderSystem();
+	extern "C" DLLEXPORT IRenderDevice* CreateRenderSystem();
 }
 
 #endif

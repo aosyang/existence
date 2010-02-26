@@ -8,6 +8,7 @@
 
 #include "Billboard.h"
 #include "Engine.h"
+#include "Renderer.h"
 
 namespace Gen
 {
@@ -24,7 +25,8 @@ namespace Gen
 		m_RenderOrder = 110;
 
 		// 创建顶点缓冲
-		m_VertexBuffer = renderer->BuildVertexBuffer();
+		m_VertexBuffer = Renderer::Instance().BuildVertexBuffer();
+		m_IndexBuffer = Renderer::Instance().BuildIndexBuffer();
 
 		// 指定顶点数据
 		unsigned int face[] = { 0, 2, 1, 2, 3, 1 };
@@ -49,12 +51,14 @@ namespace Gen
 			0.0f, 0.0f,
 			1.0f, 0.0f };
 
-		m_VertexBuffer->CreateBuffer(VFormat_Position|VFormat_Normal|VFormat_Color|VFormat_Texcoord0, vert, normal, color, uv, 4, face, 2);
+		m_VertexBuffer->CreateBuffer(VFormat_Position|VFormat_Normal|VFormat_Color|VFormat_Texcoord0, vert, normal, color, uv, 4);
+		m_IndexBuffer->CreateBuffer(face, 2);
 	}
 
 	Billboard::~Billboard()
 	{
-		SAFE_DELETE(m_VertexBuffer)
+		SAFE_DELETE(m_VertexBuffer);
+		SAFE_DELETE(m_IndexBuffer);
 	}
 
 	void Billboard::Update(unsigned long deltaTime)
@@ -63,7 +67,7 @@ namespace Gen
 
 		RenderableObjectBase::Update(deltaTime);
 
-		//float n = renderer->GetFrustum()->SphereInFrustum(m_WorldTransform.GetPosition(), 1.0f) / 10.0f;
+		//float n = Renderer::Instance().GetFrustum()->SphereInFrustum(m_WorldTransform.GetPosition(), 1.0f) / 10.0f;
 		//SetColor(Color4f(1.0f, 1.0f, 1.0f, max(n, 0.0f)));
 	}
 
@@ -71,13 +75,19 @@ namespace Gen
 	{
 		RenderableObjectBase::RenderSingleObject();
 
-		Matrix4 invViewMatrix = renderer->ViewMatrix().GetInverseMatrix();
+		Matrix4 invViewMatrix = Renderer::Instance().GetViewMatrix().GetInverseMatrix();
 		Matrix4 billboardingMat = m_WorldTransform;
 		//Matrix3 identityRotMatrix;
 		//identityRotMatrix.MakeIdentity();
 		billboardingMat.SetRotation(invViewMatrix.GetRotationMatrix());
 
-		renderer->RenderVertexBuffer(m_VertexBuffer, m_Material, billboardingMat);
+		Renderer::Instance().SetupMaterial(m_Material);
+		Renderer::Instance().RenderPrimitives(m_VertexBuffer, m_IndexBuffer, billboardingMat);
+	}
+	void Billboard::SetMaterial(Material* mat)
+	{
+		m_Material = mat;
+		if (mat) mat->Trigger();
 	}
 
 	void Billboard::SetColor(const Color4f& color)

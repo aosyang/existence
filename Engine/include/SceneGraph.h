@@ -68,7 +68,9 @@ namespace Gen
 		void UpdateScene(unsigned long deltaTime);
 
 		void SetupRenderView(const RenderView& view);
-		void RenderScene();
+
+		// 渲染场景
+		void RenderScene(bool debugRender=false);
 
 		// 对场景进行射线检测
 		// TODO: 这个type目前完全没有用途

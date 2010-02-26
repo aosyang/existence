@@ -51,7 +51,7 @@ namespace Gen
 	}
 
 	// 指定音频缓冲
-	void ALAudioSource::SetAudioBuffer(IAudioBuffer* buffer)
+	void ALAudioSource::SetAudioBuffer(IDeviceAudioBuffer* buffer)
 	{
 		// 将buffer id赋予当前source
 		ALAudioBuffer* al_buf = static_cast<ALAudioBuffer*>(buffer);

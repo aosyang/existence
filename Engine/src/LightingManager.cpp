@@ -168,6 +168,9 @@ namespace Gen
 				iter_light!=m_GlobalLights.end();
 				iter_light++)
 			{
+				// 未开启该光源，忽略
+				if (!(*iter_light)->GetActive()) continue;
+
 				(*iter_obj)->AddLight(*iter_light);
 			}
 
@@ -176,6 +179,9 @@ namespace Gen
 				iter_light!=m_Lights.end();
 				iter_light++)
 			{
+				// 未开启该光源，忽略
+				if (!(*iter_light)->GetActive()) continue;
+
 				Vector3f light_pos = (*iter_light)->WorldTransform().GetPosition();
 				Vector3f obj_pos = (*iter_obj)->GetRenderableObject()->WorldTransform().GetPosition();
 

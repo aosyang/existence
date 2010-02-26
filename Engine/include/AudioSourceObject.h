@@ -11,6 +11,7 @@
 
 #include "SceneObject.h"
 #include "IAudioSource.h"
+#include "AudioBuffer.h"
 #include "EString.h"
 
 namespace Gen
@@ -25,12 +26,9 @@ namespace Gen
 
 		// ----- AudioSourceObject Methods
 
-		bool CreateAudioSource(IAudioBuffer* buffer);
-		bool CreateAudioSource(const String& bufferName);
-
-		// 指定音源(注：不要让多个对象共享同一个音源)
-		//void SetAudioSource(IAudioSource* source);
-		IAudioSource* GetAudioSource() { return m_Source; }
+		// 指定音频缓冲
+		void SetAudioBuffer(AudioBuffer* buffer);
+		AudioBuffer* GetAudioBuffer() { return m_Buffer; }
 
 		void Play();
 		void Stop();
@@ -44,6 +42,7 @@ namespace Gen
 
 	protected:
 		IAudioSource*		m_Source;
+		AudioBuffer*		m_Buffer;
 
 		Vector3f			m_OldPosition;			///< 计算移动速度用的上一帧位置
 		float				m_VelocityFactor;		///< 速度因子，影响多普勒效应，设置成0.0f为关闭

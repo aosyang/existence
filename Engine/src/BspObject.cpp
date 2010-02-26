@@ -1,6 +1,8 @@
 #include "BspObject.h"
 #include "Engine.h"
 #include "MeshManager.h"
+#include "MeshElement.h"
+#include "Renderer.h"
 
 namespace Gen
 {
@@ -25,7 +27,8 @@ namespace Gen
 		{
 			MeshElement* elem = m_Mesh->GetElement(i);
 
-			renderer->RenderVertexBuffer(elem->GetVertexBuffer(), m_Mesh->GetMaterial(i), m_WorldTransform);
+			Renderer::Instance().SetupMaterial(m_Mesh->GetMaterial(i));
+			Renderer::Instance().RenderPrimitives(m_Mesh->GetVertexBuffer(), elem->GetIndexBuffer(), m_WorldTransform);
 		}
 	}
 
@@ -69,7 +72,7 @@ namespace Gen
 	{
 		if (!RenderableObjectBase::OnSave(node)) return false;
 
-		node->SaveAttribute("MeshName", m_Mesh->GetName());
+		node->SaveAttribute("MeshName", m_Mesh->GetResourceName());
 		return true;
 	}
 
@@ -79,10 +82,11 @@ namespace Gen
 		SetMesh(MeshManager::Instance().GetByName(node->GetAttribute("MeshName")));
 	}
 
-	void BspObject::SetMesh(IMesh* mesh)
+	void BspObject::SetMesh(BaseMesh* mesh)
 	{
 		AssertFatal(mesh, "BspObject::SetMesh() : Mesh cannot be null!");
 		m_Mesh = mesh;
+		mesh->Trigger();
 
 		// 根据mesh的包围球半径更新对象包围球半径
 		m_BoundingSphereRadius = m_Mesh->GetBoundingRadius();

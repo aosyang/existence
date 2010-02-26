@@ -15,7 +15,9 @@ namespace Gen
 	class PrimitiveMesh : public BaseMesh
 	{
 	public:
-		PrimitiveMesh();
+		PrimitiveMesh(const String& filename);
+
+		// ----- PrimitiveMesh Methods
 
 		void CreateBox(float side);
 
@@ -23,6 +25,12 @@ namespace Gen
 		void CreatePositiveZPlane(float side);
 
 		String GetFileName() const { return ""; }
+
+	protected:
+		// ----- Overwrite Resource
+		bool LoadImpl();
+
+		// ----- PrimitiveMesh Methods
 	};
 }
 

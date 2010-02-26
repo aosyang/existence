@@ -1,18 +1,36 @@
+//-----------------------------------------------------------------------------------
+/// PrimitiveMesh.cpp 基础几何体类实现
+/// 
+/// File Encoding : GB2312
+/// 
+/// Copyright (c) 2009 - 2010 by Mwolf
+//-----------------------------------------------------------------------------------
 #include "PrimitiveMesh.h"
+#include "MeshElement.h"
+#include "Engine.h"
+#include "Renderer.h"
 
 namespace Gen
 {
-	PrimitiveMesh::PrimitiveMesh()
-	: BaseMesh()
+	PrimitiveMesh::PrimitiveMesh(const String& filename)
+	: BaseMesh(filename)
 	{
+
 	}
 
+	bool PrimitiveMesh::LoadImpl()
+	{
+		// 这类几何体无法通过资源管理器装载
+
+		return false;
+	}
 
 	void PrimitiveMesh::CreateBox(float side)
 	{
+		m_VertexBuffer = Renderer::Instance().BuildVertexBuffer();
 		ClearMeshElements();
 
-		MeshElement* elem = new MeshElement();
+		MeshElement* elem = new MeshElement(this);
 		
 		static unsigned int cubeIndex[] = 
 		{
@@ -109,24 +127,35 @@ namespace Gen
 			1, 1, 
 			0, 1};
 
-		float vertices[72];
-		memcpy(vertices, cubeVertex, sizeof(float) * 72);
+		m_VertexArray = new float[72];
+		memcpy(m_VertexArray, cubeVertex, sizeof(float) * 72);
 		for (int i=0; i<72; i++)
-			vertices[i] *= side;
+			m_VertexArray[i] *= side;
+
+		m_VertexNum = 24;
 		
-		elem->CreateMeshData(24, 12, cubeIndex, vertices, cubeNormal, cubeTexcoord);
+		//elem->CreateMeshData(24, 12, cubeIndex, vertices, cubeNormal, cubeTexcoord);
+		m_VertexBuffer->CreateBuffer(VFormat_Position|VFormat_Normal|VFormat_Texcoord0,
+									 m_VertexArray,
+									 cubeNormal,
+									 NULL,
+									 cubeTexcoord,
+									 m_VertexNum);
+		elem->CreateMeshData(12, cubeIndex);
 
 		AddMeshElement(elem);
+		UpdateElementsOBB();
 
 		m_BoundingRadius = side * 0.866f;
+		m_IsResourceLoaded = true;
 	}
 
 	void PrimitiveMesh::CreatePositiveYPlane(float side)
 	{
-
+		m_VertexBuffer = Renderer::Instance().BuildVertexBuffer();
 		ClearMeshElements();
 
-		MeshElement* elem = new MeshElement();
+		MeshElement* elem = new MeshElement(this);
 
 		static unsigned int planeIndex[] = 
 		{	0, 1, 2,
@@ -140,10 +169,10 @@ namespace Gen
 			0.5, 0.0, 0.5
 		};
 
-		float vertices[12];
-		memcpy(vertices, planeVertex, sizeof(float) * 12);
+		m_VertexArray = new float[12];
+		memcpy(m_VertexArray, planeVertex, sizeof(float) * 12);
 		for (int i=0; i<12; i++)
-			vertices[i] *= side;
+			m_VertexArray[i] *= side;
 
 		static float planeNormal[] = 
 		{
@@ -161,18 +190,30 @@ namespace Gen
 			1	,	0
 		};
 
-		elem->CreateMeshData(4, 2, planeIndex, vertices, planeNormal, planeTexcoord);
+		m_VertexNum = 4;
+
+		//elem->CreateMeshData(4, 2, planeIndex, vertices, planeNormal, planeTexcoord);
+		m_VertexBuffer->CreateBuffer(VFormat_Position|VFormat_Normal|VFormat_Texcoord0,
+									 m_VertexArray,
+									 planeNormal,
+									 NULL,
+									 planeTexcoord,
+									 m_VertexNum);
+		elem->CreateMeshData(2, planeIndex);
 
 		AddMeshElement(elem);
+		UpdateElementsOBB();
 
 		m_BoundingRadius = side * 0.7071f;
+		m_IsResourceLoaded = true;
 	}
 
 	void PrimitiveMesh::CreatePositiveZPlane(float side)
 	{
+		m_VertexBuffer = Renderer::Instance().BuildVertexBuffer();
 		ClearMeshElements();
 
-		MeshElement* elem = new MeshElement();
+		MeshElement* elem = new MeshElement(this);
 		
 		static unsigned int planeIndex[] = 
 		{	0, 2, 1,
@@ -185,10 +226,10 @@ namespace Gen
 			-0.5, 0.5, 0.0,
 			0.5, 0.5, 0.0};
 
-		float vertices[12];
-		memcpy(vertices, planeVertex, sizeof(float) * 12);
+		m_VertexArray = new float[12];
+		memcpy(m_VertexArray, planeVertex, sizeof(float) * 12);
 		for (int i=0; i<12; i++)
-			vertices[i] *= side;
+			m_VertexArray[i] *= side;
 
 		static float planeNormal[] = 
 		{
@@ -205,11 +246,21 @@ namespace Gen
 			0	,	0	,
 			1	,	0};
 
-		elem->CreateMeshData(4, 2, planeIndex, vertices, planeNormal, planeTexcoord);
+		m_VertexNum = 4;
+
+		//elem->CreateMeshData(4, 2, planeIndex, vertices, planeNormal, planeTexcoord);
+		m_VertexBuffer->CreateBuffer(VFormat_Position|VFormat_Normal|VFormat_Texcoord0,
+									 m_VertexArray,
+									 planeNormal,
+									 NULL,
+									 planeTexcoord,
+									 m_VertexNum);
+		elem->CreateMeshData(2, planeIndex);
 
 		AddMeshElement(elem);
+		UpdateElementsOBB();
 
 		m_BoundingRadius = side * 0.7071f;
-
+		m_IsResourceLoaded = true;
 	}
 }

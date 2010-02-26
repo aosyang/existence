@@ -31,6 +31,11 @@ private:
 	DistantViewObject*	m_Sky;
 
 	TextUIControl*		m_UIFps;
+
+	SkeletalMeshObject*	m_SkelMesh1;
+	SkeletalMeshObject*	m_SkelMesh2;
+
+	bool				m_DebugRender;
 };
 
 #endif

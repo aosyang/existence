@@ -1,20 +1,20 @@
 //-----------------------------------------------------------------------------------
-/// Prerequistites.h 预包含头文件
+/// Existence.h 预包含头文件
 /// 
 /// File Encoding : GB2312
 /// 
-/// Copyright (c) 2009 by Mwolf
+/// Copyright (c) 2009 - 2010 by Mwolf
 //-----------------------------------------------------------------------------------
-#ifndef _PREREQUISITES_H
-#define _PREREQUISITES_H
+#ifndef _EXISTENCE_H
+#define _EXISTENCE_H
 
 namespace Gen
 {
 	// Interfaces
 	class IAudioSystem;
-	class IRenderer;
+	class IRenderDevice;
 	class IVertexBuffer;
-	class ITexture;
+	class BaseTexture;
 	class IGame;
 	class ISceneObject;
 
@@ -46,12 +46,16 @@ namespace Gen
 	class NullAudioSystem;
 	class BspTree;
 	class Log;
-	class Skeletal;
 	class Image;
 	class String;
 
+	class TextureManager;
 	class MeshManager;
-	class IMesh;
+	class SkeletonManager;
+	class Renderer;
+	class AudioManager;
+
+	class BaseMesh;
 	class EmdMesh;
 	class Ms3dMesh;
 
@@ -62,6 +66,7 @@ namespace Gen
 	class SceneRootObject;
 	class Camera;
 	class MeshObject;
+	class SkeletalMeshObject;
 	class DistantViewObject;
 	class Billboard;
 	class Decal;
@@ -86,8 +91,8 @@ namespace Gen
 #include "Platform.h"
 #include "Debug.h"
 
-#include "ITexture.h"
-#include "IRenderer.h"
+#include "Texture.h"
+#include "IRenderDevice.h"
 #include "IVertexBuffer.h"
 #include "MathUtil.h"
 #include "Vector3f.h"
@@ -116,13 +121,18 @@ namespace Gen
 #include "AudioSourceObject.h"
 #include "BspTree.h"
 #include "Log.h"
-#include "Skeletal.h"
+#include "Skeleton.h"
 #include "Image.h"
 #include "EString.h"
 #include "StringConverter.h"
 
 #include "MeshManager.h"
-#include "IMesh.h"
+#include "TextureManager.h"
+#include "SkeletonManager.h"
+#include "Renderer.h"
+#include "AudioManager.h"
+
+#include "BaseMesh.h"
 #include "EmdMesh.h"
 #include "Ms3dMesh.h"
 
@@ -134,6 +144,7 @@ namespace Gen
 #include "SceneRootObject.h"
 #include "Camera.h"
 #include "MeshObject.h"
+#include "SkeletalMeshObject.h"
 #include "DistantViewObject.h"
 #include "Billboard.h"
 #include "Decal.h"

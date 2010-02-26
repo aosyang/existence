@@ -7,6 +7,7 @@
 //-----------------------------------------------------------------------------------
 #include "GLTexture.h"
 #include "Debug.h"
+#include <math.h>
 
 namespace Gen
 {
@@ -16,14 +17,13 @@ namespace Gen
 	{
 		if (n==1) return 1;
 
-		int l = int(log((float)(n - 1)) / log(2.0f));
+		int l = int(log(float(n - 1)) / log(2.0f));
 		return 1 << (l+1);
 	}
 
 	GLTexture::GLTexture()
 		: m_GLTextureID(0)
 	{
-		glGenTextures(1, &m_GLTextureID);
 	}
 
 	GLTexture::~GLTexture()
@@ -37,11 +37,12 @@ namespace Gen
 
 	void GLTexture::Create(unsigned int width, unsigned int height, unsigned int bpp, unsigned char* data)
 	{
+		glGenTextures(1, &m_GLTextureID);
+
+		m_Bpp = bpp;
 
 		//GLint internalFormat;		// 每像素颜色数(RGB为3， RGBA为4)
 		//GLint format;				// 像素格式(RGB的顺序以及是否含有Alpha通道)
-
-		m_Bpp = bpp;
 
 		// FIXME: 对于8bit的纹理读取目前还有问题
 
@@ -85,7 +86,7 @@ namespace Gen
 			gluScaleImage(m_Format, width, height, GL_UNSIGNED_BYTE, data, m_Width, m_Height, GL_UNSIGNED_BYTE, scaleImage);
 
 			glTexImage2D(GL_TEXTURE_2D, 0, m_InternalFormat, m_Width, m_Height,
-				0, m_Format, GL_UNSIGNED_BYTE, scaleImage);
+						 0, m_Format, GL_UNSIGNED_BYTE, scaleImage);
 
 			delete [] scaleImage;
 		}
@@ -96,7 +97,7 @@ namespace Gen
 
 			//store the texture data for OpenGL use
 			glTexImage2D(GL_TEXTURE_2D, 0, m_InternalFormat, width, height,
-				0, m_Format, GL_UNSIGNED_BYTE, data);
+						 0, m_Format, GL_UNSIGNED_BYTE, data);
 		}
 
 		// 生成mipmap

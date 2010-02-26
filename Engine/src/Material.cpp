@@ -7,13 +7,13 @@
 //-----------------------------------------------------------------------------------
 #include "Material.h"
 #include "Engine.h"
+#include "TextureManager.h"
+#include "FileSystem.h"
 
 #include "tinyxml/tinyxml.h"
 
 namespace Gen
 {
-	template <> unsigned int ResourceManager<Material>::m_sIndex = 0;
-	template <> ResourceManager<Material>::LoadFunc ResourceManager<Material>::m_sLoadFunc = &Material::LoadMaterial;
 	MaterialLoadFuncMap	Material::m_sFuncMap;
 	RenderStateLoadFuncMap Material::m_sRSFuncMap;
 
@@ -28,16 +28,39 @@ namespace Gen
 	void ReadDepthTest(Material* mat, const String& val);
 	void ReadAlphaTest(Material* mat, const String& val);
 	void ReadAlphaRef(Material* mat, const String& val);
+	void ReadBlending(Material* mat, const String& val);
+	void ReadSrcBlendFactor(Material* mat, const String& val);
+	void ReadDstBlendFactor(Material* mat, const String& val);
 
 	void ReadRSTexture(TextureRenderState* rs, const String& val);
 	void ReadRSWrapType(TextureRenderState* rs, const String& val);
 	void ReadRSMinFilterType(TextureRenderState* rs, const String& val);
 	void ReadRSMagFilterType(TextureRenderState* rs, const String& val);
 	void ReadRSGenMode(TextureRenderState* rs, const String& val);
-	void ReadRSBlending(TextureRenderState* rs, const String& val);
-	void ReadRSSrcBlendFactor(TextureRenderState* rs, const String& val);
-	void ReadRSDstBlendFactor(TextureRenderState* rs, const String& val);
 	void ReadRSEnvMode(TextureRenderState* rs, const String& val);
+
+	static map<const String, TextureWrapType>	g_TexWrapTypeTable;
+	static String g_TexWrapTypeStringTable[] =
+	{
+		"WRAP_TYPE_CLAMP",
+		"WRAP_TYPE_REPEAT",
+		"WRAP_TYPE_CLAMP_TO_EDGE",
+	};
+
+	TextureWrapType StringToWrapType(const String& str)
+	{
+		if (g_TexWrapTypeTable.find(str)!=g_TexWrapTypeTable.end())
+			return g_TexWrapTypeTable[str];
+
+		return WRAP_TYPE_CLAMP;
+	}
+
+	String WrapTypeToString(TextureWrapType type)
+	{
+		if (type<WRAP_TYPE_COUNT && type>=0)
+			return g_TexWrapTypeStringTable[type];
+		return g_TexWrapTypeStringTable[WRAP_TYPE_CLAMP_TO_EDGE];
+	}
 
 	int InitializeMaterialFunc()
 	{
@@ -52,23 +75,28 @@ namespace Gen
 		Material::m_sFuncMap["DepthTest"] = &ReadDepthTest;
 		Material::m_sFuncMap["AlphaTest"] = &ReadAlphaTest;
 		Material::m_sFuncMap["AlphaRef"] = &ReadAlphaRef;
+		Material::m_sFuncMap["Blending"] = &ReadBlending;
+		Material::m_sFuncMap["SrcBlendFactor"] = &ReadSrcBlendFactor;
+		Material::m_sFuncMap["DstBlendFactor"] = &ReadDstBlendFactor;
 
 		Material::m_sRSFuncMap["Texture"] = &ReadRSTexture;
 		Material::m_sRSFuncMap["WrapType"] = &ReadRSWrapType;
 		Material::m_sRSFuncMap["MinFilterType"] = &ReadRSMinFilterType;
 		Material::m_sRSFuncMap["MagFilterType"] = &ReadRSMagFilterType;
 		Material::m_sRSFuncMap["TextureGenMode"] = &ReadRSGenMode;
-		Material::m_sRSFuncMap["Blending"] = &ReadRSBlending;
-		Material::m_sRSFuncMap["TextureBlendFactorSrc"] = &ReadRSSrcBlendFactor;
-		Material::m_sRSFuncMap["TextureBlendFactorDst"] = &ReadRSDstBlendFactor;
 		Material::m_sRSFuncMap["TextureEnvMode"] = &ReadRSEnvMode;
+
+		g_TexWrapTypeTable["WRAP_TYPE_CLAMP"] = WRAP_TYPE_CLAMP;
+		g_TexWrapTypeTable["WRAP_TYPE_REPEAT"] = WRAP_TYPE_REPEAT;
+		g_TexWrapTypeTable["WRAP_TYPE_CLAMP_TO_EDGE"] = WRAP_TYPE_CLAMP_TO_EDGE;
 		return 1;
 	}
 
 	static int mat_init = InitializeMaterialFunc();
 
-	Material::Material()
-	: m_Lighting(true),
+	Material::Material(const String& filename)
+	: Resource(filename),
+	  m_Lighting(true),
 	  //m_Ambient(0.2f, 0.2f, 0.2f),
 	  m_Ambient(0.5f, 0.5f, 0.5f),
 	  m_Diffuse(0.8f, 0.8f, 0.8f),
@@ -80,6 +108,9 @@ namespace Gen
 	  m_DepthTest(true),
 	  m_AlphaTest(false),
 	  m_AlphaReference(0.0f),
+	  m_Blending(true),
+	  m_SrcBlendFactor(BLEND_FACTOR_SRC_ALPHA),
+	  m_DstBlendFactor(BLEND_FACTOR_ONE_MINUS_SRC_ALPHA),
 	  m_VertexProgram(NULL),
 	  m_FragmentProgram(NULL)
 	{
@@ -91,9 +122,9 @@ namespace Gen
 	Material::~Material()
 	{}
 
-	Material* Material::LoadMaterial(const String& filename)
+	bool Material::LoadImpl()
 	{
-		TiXmlDocument matDoc(filename.Data());
+		TiXmlDocument matDoc(m_Filename.Data());
 		matDoc.LoadFile();
 
 		TiXmlElement* elem = matDoc.FirstChildElement();
@@ -101,10 +132,10 @@ namespace Gen
 		if (!elem) return NULL;
 
 		const char* name = elem->Attribute("name");
-		if (!name) return NULL;
+		if (m_ResourceName!=name) return false;
 
 		TiXmlElement* mat_elem = elem->FirstChildElement();
-		Material* material = new Material();
+
 		int renderState = 0;
 		while(mat_elem)
 		{
@@ -114,22 +145,60 @@ namespace Gen
 				if (!rs_elem)
 					break;
 
-				material->SetTextureLayerEnabled(renderState, true);
+				this->SetTextureLayerEnabled(renderState, true);
 
 				while(rs_elem)
 				{
-					TextureRenderState* rs = material->GetTextureRenderState(renderState);
+					TextureRenderState* rs = this->GetTextureRenderState(renderState);
 					LoadRenderState(rs, rs_elem->Value(), rs_elem->GetText());
 					rs_elem = rs_elem->NextSiblingElement();
 				}
 				renderState++;
 			}
 			else
-				LoadAttrib(material, mat_elem->Value(), mat_elem->GetText());
+				LoadAttrib(this, mat_elem->Value(), mat_elem->GetText());
 			mat_elem = mat_elem->NextSiblingElement();
 		}
 
-		return material;
+		return true;
+	}
+	
+	void Material::UnloadImpl()
+	{
+		// TODO: 将所有状态设置为初值
+	}
+
+	bool Material::Trigger()
+	{
+		if (!Resource::Trigger()) return false;
+
+		for (int i=0; i<8; i++)
+		{
+			if (m_TextureLayerEnabled[i] && (m_TextureRenderState[i].textureName!=""))
+			{
+				BaseTexture* tex = TextureManager::Instance().GetByName(m_TextureRenderState[i].textureName);
+				if (tex)
+				{
+					tex->Trigger();
+					m_TextureRenderState[i].texture = tex->GetDeviceTexture();
+				}
+			}
+		}
+
+		return true;
+	}
+
+	void Material::SetTexture(BaseTexture* tex, unsigned int index)
+	{
+		if (tex)
+		{
+			m_TextureRenderState[index].textureName = tex->GetResourceName();
+			if (m_IsResourceLoaded)
+			{
+				tex->Trigger();
+				m_TextureRenderState[index].texture = tex->GetDeviceTexture();
+			}
+		}
 	}
 
 	void Material::SaveToFile(const String& filename, bool outputDefault)
@@ -140,7 +209,7 @@ namespace Gen
 		doc.InsertEndChild(decl);
 
 		TiXmlElement elem_mat("Material");
-		elem_mat.SetAttribute("name", m_Name->Data());
+		elem_mat.SetAttribute("name", m_ResourceName.Data());
 
 		// 属性写入xml文件，如果与默认值相等就不写入
 
@@ -176,6 +245,10 @@ namespace Gen
 		SAVE_MATERIAL_ATTRIB(AlphaTest, false);
 		SAVE_MATERIAL_ATTRIB(AlphaRef, 0.0f);
 
+		SAVE_MATERIAL_ATTRIB(Blending, true);
+		SAVE_MATERIAL_ATTRIB(SrcBlendFactor, BLEND_FACTOR_SRC_ALPHA);
+		SAVE_MATERIAL_ATTRIB(DstBlendFactor, BLEND_FACTOR_ONE_MINUS_SRC_ALPHA);
+
 		for (int i=0; i<8; i++)
 		{
 			if (!m_TextureLayerEnabled[i]) continue;
@@ -190,12 +263,14 @@ namespace Gen
 			elem_rs.InsertEndChild(name##attr);
 
 			// 尝试保存纹理
-			if (rs->texture)
-			{
-				SAVE_RENDER_STATE_ATTRIB(Texture, texture->GetName());
-			}
-			// 如果没有指定纹理，尝试保存纹理名称
-			else if (rs->textureName!="")
+			//if (rs->texture)
+			//{
+			//	// FIXME:
+			//	SAVE_RENDER_STATE_ATTRIB(Texture, texture->GetName());
+			//}
+			//// 如果没有指定纹理，尝试保存纹理名称
+			//else 
+			if (rs->textureName!="")
 			{
 				TiXmlElement nameTexture("Texture");
 				TiXmlText valTexture(rs->textureName.Data());
@@ -210,14 +285,17 @@ namespace Gen
 				nameTexture.InsertEndChild(valTexture);
 				elem_rs.InsertEndChild(nameTexture);
 			}
-			SAVE_RENDER_STATE_ATTRIB(WrapType, wrapType);
+
+			//SAVE_RENDER_STATE_ATTRIB(WrapType, wrapType);
+
+			TiXmlElement nameWrapType("WrapType");
+			TiXmlText valWrapType(WrapTypeToString(rs->wrapType).Data());
+			nameWrapType.InsertEndChild(valWrapType);
+			elem_rs.InsertEndChild(nameWrapType);
+
 			SAVE_RENDER_STATE_ATTRIB(MinFilterType, minFilterType);
 			SAVE_RENDER_STATE_ATTRIB(MagFilterType, magFilterType);
 			SAVE_RENDER_STATE_ATTRIB(TextureGenMode, genMode);
-
-			SAVE_RENDER_STATE_ATTRIB(Blending, useBlending);
-			SAVE_RENDER_STATE_ATTRIB(TextureBlendFactorSrc, srcBlendFactor);
-			SAVE_RENDER_STATE_ATTRIB(TextureBlendFactorDst, dstBlendFactor);
 
 			SAVE_RENDER_STATE_ATTRIB(TextureEnvMode, envMode);
 
@@ -289,6 +367,21 @@ namespace Gen
 		mat->SetAlphaRef(val.ToFloat());
 	}
 
+	void ReadBlending(Material* mat, const String& val)
+	{
+		mat->SetBlending(val.ToBool());
+	}
+
+	void ReadSrcBlendFactor(Material* mat, const String& val)
+	{
+		mat->SetSrcBlendFactor((BlendFactor)val.ToInt());
+	}
+
+	void ReadDstBlendFactor(Material* mat, const String& val)
+	{
+		mat->SetDstBlendFactor((BlendFactor)val.ToInt());
+	}
+
 	void Material::LoadRenderState(TextureRenderState* rs, const String& attrib, const String& val)
 	{
 		if (m_sRSFuncMap.find(attrib)!=m_sRSFuncMap.end())
@@ -297,12 +390,14 @@ namespace Gen
 
 	void ReadRSTexture(TextureRenderState* rs, const String& val)
 	{
-		rs->texture = renderer->GetTexture(val);
+		// 读取材质名称并保存，当资源被触发时载入材质
+		rs->textureName = val;
 	}
 
 	void ReadRSWrapType(TextureRenderState* rs, const String& val)
 	{
-		rs->wrapType = (TextureWrapType)val.ToInt();
+		//rs->wrapType = (TextureWrapType)val.ToInt();
+		rs->wrapType = StringToWrapType(val);
 	}
 
 	void ReadRSMinFilterType(TextureRenderState* rs, const String& val)
@@ -320,24 +415,56 @@ namespace Gen
 		rs->genMode = (TextureGenMode)val.ToInt();
 	}
 
-	void ReadRSBlending(TextureRenderState* rs, const String& val)
-	{
-		rs->useBlending = val.ToBool();
-	}
-
-	void ReadRSSrcBlendFactor(TextureRenderState* rs, const String& val)
-	{
-		rs->srcBlendFactor = (TextureBlendFactor)val.ToInt();
-	}
-
-	void ReadRSDstBlendFactor(TextureRenderState* rs, const String& val)
-	{
-		rs->dstBlendFactor = (TextureBlendFactor)val.ToInt();
-	}
-
 	void ReadRSEnvMode(TextureRenderState* rs, const String& val)
 	{
 		rs->envMode = (TextureEnvMode)val.ToInt();
+	}
+
+	// ----------------------------------- MaterialManager
+	MaterialManager::MaterialManager()
+	{
+	}
+
+	bool MaterialManager::CreateResourceHandles(ResourceFileNameInfo* resName)
+	{
+		String relativePathName = resName->path + CORRECT_SLASH + resName->filename;
+
+		// 打开材质脚本，获取材质名称
+		TiXmlDocument matDoc(relativePathName.Data());
+		matDoc.LoadFile();
+
+		TiXmlElement* elem = matDoc.FirstChildElement();
+
+		if (!elem) return false;
+
+		const char* name = elem->Attribute("name");
+		if (!name) return false;
+
+		AssertFatal(m_ResourceMap.find(name)==m_ResourceMap.end(),
+					"MaterialManager::CreateResourceHandles(): Specified resource name already exists.");
+
+		Material* material = new Material(relativePathName);
+		m_ResourceMap[name] = material;
+		material->m_ResourceName = name;
+
+		return true;
+	}
+
+	Material* MaterialManager::Create(const String& resName)
+	{
+		String name = CheckResName(resName);
+
+		Material* material = new Material("");
+		m_ResourceMap[name] = material;
+		material->m_ResourceName = name;
+		material->m_IsResourceLoaded = true;
+
+		return material;
+	}
+
+	Material* MaterialManager::GetByName(const String& resName)
+	{
+		return static_cast<Material*>(GetResourceByName(resName));
 	}
 
 }

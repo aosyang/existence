@@ -104,5 +104,6 @@ namespace Gen
 		m_Material = material;
 		if (m_ParticlePool)
 			m_ParticlePool->SetMaterial(material);
+		if (material) material->Trigger();
 	}
 }

@@ -110,7 +110,9 @@ namespace Gen
 		normalized_up.normalize();
 
 		Vector3f s = CrossProduct(f, normalized_up);
+		s.normalize();
 		Vector3f u = CrossProduct(s, f);
+		f.normalize();
 
 		m[0][0] = s[0]; m[0][1] = u[0]; m[0][2] = -f[0];
 		m[1][0] = s[1]; m[1][1] = u[1]; m[1][2] = -f[1];
@@ -249,5 +251,37 @@ namespace Gen
 		m[0][3] = pos.x;
 		m[1][3] = pos.y;
 		m[2][3] = pos.z;
+	}
+
+	Matrix4 Matrix4::BuildPerspectiveProjection(float left, float right, float bottom, float top, float znear, float zfar)
+	{
+		float m00 = 2 * znear / (right - left);
+		float m11 = 2 * znear / (top - bottom);
+
+		float m02 = (right + left) / (right - left);
+		float m12 = (top + bottom) / (top - bottom);
+		float m22 = -(zfar + znear) / (zfar - znear);
+		float m23 = - 2 * zfar * znear / (zfar - znear);
+
+		return Matrix4(	m00,  0.0f, m02,  0.0f,
+						0.0f, m11,  m12,  0.0f,
+						0.0f, 0.0f, m22,  m23,
+						0.0f, 0.0f,-1.0f, 0.0f);
+	}
+
+	Matrix4 Matrix4::BuildOrthographicProjection(float left, float right, float bottom, float top, float znear, float zfar)
+	{
+		float m00 = 2.0f / (right - left);
+		float m11 = 2.0f / (top - bottom);
+		float m22 = -2.0f / (zfar - znear);
+
+		float tx = -(right + left) / (right - left);
+		float ty = -(top + bottom) / (top - bottom);
+		float tz = -(zfar + znear) / (zfar - znear);
+
+		return Matrix4(	m00, 0.0f, 0.0f, tx,
+						0.0f, m11, 0.0f, ty,
+						0.0f, 0.0f, m22, tz,
+						0.0f, 0.0f, 0.0f, 1.0f);
 	}
 }

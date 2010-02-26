@@ -64,9 +64,10 @@ namespace Gen
 		bool ToBool() const;
 		float ToFloat() const;
 
-		static size_t npos;
 	private:
 		std::string		m_String;
+	public:
+		static size_t npos;
 	};
 }
 

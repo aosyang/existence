@@ -20,7 +20,7 @@
 		<Configuration
 			Name="Release|Win32"
 			OutputDirectory="..\..\bin\$(ProjectName)\$(ConfigurationName)"
-			IntermediateDirectory=".\Release"
+			IntermediateDirectory="..\..\$(ProjectName)\obj\$(ConfigurationName)"
 			ConfigurationType="2"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
@@ -135,7 +135,7 @@
 		<Configuration
 			Name="Hybrid|Win32"
 			OutputDirectory="..\..\bin\$(ProjectName)\$(ConfigurationName)"
-			IntermediateDirectory=".\Hybrid"
+			IntermediateDirectory="..\..\$(ProjectName)\obj\$(ConfigurationName)"
 			ConfigurationType="2"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
@@ -241,7 +241,7 @@
 		<Configuration
 			Name="Debug|Win32"
 			OutputDirectory="..\..\bin\$(ProjectName)\$(ConfigurationName)"
-			IntermediateDirectory=".\Debug"
+			IntermediateDirectory="..\..\$(ProjectName)\obj\$(ConfigurationName)"
 			ConfigurationType="2"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"

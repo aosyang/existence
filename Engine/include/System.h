@@ -28,6 +28,8 @@ namespace Gen
 #endif	// #if defined __PLATFORM_LINUX
 
 	typedef bool(*FileLoadFuncPtr)(const String&, const String&);
+	
+	class ResourceManagerBase;
 
 	class System : public Singleton<System>
 	{
@@ -78,8 +80,8 @@ namespace Gen
 		//RenderWindowHandle GetRenderWindowHandle() { return m_RenderWindowParam.handle; }
 		RenderWindowParam* GetRenderWindowParameters() { return &m_RenderWindowParam; }
 
-		// 注册指定扩展名的读取函数
-		void RegisterExtensionLoader(const String& ext, FileLoadFuncPtr func);
+		// 为指定扩展名注册管理器
+		void RegisterExtensionManager(const String& ext, ResourceManagerBase* manager);
 
 	private:
 		RenderWindowParam	m_RenderWindowParam;
@@ -87,8 +89,9 @@ namespace Gen
 		bool				m_FullScreen;
 		String				m_TitleName;
 
-		typedef map<const String, FileLoadFuncPtr>	FileLoaders;
-		FileLoaders			m_FileLoaders;
+		// 使用扩展名注册的资源管理器
+		typedef map<const String, ResourceManagerBase*>	ExtManagers;
+		ExtManagers			m_ExtManagers;
 	};
 }
 

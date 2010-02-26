@@ -8,6 +8,7 @@
 
 #include "LightableObject.h"
 #include "Engine.h"
+#include "Renderer.h"
 
 namespace Gen
 {
@@ -18,9 +19,8 @@ namespace Gen
 
 	void LightableObject::AddLight(Light* light)
 	{
-		// TODO: 判断最大受影响光源数量
-
-		if (m_Lights.size()>=renderer->GetMaxLightsNumber())
+		// 判断最大受影响光源数量
+		if (m_Lights.size()>=Renderer::Instance().GetMaxLightCount())
 			return;
 
 		m_Lights.push_back(light);
@@ -34,17 +34,17 @@ namespace Gen
 	// 设置渲染器的灯光状态
 	void LightableObject::SetupLights()
 	{
-		int maxLightNum = renderer->GetMaxLightsNumber();
+		int maxLightNum = Renderer::Instance().GetMaxLightCount();
 
 		int i;
 		for (i=0; i<m_Lights.size() && i<maxLightNum; i++)
 		{
-			renderer->SetupLight(i, m_Lights[i]);
+			Renderer::Instance().SetupLight(i, m_Lights[i]);
 		}
 
 		for (; i<maxLightNum; i++)
 		{
-			renderer->SetupLight(i, NULL);
+			Renderer::Instance().SetupLight(i, NULL);
 		}
 	}
 }

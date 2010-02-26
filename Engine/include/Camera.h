@@ -37,9 +37,11 @@ namespace Gen
 		// ----- Overwrite IObject
 
 		void Update(unsigned long deltaTime);
-		//void DebugRender();
 
-		// ----- Overwrite BaseSceneObject
+		// ----- Overwrite SceneObject
+		void DebugRender();
+
+		// ----- Overwrite MovableObjectBase
 
 		void SetPosition(const Vector3f& pos)
 		{

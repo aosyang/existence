@@ -34,7 +34,7 @@ private:
 	int			m_PosX, m_PosY;
 
 	static Material*		m_sBlockMaterial[MAX_SHAPE_TYPE_NUM + 1];
-	static ITexture*		m_sBlockTexture;
+	static BaseTexture*		m_sBlockTexture;
 	static PrimitiveMesh*	m_sBlockMesh;
 	static bool				m_sDataInitialized;
 };

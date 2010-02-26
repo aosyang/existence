@@ -13,25 +13,29 @@
 
 namespace Gen
 {
+	class IVertexBuffer;
+	class IIndexBuffer;
+
 	class ImageUIControl : public BaseUIObject
 	{
 	public:
 		ImageUIControl();
-		//~ImageUIControl();
+		~ImageUIControl();
 
 		void Render();
 
-		void SetTexture(ITexture* texture) { m_Texture = texture; }
-		ITexture* GetTexture() const { return m_Texture; }
+		void SetTexture(BaseTexture* texture);
+		BaseTexture* GetTexture() const { return m_Texture; }
 
 		void SetColor(const Color4f& color) { m_Color = color; }
 		Color4f GetColor() const { return m_Color; }
 	protected:
+		BaseTexture*			m_Texture;		///< 控件使用的纹理
 
-		ITexture*			m_Texture;		///< 控件使用的纹理
+		Color4f					m_Color;		///< 控件颜色
 
-		Color4f				m_Color;		///< 控件颜色
-
+		IVertexBuffer*			m_VertexBuffer;
+		IIndexBuffer*			m_IndexBuffer;
 	};
 }
 

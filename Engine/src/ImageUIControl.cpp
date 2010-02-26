@@ -9,6 +9,7 @@
 #include "ImageUIControl.h"
 #include "Engine.h"
 #include "System.h"
+#include "Renderer.h"
 
 namespace Gen
 {
@@ -16,58 +17,52 @@ namespace Gen
 		: m_Texture(NULL),
 		m_Color(1.0f, 1.0f, 1.0f)
 	{
+		m_VertexBuffer = Renderer::Instance().BuildVertexBuffer();
+		m_IndexBuffer = Renderer::Instance().BuildIndexBuffer();
+
+		unsigned int index[] = { 0, 2, 1, 0, 3, 2 };
+		m_IndexBuffer->CreateBuffer(index, 2);
+	}
+
+	ImageUIControl::~ImageUIControl()
+	{
+		SAFE_DELETE(m_VertexBuffer);
+		SAFE_DELETE(m_IndexBuffer);
 	}
 
 	void ImageUIControl::Render()
 	{
-		int left, right, top, bottom;
+		if (!m_Texture) return;
 
-		RenderWindowParam* param = System::Instance().GetRenderWindowParameters();
-		int screenWidth = param->width;
-		int screenHeight = param->height;
+		UpdateControlSizeValue();
 
-		switch (m_VAlignType)
-		{
-		case VALIGN_TOP:
-			top = m_Top;
-			bottom = m_Top + m_Height;
-			break;
+		m_VertexBuffer->Clear();
 
-		case VALIGN_MIDDLE:
-			top = (screenHeight - m_Height) / 2;
-			bottom = (screenHeight + m_Height) / 2;
-			break;
+		float vertexArray[] = { m_Left, m_Bottom, -1.0f,
+								m_Left, m_Top, -1.0f,
+								m_Right, m_Top, -1.0f,
+								m_Right, m_Bottom, -1.0f };
 
-		case VALIGN_BOTTOM:
-			top = screenHeight - m_Bottom - m_Height;
-			bottom = screenHeight - m_Bottom;
-			break;
+		float texcoordArray[] = { 0.0f, 0.0f,
+								  0.0f, 1.0f,
+								  1.0f, 1.0f,
+								  1.0f, 0.0f };
 
-		default:
-			AssertFatal(0, "BaseUIObject::Render() : Invalid VerticalAlignType.");
-		}
+		m_VertexBuffer->CreateBuffer(VFormat_Position|VFormat_Texcoord0,
+									 vertexArray,
+									 NULL,
+									 NULL,
+									 texcoordArray,
+									 4);
 
-		switch (m_HAlignType)
-		{
-		case HALIGN_LEFT:
-			left = m_Left;
-			right = m_Left + m_Width;
-			break;
-
-		case HALIGN_MIDDLE:
-			left = (screenWidth - m_Width) / 2;
-			right = (screenWidth + m_Width) / 2;
-			break;
-
-		case HALIGN_RIGHT:
-			left = screenWidth - m_Right - m_Width;
-			right = screenWidth - m_Right;
-			break;
-
-		default:
-			AssertFatal(0, "BaseUIObject::Render() : Invalid HorizontalAlignType.");
-		}
-
-		renderer->RenderScreenQuad(left, top, right, bottom, m_Texture, m_Color);
+		Renderer::Instance().BindTextureRenderState(m_Texture->GetDeviceTexture());
+		Renderer::Instance().RenderPrimitives(m_VertexBuffer, m_IndexBuffer, Matrix4::IDENTITY);
 	}
+
+	void ImageUIControl::SetTexture(BaseTexture* texture)
+	{
+		texture->Trigger();
+		m_Texture = texture;
+	}
+
 }

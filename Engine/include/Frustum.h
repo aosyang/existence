@@ -34,12 +34,6 @@ namespace Gen
 		// 生成透视投影矩阵
 		Matrix4 BuildPrespectiveProjMatrix(float fovy = 45.0f, float aspect = 4.0f/3.0f, float near = 1.0f, float far = 100.0f);
 
-		// 生成正交投影矩阵
-		Matrix4 BuildOrthographicProjMatrix(float left, float right, float bottom, float top, float znear, float zfar);
-
-		// 生成投影矩阵
-		Matrix4 BuildProjectionMatrix(float left, float right, float bottom, float top, float znear, float zfar);
-
 		// 根据投影矩阵和视矩阵生成视截体平面
 		void BuildFrustumPlanes(const Matrix4& projMatrix, const Matrix4& viewMatrix);
 

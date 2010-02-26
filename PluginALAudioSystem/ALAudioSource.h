@@ -38,7 +38,7 @@ namespace Gen
 		void Stop();
 		void Rewind();
 
-		void SetAudioBuffer(IAudioBuffer* buffer);
+		void SetAudioBuffer(IDeviceAudioBuffer* buffer);
 
 		void SetPitch(float pitch);
 		float GetPitch();

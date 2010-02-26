@@ -6,29 +6,22 @@
 /// Copyright (c) 2009 by Mwolf
 //-----------------------------------------------------------------------------------
 #include "Ms3dMesh.h"
+#include "FileSystem.h"
+#include "Material.h"
+#include "TextureManager.h"
 
 namespace Gen
 {
-	Ms3dMesh::Ms3dMesh()
-		: BaseMesh()
+	Ms3dMesh::Ms3dMesh(const String& filename)
+		: BaseMesh(filename)
 	{
 	}
 
-	IMesh* Ms3dMesh::ManagerLoad(const String& filename)
+	bool Ms3dMesh::LoadImpl()
 	{
-		Ms3dMesh* mesh = new Ms3dMesh();
-		if (!mesh->LoadFromFile(filename))
-		{
-			delete mesh;
-			return NULL;
-		}
+		BaseMesh::LoadImpl();
 
-		return mesh;
-	}
-
-	bool Ms3dMesh::LoadFromFile(const String& filename)
-	{
-		ifstream inputFile(filename.Data(), ios::in|ios::binary);
+		ifstream inputFile(m_Filename.Data(), ios::in|ios::binary);
 
 		if (inputFile.fail())	// 无法打开文件
 			return false;
@@ -63,8 +56,17 @@ namespace Gen
 		Ms3dTriangle* pTriangle = (Ms3dTriangle*)pPtr;
 		pPtr += sizeof(Ms3dTriangle) * nTriangles;
 
+		// 读取分组信息
 		int nGroups = *(word*)pPtr;
 		pPtr += sizeof(word);
+
+		// 使用MeshBuilder构造模型
+		// TODO: 考虑模型的材质分组
+		MeshBuilder builder(nGroups);
+
+		// 记录材质列表和材质id列表
+		vector<Material*>	materialList;
+		vector<char>		materialIdList;
 
 		for (int i=0; i<nGroups; i++)
 		{
@@ -74,8 +76,6 @@ namespace Gen
 			word nGroupTriangles = *(word*)pPtr;
 			pPtr += sizeof(word);
 
-			MeshElementBuilder builder;
-
 			for (int j=0; j<nGroupTriangles; j++)
 			{
 				int index = *(word*)pPtr;
@@ -83,23 +83,26 @@ namespace Gen
 				Ms3dTriangle* tri = &pTriangle[index];
 				for (int k=0; k<3; k++)
 				{
-					float uv[2] = { tri->u[k], tri->v[k] };
+					float uv[2] = { tri->u[k], 1.0f - tri->v[k] };
 					builder.AddVertex(pVertex[tri->vertexIndices[k]].pos,
-						tri->vertexNormals[k],
-						uv);
+									  tri->vertexNormals[k],
+									  uv, i);
 				}
 
 				pPtr += sizeof(word);
 			}
 
-			MeshElement* elem = new MeshElement();
-			elem->CreateMeshData(&builder);
-			AddMeshElement(elem);
+			//MeshElement* elem = new MeshElement(this);
+			//elem->CreateMeshData(&builder);
+			//AddMeshElement(elem);
 
 			char materialIndex = *(char*)pPtr;
+			materialIdList.push_back(materialIndex);
 			pPtr += sizeof(char);
 
 		}
+
+		BuildMesh(&builder);
 
 		// TODO: 在这里为模型指定材质信息
 		int nMaterials = *(word*)pPtr;
@@ -108,7 +111,50 @@ namespace Gen
 		for (int i=0; i<nMaterials; i++)
 		{
 			Ms3dMaterial* pMaterial = (Ms3dMaterial*)pPtr;
+
+			String matOriginalName;
+			matOriginalName.Format("%d_%s", i, pMaterial->name);
+
+			// 为模型创建材质
+			String matName = m_ResourceName + CORRECT_SLASH + matOriginalName;
+
+			// 创建一个新材质
+			Material* material = MaterialManager::Instance().Create(matName);
+
+			material->SetAmbient(Color4f(pMaterial->ambient));
+			material->SetDiffuse(Color4f(pMaterial->diffuse));
+			material->SetEmissive(Color4f(pMaterial->emissive));
+			material->SetSpecular(Color4f(pMaterial->specular));
+			material->SetSpecularLevel(pMaterial->shininess);
+
+			if (String(pMaterial->texture)!=String(""))
+			{
+
+				String texResName = CanonicalizePath(pMaterial->texture);
+				size_t pos = m_ResourceName.FindLastOf(CORRECT_SLASH);
+				String path = "";
+				if (pos!=String::npos)
+					path = m_ResourceName.Substr(0, pos + 1);
+				texResName = path + texResName;
+
+				BaseTexture* tex = TextureManager::Instance().GetByName(texResName);
+				if (tex)
+				{
+					tex->Trigger();
+					material->GetTextureRenderState()->texture = tex->GetDeviceTexture();
+				}
+				material->GetTextureRenderState()->textureName = texResName;
+			}
+
+			materialList.push_back(material);
+
 			pPtr += sizeof(Ms3dMaterial);
+		}
+
+		// 分配材质
+		for (size_t i=0; i<materialIdList.size(); i++)
+		{
+			m_Materials.push_back(materialList[materialIdList[i]]);
 		}
 
 		delete [] pBuffer;

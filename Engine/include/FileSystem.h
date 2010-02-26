@@ -21,22 +21,29 @@ namespace Gen
 {
 #if defined __PLATFORM_WIN32
 #define CORRECT_SLASH "\\"
+#define CORRECT_SLASH_CHAR '\\'
 #define INCORRECT_SLASH "/"
 #elif defined __PLATFORM_LINUX
 #define CORRECT_SLASH "/"
+#define CORRECT_SLASH_CHAR '/'
 #define INCORRECT_SLASH "\\"
 #endif	// #if defined __PLATFORM_WIN32
 
 	// 修正斜杠与反斜杠，使之符合对应操作系统的习惯
 	void CorrectSlash(String& path);
 
+	// 获取当前路径去掉"."及".."后的标准路径
+	// 注：如果上级路径不存在，".."符号仍然会被去除，并返回错误的相对路径
+	String CanonicalizePath(const String& path);
+
+	// 获取一个文件的路径名(即截去最后一个斜杠之后的内容)
+	String GetPathName(const String& pathFilename);
 
 	struct ResourceFileNameInfo
 	{
 		String filename;	///< 文件名称(基于path的相对名称)
 		String ext;			///< 文件扩展名
 		String path;		///< 路径名称(不必须是完整路径)
-		int period;			///< 载入优先级，越小越早
 	};
 
 	// 文件系统
@@ -61,15 +68,16 @@ namespace Gen
 		// 注：路径必须是一个有效路径(即操作系统可识别的路径)
 		void FindFilesInDir(const String& basePath, vector<ResourceFileNameInfo>& foundFileList, bool recursive = false, const String& subPath = "");
 
-		const String GetExtension(const String& filename);
+		// 获取一个文件的扩展名，包括'.'
+		const String GetExtension(const String& filename) const;
 
 	protected:
 		FileSystem();
 
 	protected:
-		String	m_AppPath;
-		String	m_DataPath;
-		String	m_DataFullPath;
+		String	m_AppPath;			///< 程序运行路径
+		String	m_DataPath;			///< data相对路径
+		String	m_DataFullPath;		///< data绝对路径
 
 		set<String>		m_IgnoreList;
 	};

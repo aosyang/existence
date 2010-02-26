@@ -1,5 +1,7 @@
 #include "ParticleGame.h"
 
+bool g_DebugRender = false;
+
 particleGame::particleGame()
 : m_Scene(NULL),
   m_Camera(NULL),
@@ -62,7 +64,7 @@ void particleGame::StartGame()
 {
 	m_Scene = new SceneGraph;
 
-	renderer->SetAmbientColor(Color4f(0.7f, 0.7f, 0.7f));
+	Renderer::Instance().SetAmbientColor(Color4f(0.7f, 0.7f, 0.7f));
 
 	m_Camera = static_cast<Camera*>(m_Scene->CreateSceneObject("Camera"));
 	m_Camera->SetPosition(Vector3f(1.0f, 0.0f, 5.0f));
@@ -71,8 +73,8 @@ void particleGame::StartGame()
 	m_AudioListener = static_cast<AudioListener*>(m_Scene->CreateSceneObject("AudioListener"));
 	m_Camera->AttachChildObject(m_AudioListener, false);
 
-	m_MatSmoke = ResourceManager<Material>::Instance().GetByName("smoke");
-	//m_MatSmoke->SetTexture(renderer->GetTexture("smoke"));
+	m_MatSmoke = MaterialManager::Instance().GetByName("smoke");
+	//m_MatSmoke->SetTexture(Renderer::Instance().GetTexture("smoke"));
 	//m_MatSmoke->SetLighting(false);
 	//m_MatSmoke->SetDepthWriting(false);
 
@@ -108,8 +110,8 @@ void particleGame::StartGame()
 		pool->AddParticle(p);
 	}
 
-	Material* matFlare = ResourceManager<Material>::Instance().GetByName("flare");
-	//ITexture* tex_flare = renderer->GetTexture("flare");
+	Material* matFlare = MaterialManager::Instance().GetByName("flare");
+	//ITexture* tex_flare = Renderer::Instance().GetTexture("flare");
 	//matFlare->SetTexture(tex_flare);
 	//matFlare->SetLighting(false);
 	//matFlare->SetDepthWriting(false);
@@ -182,6 +184,15 @@ void particleGame::OnKeyPressed(unsigned int key)
 	case KC_SPACE:
 		g_CameraShake.Create(1.f, 20.0f, 2000);
 		break;
+	case KC_H:
+		MeshManager::Instance().DumpToLog();
+		TextureManager::Instance().DumpToLog();
+		MaterialManager::Instance().DumpToLog();
+		FontManager::Instance().DumpToLog();
+		break;
+	case KC_P:
+		g_DebugRender = !g_DebugRender;
+		break;
 	}
 }
 
@@ -196,7 +207,7 @@ void particleGame::OnResizeWindow(unsigned int width, unsigned int height)
 	if (m_Camera)
 	{
 		m_Camera->SetAspect(aspect);
-		renderer->ProjectionMatrix() = m_Camera->GetProjMatrix();
+		Renderer::Instance().SetProjectionMatrix(m_Camera->GetProjMatrix());
 	}
 
 }
@@ -266,7 +277,7 @@ void particleGame::Update(unsigned long deltaTime)
 		iter->rot += iter->rot_inc * deltaTime / 100;
 		iter->bb->SetZRotation(iter->rot);
 
-		//float fCamDist = renderer->GetFrustum()->SphereInFrustum(iter->bb->WorldTransform().GetPosition(), 5.0f);
+		//float fCamDist = Renderer::Instance().GetFrustum()->SphereInFrustum(iter->bb->WorldTransform().GetPosition(), 5.0f);
 		//if (fCamDist < fPercent)
 		//{
 		float fAplha  = max((float)iter->life, 0.0f) / 30000;
@@ -307,17 +318,17 @@ void particleGame::RenderScene()
 	rv.frustum = m_Camera->GetFrustum();
 
 	// 全屏渲染
-	renderer->SetViewport(0, 0, 0, 0);
-	//renderer->SetViewport(160, 120, 320, 240);
+	Renderer::Instance().SetViewport(0, 0, 0, 0);
+	//Renderer::Instance().SetViewport(160, 120, 320, 240);
 
 	// 设定渲染视点
 	m_Scene->SetupRenderView(rv);
-	m_Scene->RenderScene();
+	m_Scene->RenderScene(g_DebugRender);
 
 	// 使用BeginRender和EndRender方法，进行其他自定义渲染操作
-	renderer->BeginRender();
-	renderer->RenderLine(Vector3f(0.0f, 0.0f, 0.0f), Vector3f(5000.0f, 0.0f, 0.0f), Color4f(0.0f, 1.0f, 1.0f));
-	renderer->EndRender();
+	Renderer::Instance().BeginRender();
+	Renderer::Instance().RenderLine(Vector3f(0.0f, 0.0f, 0.0f), Vector3f(5000.0f, 0.0f, 0.0f), Color4f(0.0f, 1.0f, 1.0f));
+	Renderer::Instance().EndRender();
 }
 
 void Emitparticle(const Vector3f& pos, SceneGraph* scene, particlePool& pool)

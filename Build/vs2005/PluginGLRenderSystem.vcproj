@@ -202,6 +202,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\PluginGLRenderSystem\GLRenderTargetTexture.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\PluginGLRenderSystem\GLTexture.cpp"
 				>
 			</File>
@@ -219,6 +223,10 @@
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
+			<File
+				RelativePath="..\..\PluginGLRenderSystem\GLBaseRenderTarget.h"
+				>
+			</File>
 			<File
 				RelativePath="..\..\PluginGLRenderSystem\GLCubeTexture.h"
 				>
@@ -240,6 +248,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\PluginGLRenderSystem\GLRenderTargetTexture.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\PluginGLRenderSystem\GLTexture.h"
 				>
 			</File>
@@ -249,10 +261,6 @@
 			</File>
 			<File
 				RelativePath="..\..\PluginGLRenderSystem\GLVertexBufferObject.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\PluginGLRenderSystem\GL\glxew.h"
 				>
 			</File>
 			<File

@@ -32,7 +32,7 @@ namespace Gen
 		Vector3f(void){};
 		Vector3f(const Vector3f &a):x(a.x), y(a.y), z(a.z){}
 		Vector3f(float nx, float ny, float nz):x(nx), y(ny), z(nz){}
-		Vector3f(float vec[3])
+		Vector3f(const float vec[3])
 		{
 			x = vec[0];
 			y = vec[1];

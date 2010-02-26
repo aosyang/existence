@@ -9,6 +9,7 @@
 #include "Light.h"
 #include "LightingManager.h"
 #include "Engine.h"
+#include "Renderer.h"
 
 namespace Gen
 {
@@ -22,6 +23,7 @@ namespace Gen
 	  m_ConstantAttenuation(1.0f),
 	  m_LinearAttenuation(0.0f),
 	  m_QuadraticAttenuation(0.0f),
+	  m_Active(true),
 	  m_Range(10.0f)
 	{
 	}
@@ -30,24 +32,25 @@ namespace Gen
 	{
 	}
 
-	//void Light::DebugRender()
-	//{
-	//	BaseSceneObject::DebugRender();
-	//	//renderer->RenderSphere(m_WorldTransform.GetPosition(), m_BoundingSphereRadius);
-	//
-	//	switch (m_Type)
-	//	{
-	//	case LIGHT_TYPE_POINT:
-	//	case LIGHT_TYPE_SPOT:
-	//		// π‚’’∑∂Œß
-	//		renderer->RenderSphere(m_WorldTransform.GetPosition(), m_Range, Color4f(1.0f, 1.0f, 0.0f));
-	//		break;
-	//
-	//	case LIGHT_TYPE_DIRECTIONAL:
-	//		renderer->RenderLine(m_Direction * 10, Vector3f(0.0f, 0.0f, 0.0f));
-	//		break;
-	//	}
-	//}
+	void Light::DebugRender()
+	{
+		//Renderer::Instance().RenderSphere(m_WorldTransform.GetPosition(), m_BoundingSphereRadius);
+	
+		switch (m_Type)
+		{
+		case LIGHT_TYPE_POINT:
+		case LIGHT_TYPE_SPOT:
+			// π‚’’∑∂Œß
+			Renderer::Instance().RenderSphere(m_WorldTransform.GetPosition(), m_Range, Color4f(1.0f, 1.0f, 0.0f));
+			break;
+	
+		case LIGHT_TYPE_DIRECTIONAL:
+			Renderer::Instance().RenderLine(m_WorldTransform.GetPosition() + m_Direction * 10, m_WorldTransform.GetPosition());
+			break;
+		}
+
+		SceneObject::DebugRender();
+	}
 
 	void Light::Destroy()
 	{

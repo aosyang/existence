@@ -8,6 +8,8 @@
 #ifndef _COLOR4F_H
 #define _COLOR4F_H
 
+#include "MathUtil.h"
+
 namespace Gen
 {
 	class Color4f
@@ -22,8 +24,14 @@ namespace Gen
 
 		Color4f& operator=(const Color4f& rhs) { r = rhs.r; g = rhs.g; b = rhs.b; a = rhs.a; return *this; }
 
-		bool operator==(const Color4f& rhs) const { return (r==rhs.r && g==rhs.g && b==rhs.b && a==rhs.a); }
-		bool operator!=(const Color4f& rhs) const { return (r!=rhs.r || g!=rhs.g || b!=rhs.b || a!=rhs.a); }
+		inline bool operator==(const Color4f& rhs) const
+		{
+			return (FLOAT_EQUAL(r, rhs.r) && FLOAT_EQUAL(g, rhs.g) && FLOAT_EQUAL(b, rhs.b) && FLOAT_EQUAL(a, rhs.a));
+		}
+		inline bool operator!=(const Color4f& rhs) const
+		{
+			return !(*this==rhs);
+		}
 
 		const float* GetArray() const { return &r; }
 

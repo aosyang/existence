@@ -19,6 +19,10 @@ using namespace std;
 #include "EmdMesh.h"
 #include "EGUIManager.h"
 #include "MeshManager.h"
+#include "TextureManager.h"
+#include "Renderer.h"
+#include "SkeletonManager.h"
+#include "AudioManager.h"
 
 namespace Gen
 {
@@ -108,7 +112,7 @@ namespace Gen
 
 	void EngineMessageNotifier::OnMessageActiveWindow(bool active)
 	{
-		renderer->SetActive(active);									// Program Is Active
+		Renderer::Instance().SetActive(active);									// Program Is Active
 	}
 
 	void EngineMessageNotifier::OnMessageResizeWindow(unsigned int width, unsigned int height)
@@ -117,13 +121,11 @@ namespace Gen
 	}
 
 	Engine::Engine()
-	: m_Renderer(NULL),
-	  m_AudioSystem(NULL),
+	: m_AudioSystem(NULL),
 	  m_RenderBatchCount(0),
 	  m_MessageNotifier(NULL),
 	  m_Game(NULL),
 	  m_Quit(false),
-	  m_DebugRender(false),
 	  m_FPS(0)
 	{
 		// 设置语言，正确读取带中文名的文件
@@ -151,10 +153,7 @@ namespace Gen
 
 		//AssertFatal(System::Instance().GetRenderWindowParameters()->handle, "Engine::Initialize(): Render window handle is never expected to be null.");
 
-		Log.MsgLn("Initializing RenderSystem");
-		renderer->Initialize(System::Instance().GetRenderWindowParameters());
-
-		Log.MsgLn(renderer->GetFeatureString());
+		Renderer::Instance().Initialize(System::Instance().GetRenderWindowParameters());
 
 		Log.MsgLn("Initializing AudioSystem");
 		m_AudioSystem->Initialize();
@@ -172,14 +171,26 @@ namespace Gen
 
 		// 创建默认的空白纹理
 		// 需要在渲染器初始化以后调用
-		Material* matWhite = ResourceManager<Material>::Instance().Create("#white");
+		Material* matWhite = MaterialManager::Instance().Create("#white");
 		matWhite->SetLighting(false);
 		unsigned int white_data = 0xFFFFFFFF;
-		matWhite->SetTexture(renderer->BuildTexture("#white", 1, 1, 32, (unsigned char*)&white_data));
+
+		Texture2D* whiteTex = TextureManager::Instance().CreateTexture2D("#white");
+		whiteTex->Create(1, 1, 32, (unsigned char*)&white_data);
+		matWhite->SetTexture(whiteTex);
 	}
 
 	void Engine::Shutdown()
 	{
+		// 清理全部资源
+		MeshManager::Instance().UnloadAllResources();
+		TextureManager::Instance().UnloadAllResources();
+		MaterialManager::Instance().UnloadAllResources();
+		FontManager::Instance().UnloadAllResources();
+		SkeletonManager::Instance().UnloadAllResources();
+		AudioManager::Instance().UnloadAllResources();
+
+		// 卸载系统
 		EGUIManager::Instance().Shutdown();
 		FontManager::Instance().Shutdown();
 
@@ -190,14 +201,8 @@ namespace Gen
 		m_AudioSystem->Shutdown();
 		delete m_AudioSystem;
 
-		// 在渲染器摧毁前清除所有Mesh
-		//ResourceManager<Mesh>::Instance().UnloadAllResources();
-		MeshManager::Instance().UnloadAllResources();
-
-		Log.MsgLn("Shutitng down renderer");
-		m_Renderer->Shutdown();
-		delete m_Renderer;
-
+		Renderer::Instance().Shutdown();
+		
 		Input::Instance().Shutdown();
 	}
 
@@ -253,7 +258,7 @@ namespace Gen
 		EGUIManager::Instance().Update(deltaTime);
 
 		// 更新音频系统，删除无用的音源
-		Engine::Instance().AudioSystem()->Update();
+		//Engine::Instance().AudioSystem()->Update();
 
 		// TODO: SceneGraph updates here
 
@@ -264,14 +269,14 @@ namespace Gen
 			m_Quit = m_Game->OnNotifyQuitting();
 
 		// TODO: SceneGraph renders here.
-		//if (renderer->GetActive())
+		//if (Renderer::Instance().GetActive())
 		{
 			m_Game->RenderScene();
 
 			// 渲染EGUI
 			EGUIManager::Instance().RenderUI();
 
-			renderer->SwapBuffer();
+			Renderer::Instance().SwapBuffer();
 		}
 	}
 	void Engine::ResizeWindow(unsigned int width, unsigned int height)
@@ -279,7 +284,7 @@ namespace Gen
 		System::Instance().ResizeWindow(width, height);
 		Input::Instance().ResizeWindow();
 		m_Game->OnResizeWindow(width, height);
-		renderer->ResizeRenderWindow(width, height);
+		Renderer::Instance().ResizeRenderWindow(width, height);
 	}
 
 	// 从插件中读入音频及视频渲染系统
@@ -327,7 +332,7 @@ namespace Gen
 					continue;
 				}
 
-				m_Renderer = (*rendererCreator)();
+				Renderer::Instance().SetRenderDevice((*rendererCreator)());
 
 				//UnloadModule(hDLL);
 			}
@@ -354,8 +359,8 @@ namespace Gen
 			}
 		}
 
-		AssertFatal(m_Renderer, "Engine::LoadModules() : Failed to create render system from plugin.");
-		m_Renderer->SetGpuPluginName(renderSystemPluginName);
+		AssertFatal(Renderer::Instance().GetRenderDevice(), "Engine::LoadModules() : Failed to create render system from plugin.");
+		Renderer::Instance().GetRenderDevice()->SetGpuPluginName(renderSystemPluginName);
 
 		// Use a null audio system if we don't find one from plugins
 		if (!m_AudioSystem)

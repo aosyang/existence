@@ -20,23 +20,22 @@ using namespace std;
 
 namespace Gen
 {
-	class MeshElementBuilder;
+	//class MeshElementBuilder;
+
+	class BaseMesh;
 
 	class MeshElement
 	{
+		friend class BaseMesh;
 	public:
-		MeshElement();
+		MeshElement(BaseMesh* mesh);
 		~MeshElement();
 
 		// 从数据创建模型
-		void CreateMeshData(unsigned int vertexNum,
-			unsigned int faceNum,
-			unsigned int* faceArray,
-			float* vertexArray,
-			float* normalArray,
-			float* texcoordArray);
+		void CreateMeshData(unsigned int faceNum,
+							unsigned int* faceArray);
 
-		void CreateMeshData(MeshElementBuilder* builder);
+		//void CreateMeshData(MeshElementBuilder* builder);
 
 		void ClearData();
 
@@ -50,21 +49,9 @@ namespace Gen
 			z = m_FaceArray[index*3+2];
 		}
 
-		// 通过索引获取顶点
-		Vector3f GetVertexByIndex(unsigned int index) const
-		{
-			AssertFatal(index<m_VertexNum, "MeshElement::GetVertexByIndex() : Index out of boundary.");
-
-			float px = m_VertexArray[index*3];
-			float py = m_VertexArray[index*3+1];
-			float pz = m_VertexArray[index*3+2];
-
-			return Vector3f(px, py, pz);
-		}
-
 		unsigned int GetFaceNum() const { return m_FaceNum; }
 
-		inline IVertexBuffer* GetVertexBuffer() const { return m_VertexBuffer; }
+		inline IIndexBuffer* GetIndexBuffer() const { return m_IndexBuffer; }
 
 		OBB& GetOBB() { return m_OBB; }
 
@@ -78,47 +65,46 @@ namespace Gen
 	private:
 		unsigned int*	m_FaceArray;		///< 三角形数组
 
-		float*			m_VertexArray;		///< 顶点数组
-		float*			m_NormalArray;		///< 法线数组
-		float*			m_TexCoordArray;	///< 纹理坐标数组
+		//float*			m_VertexArray;		///< 顶点数组
+		//float*			m_NormalArray;		///< 法线数组
+		//float*			m_TexCoordArray;	///< 纹理坐标数组
 
-		unsigned int	m_VertexNum;
 		unsigned int	m_FaceNum;
 
-		IVertexBuffer*	m_VertexBuffer;
-
+		BaseMesh*		m_Mesh;				///< 指向mesh的指针，用于获取顶点信息
+		IIndexBuffer*	m_IndexBuffer;
 		OBB				m_OBB;
 	};
 
 
-	// 模型元素构造器
-	// 通过一个一个添加顶点的方式构造模型元素
-	// 自动生成顶点索引
-	//
-	// 注意：这个东西生成索引缓冲的过程可能会很慢！！！
-	class MeshElementBuilder
-	{
-		friend class MeshElement;
-	public:
-		MeshElementBuilder();
-		~MeshElementBuilder();
+	//// 模型元素构造器
+	//// 通过一个一个添加顶点的方式构造模型元素
+	//// 自动生成顶点索引
+	////
+	//// 注意：这个东西生成索引缓冲的过程可能会很慢！！！
+	//class MeshElementBuilder
+	//{
+	//	friend class MeshElement;
+	//public:
+	//	MeshElementBuilder();
+	//	~MeshElementBuilder();
 
-		void AddVertex(float pos[3], float normal[3], float texcoord[2]);
-	private:
-		void AddIndex(unsigned int index);
-	private:
-		unsigned int*	m_Indices;
-		float*			m_Vertices;
-		float*			m_Normals;
-		float*			m_Texcoords;
+	//	void AddVertex(float pos[3], float normal[3], float texcoord[2]);
+	//private:
+	//	void AddIndex(unsigned int index);
+	//private:
+	//	unsigned int*	m_Indices;
+	//	float*			m_Vertices;
+	//	float*			m_Normals;
+	//	float*			m_Texcoords;
 
-		int				m_VertexCaps;
-		int				m_VertexCount;
-		int				m_IndexCaps;
-		int				m_IndexCount;
+	//	int				m_VertexCaps;
+	//	int				m_VertexCount;
+	//	int				m_IndexCaps;
+	//	int				m_IndexCount;
 
-		OBB				m_OBB;
-	};
+	//	OBB				m_OBB;
+	//};
 
 }
 

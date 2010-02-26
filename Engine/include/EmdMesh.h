@@ -29,16 +29,13 @@ namespace Gen
 	class MeshElement;
 	class EmdMesh;
 
-	//DECLARE_RESOURCEMANAGER(EmdMesh);
-
 	enum EmdlLump
 	{
-		EMDL_LUMP_TEXTURES = 100,
+		EMDL_LUMP_MATERIALS = 100,
 		EMDL_LUMP_MESH_ELEMENTS,
+		EMDL_LUMP_VERTICES,
 	};
 
-
-	// TODO: EmdMesh应当属于一种资源，因为可以被重复使用
 
 	//-----------------------------------------------------------------------------------
 	/// \brief
@@ -51,53 +48,23 @@ namespace Gen
 	//-----------------------------------------------------------------------------------
 	class EmdMesh : public BaseMesh
 	{
-		friend class MeshObject;
-		//friend class ResourceManager<EmdMesh>;
+		//friend class MeshObject;
 		friend class MeshManager;
 
 	public:
-
-		//-----------------------------------------------------------------------------------
-		/// \brief
-		/// 从文件载入一个模型
-		/// 
-		/// \param filename
-		/// 资源文件名
-		/// 
-		/// \returns
-		/// 成功读取返回true
-		/// 
-		/// 读取一个模型，保存顶点信息
-		//-----------------------------------------------------------------------------------
-		static IMesh* ManagerLoad(const String& filename);
-
-		bool LoadFromFile(const String& filename);
-
-		bool LoadMesh_NoVersion(ifstream& fin);
-		bool LoadMesh_010(ifstream& fin);
-
-		bool LoadMeshElement_NoVersion(MeshElement* elem, ifstream& fin, float& boundingRadius);
-		bool LoadMeshElement_010(MeshElement* elem, ifstream& fin);
+		// ----- EmdMesh Methods
+		bool LoadMesh_020(ifstream& fin);
 
 		void AddMaterial(Material* mat) { m_Materials.push_back(mat); }
 		//size_t GetMaterialsNum() const { return m_Materials.size(); }
-		//Material* GetMaterial(unsigned int index)
-		//{
-		//	return (index<m_Materials.size()) ? m_Materials[index] : NULL;
-		//}
-		//void SetMaterial(Material* mat, unsigned int index)
-		//{
-		//	if (index<m_Materials.size())
-		//	{
-		//		m_Materials[index] = mat;
-		//	}
-		//}
 
-	private:
-		EmdMesh();
+	protected:
+		// ----- Overwrite Resource
+		bool LoadImpl();
+
+		// ----- EmdMesh Methods
+		EmdMesh(const String& filename);
 		~EmdMesh();
-
-		String					m_Filename;			// for test only
 	};
 }
 

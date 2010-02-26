@@ -1,24 +1,21 @@
 #ifndef _D3D9TEXTURE_H
 #define _D3D9TEXTURE_H
 
-#include "ITexture.h"
+#include "IDeviceTexture.h"
 #include <d3dx9.h>
 
 namespace Gen
 {
-	class D3D9Texture : public BaseTexture
+	class D3D9Texture : public DeviceTexture2D
 	{
 	public:
 		D3D9Texture();
 		~D3D9Texture();
 
-		// ----- ITexture Methods
+		// ----- BaseTexture Methods
 
 		void Create(unsigned int width, unsigned int height, unsigned int bpp, unsigned char* data);
 		void ModifyRectData(int xoffset, int yoffset, int width, int heigh, void* data);
-
-		void SetVertexProgram(const String& filename, const String& entry) {}
-		void SetFragmentProgram(const String& filename, const String& entry) {}
 
 		void BindTexture();
 

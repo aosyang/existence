@@ -97,6 +97,12 @@ namespace Gen
 		{
 			return Vector3f(m[0][3], m[1][3], m[2][3]);
 		}
+
+		// 生成透视投影矩阵
+		static Matrix4 BuildPerspectiveProjection(float left, float right, float bottom, float top, float znear, float zfar);
+
+		// 生成正交投影矩阵
+		static Matrix4 BuildOrthographicProjection(float left, float right, float bottom, float top, float znear, float zfar);
 	};
 }
 

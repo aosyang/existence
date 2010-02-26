@@ -184,14 +184,6 @@
 				RelativePath="..\..\Engine\include\Font.h"
 				>
 			</File>
-			<File
-				RelativePath="..\..\Engine\src\GlyphBoard.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\Engine\include\GlyphBoard.h"
-				>
-			</File>
 		</Filter>
 		<Filter
 			Name="Input"
@@ -293,6 +285,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\Engine\include\IDeviceTexture.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\Engine\include\IGpuProgram.h"
 				>
 			</File>
@@ -305,15 +301,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\Engine\include\IRenderer.h"
+				RelativePath="..\..\Engine\include\IRenderDevice.h"
 				>
 			</File>
 			<File
 				RelativePath="..\..\Engine\include\IRenderTarget.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\Engine\include\ITexture.h"
 				>
 			</File>
 			<File
@@ -326,6 +318,30 @@
 			</File>
 			<File
 				RelativePath="..\..\Engine\include\Material.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Engine\src\Renderer.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Engine\include\Renderer.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Engine\src\Texture.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Engine\include\Texture.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Engine\src\TextureManager.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Engine\include\TextureManager.h"
 				>
 			</File>
 		</Filter>
@@ -369,7 +385,19 @@
 			Name="Audio"
 			>
 			<File
-				RelativePath="..\..\Engine\include\IAudioBuffer.h"
+				RelativePath="..\..\Engine\src\AudioBuffer.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Engine\include\AudioBuffer.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Engine\src\AudioManager.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Engine\include\AudioManager.h"
 				>
 			</File>
 			<File
@@ -378,6 +406,10 @@
 			</File>
 			<File
 				RelativePath="..\..\Engine\include\IAudioSystem.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Engine\include\IDeviceAudioBuffer.h"
 				>
 			</File>
 			<File
@@ -549,10 +581,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\Engine\include\IMesh.h"
-				>
-			</File>
-			<File
 				RelativePath="..\..\Engine\src\MeshElement.cpp"
 				>
 			</File>
@@ -585,17 +613,37 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\Engine\src\Skeletal.cpp"
+				RelativePath="..\..\Engine\src\Skeleton.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\Engine\include\Skeletal.h"
+				RelativePath="..\..\Engine\include\Skeleton.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Engine\src\SkeletonManager.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Engine\include\SkeletonManager.h"
 				>
 			</File>
 		</Filter>
 		<Filter
 			Name="Resource"
 			>
+			<File
+				RelativePath="..\..\Engine\src\Resource.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Engine\include\Resource.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Engine\src\ResourceManager.cpp"
+				>
+			</File>
 			<File
 				RelativePath="..\..\Engine\include\ResourceManager.h"
 				>
@@ -914,6 +962,14 @@
 			</File>
 			<File
 				RelativePath="..\..\Engine\include\SceneObject.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Engine\src\SkeletalMeshObject.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Engine\include\SkeletalMeshObject.h"
 				>
 			</File>
 		</Filter>

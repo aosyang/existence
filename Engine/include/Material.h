@@ -8,7 +8,7 @@
 #ifndef _MATERIAL_H
 #define _MATERIAL_H
 
-#include "ITexture.h"
+#include "Texture.h"
 #include "Color4f.h"
 #include "ResourceManager.h"
 #include <map>
@@ -19,21 +19,23 @@ namespace Gen
 {
 	class Material;
 
-	DECLARE_RESOURCEMANAGER(Material);
-
 	typedef void(*SetMaterialAttribFunc)(Material*, const String&);
 	typedef map<const String, SetMaterialAttribFunc> MaterialLoadFuncMap;
 
 	typedef void(*SetRenderStateAttribFunc)(TextureRenderState*, const String&);
 	typedef map<const String, SetRenderStateAttribFunc> RenderStateLoadFuncMap;
 
+	class MaterialManager;
 
-	class Material
+	class Material : public Resource
 	{
-		friend class ResourceManager<Material>;
+		//friend class ResourceManager<Material>;
+		friend class MaterialManager;
 	public:
+		// ----- Overwrite Resource
+		bool Trigger();
 
-		inline const String GetName() const { return *m_Name; }
+		// ----- Material Methods
 
 		// 材质颜色(仅在不受光照影响情况下有效)
 		inline void SetColor(const Color4f& color) { m_Color = color; }
@@ -64,11 +66,11 @@ namespace Gen
 		inline float GetSpecularLevel() const { return m_SpecularLevel; }
 
 		// 材质
-		//inline void SetTexture(ITexture* tex) { m_Texture = tex; }
-		//inline ITexture* GetTexture() const { return m_Texture; }
+		//inline void SetTexture(BaseTexture* tex) { m_Texture = tex; }
+		//inline BaseTexture* GetTexture() const { return m_Texture; }
 
-		inline void SetTexture(ITexture* tex, unsigned int index = 0) { m_TextureRenderState[index].texture = tex; }
-		//inline ITexture* GetTexture() const { return m_TextureRenderState.texture; }
+		void SetTexture(BaseTexture* tex, unsigned int index = 0);
+		//inline BaseTexture* GetTexture() const { return m_TextureRenderState.texture; }
 		inline TextureRenderState* GetTextureRenderState(unsigned int index = 0) { return &m_TextureRenderState[index]; }
 
 		// 指定纹理层是否启用
@@ -91,6 +93,15 @@ namespace Gen
 		inline void SetAlphaRef(float ref) { m_AlphaReference = ref; }
 		inline float GetAlphaRef() const { return m_AlphaReference; }
 
+		inline void SetBlending(bool blend) { m_Blending = blend; }
+		inline bool GetBlending() const { return m_Blending; }
+
+		inline void SetSrcBlendFactor(BlendFactor factor) { m_SrcBlendFactor = factor; }
+		inline BlendFactor GetSrcBlendFactor() const { return m_SrcBlendFactor; }
+
+		inline void SetDstBlendFactor(BlendFactor factor) { m_DstBlendFactor = factor; }
+		inline BlendFactor GetDstBlendFactor() const { return m_DstBlendFactor; }
+
 		inline void SetVertexProgram(IGpuProgram* program) { m_VertexProgram = program; }
 		inline IGpuProgram* GetVertexProgram() { return m_VertexProgram; }
 
@@ -98,22 +109,25 @@ namespace Gen
 		inline IGpuProgram* GetFragmentProgram() { return m_FragmentProgram; }
 
 		// 从文件读取材质
-		static Material* LoadMaterial(const String& filename);
 		static MaterialLoadFuncMap	m_sFuncMap;
 		static RenderStateLoadFuncMap m_sRSFuncMap;
 
 		void SaveToFile(const String& filename, bool outputDefault = false);
 
-	private:
-		// 声明为private，这样只有ResMgr可以创建实例
-		Material();
+	protected:
+		// ----- Overwrite Resource
+		bool LoadImpl();
+		void UnloadImpl();
+
+		// ----- Material Methods
+		// 确保只有ResMgr可以创建实例
+		Material(const String& filename);
 		~Material();
 
 		static void LoadAttrib(Material* material, const String& attrib, const String& val);
 		static void LoadRenderState(TextureRenderState* rs, const String& attrib, const String& val);
 
 	private:
-		const String*	m_Name;				///< 材质名称指针
 		Color4f			m_Color;			///< 材质颜色
 
 		bool			m_Lighting;			///< 材质是否受光照影响
@@ -134,8 +148,27 @@ namespace Gen
 		bool			m_AlphaTest;
 		float			m_AlphaReference;
 
+		// Blending
+		bool			m_Blending;			///< 是否使用颜色混合
+		BlendFactor		m_SrcBlendFactor;	///< 源混合因子
+		BlendFactor		m_DstBlendFactor;	///< 目标混合因子
+
 		IGpuProgram*	m_VertexProgram;
 		IGpuProgram*	m_FragmentProgram;
+	};
+
+	class MaterialManager : public Singleton<MaterialManager>, public ResourceManagerBase
+	{
+		friend class Singleton<MaterialManager>;
+	public:
+		bool CreateResourceHandles(ResourceFileNameInfo* resName);
+
+		// 创建一个新的材质
+		Material* Create(const String& resName="");
+
+		Material* GetByName(const String& resName);
+	protected:
+		MaterialManager();
 	};
 }
 

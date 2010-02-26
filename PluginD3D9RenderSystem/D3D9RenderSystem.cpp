@@ -33,17 +33,12 @@ namespace Gen
 #endif
 
 	IDirect3DDevice9* g_d3ddevice;
-
-
-	IDirect3DTexture9* g_NullTexture;
-
+	//IDirect3DTexture9* g_NullTexture;
 
 	D3D9Renderer::D3D9Renderer()
 		: m_Direct3D(NULL),
 		m_ClearColor(D3DCOLOR_XRGB(0, 0, 0))
 	{
-		m_ViewMatrix.MakeIdentity();
-		//Debug::EnableBreakOnAlloc();
 	}
 
 	D3D9Renderer::~D3D9Renderer()
@@ -57,8 +52,7 @@ namespace Gen
 
 	bool D3D9Renderer::Initialize(RenderWindowParam* windowParam)
 	{
-		m_hWnd = windowParam->handle;
-
+		// 初始化Direct3D9
 		AssertFatal(m_Direct3D = Direct3DCreate9(D3D_SDK_VERSION), "D3D9Renderer::Initialize() : Failed to create Direct3D9.");
 
 		D3DPRESENT_PARAMETERS d3dpp;
@@ -69,15 +63,31 @@ namespace Gen
 		d3dpp.EnableAutoDepthStencil = TRUE;
 		d3dpp.AutoDepthStencilFormat = D3DFMT_D16;
 
-		AssertFatal(SUCCEEDED(m_Direct3D->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, m_hWnd, \
-			D3DCREATE_SOFTWARE_VERTEXPROCESSING, \
-			&d3dpp, &m_D3DDevice)), "D3D9Renderer::Initialize() : Failed to create device.");
+		UINT adapter = D3DADAPTER_DEFAULT;
+		D3DDEVTYPE deviceType = D3DDEVTYPE_HAL;
 
-		// 载入临时纹理
-		if (FAILED(D3DXCreateTextureFromFile(m_D3DDevice, L"../data/no_material.bmp", &g_NullTexture)))
+//#define USE_NVPERFHUD
+
+#ifdef USE_NVPERFHUD
+
+		for (UINT i=0; i<m_Direct3D->GetAdapterCount(); i++)
 		{
-			AssertFatal(0, "For test only: Unable to load no_material.bmp!")
+			D3DADAPTER_IDENTIFIER9 identifier;
+			HRESULT result;
+
+			result = m_Direct3D->GetAdapterIdentifier(adapter, 0, &identifier);
+			if (strstr(identifier.Description, "PerfHUD")!=0)
+			{
+				adapter = i;
+				deviceType = D3DDEVTYPE_REF;
+				break;
+			}
 		}
+#endif
+		// 创建D3D设备
+		AssertFatal(SUCCEEDED(m_Direct3D->CreateDevice(	adapter, deviceType, windowParam->handle, \
+														D3DCREATE_SOFTWARE_VERTEXPROCESSING, \
+														&d3dpp, &m_D3DDevice)), "D3D9Renderer::Initialize() : Failed to create device.");
 
 		g_d3ddevice = m_D3DDevice;
 
@@ -88,8 +98,6 @@ namespace Gen
 
 	void D3D9Renderer::Shutdown()
 	{
-		UnloadAllTextures();
-
 		// 释放D3D设备
 		SAFE_RELEASE(m_D3DDevice);
 		SAFE_RELEASE(m_Direct3D);
@@ -117,41 +125,21 @@ namespace Gen
 		//HRESULT hr = m_D3DDevice->SetViewport(&viewport);
 		//AssertFatal(SUCCEEDED(hr), "D3D9Renderer::SetViewport(): Unknown error");
 	}
-
-	void D3D9Renderer::ResizeRenderWindow(unsigned int width, unsigned int height)
+	
+	void D3D9Renderer::SetViewMatrix(const Matrix4& viewMat)
 	{
-		if (width != 0 && height != 0)
-		{
-			m_WindowWidth = width;
-			m_WindowHeight = height;
-		}
-
-		if (m_WindowHeight == 0) m_WindowHeight = 1;
-
-	}
-	void D3D9Renderer::SetProjectionMode(ProjectionMatrixMode mode)
-	{
-		switch (mode)
-		{
-		case PROJECTION_MODE_PERSPECTIVE:
-			{
-				D3DXMATRIXA16 projMat;
-				BuildD3DMatrix(m_ProjMatrix, projMat);
-
-				m_D3DDevice->SetTransform(D3DTS_PROJECTION, &projMat);
-				return;
-			}
-		case PROJECTION_MODE_ORTHO:
-			{
-				//float w = (GLfloat)m_WindowWidth/(GLfloat)m_WindowHeight;
-				//gluOrtho2D(-w, w, -1.0f, 1.0f);
-				return;
-			}
-		default:
-			AssertFatal(0, "D3D9Renderer::SetProjectionMode() : Invalid projection matrix mode.");
-		}
+		D3DXMATRIXA16 d3dMat;
+		BuildD3DMatrix(viewMat, d3dMat);
+		m_D3DDevice->SetTransform(D3DTS_VIEW, &d3dMat);
 	}
 
+	void D3D9Renderer::SetProjectionMatrix(const Matrix4& projMat)
+	{
+		// TODO: D3D投影矩阵与OpenGL投影矩阵范围不同
+		D3DXMATRIXA16 d3dMat;
+		BuildD3DMatrix(projMat, d3dMat);
+		m_D3DDevice->SetTransform(D3DTS_PROJECTION, &d3dMat);
+	}
 
 	void D3D9Renderer::ClearBuffer(bool color, bool depth, bool stencil)
 	{
@@ -194,6 +182,28 @@ namespace Gen
 		m_D3DDevice->SetRenderState(D3DRS_LIGHTING, enable);
 	}
 
+	void D3D9Renderer::ToggleAlphaTest(bool enable)
+	{
+		m_D3DDevice->SetRenderState(D3DRS_ALPHATESTENABLE, enable);
+	}
+
+	void D3D9Renderer::SetAlphaReference(float ref)
+	{
+		DWORD dwRef = DWORD(0xFF * ref);
+		m_D3DDevice->SetRenderState(D3DRS_ALPHATESTENABLE, dwRef);
+	}
+
+	void D3D9Renderer::ToggleBlending(bool blend)
+	{
+		m_D3DDevice->SetRenderState(D3DRS_ALPHABLENDENABLE, blend);
+	}
+
+	void D3D9Renderer::SetBlendFactor(BlendFactor src, BlendFactor dst)
+	{
+		m_D3DDevice->SetRenderState(D3DRS_SRCBLEND, GetBlendFactor(src));
+		m_D3DDevice->SetRenderState(D3DRS_DESTBLEND, GetBlendFactor(dst));
+	}
+
 	void D3D9Renderer::ToggleLight(bool enable, unsigned int index)
 	{
 		static bool light[8] = { false };
@@ -214,10 +224,10 @@ namespace Gen
 	{
 		AssertFatal(SUCCEEDED(m_D3DDevice->BeginScene()), "D3D9Renderer::BeginRender() : Failed to begin rendering.");
 
-		D3DXMATRIXA16 viewMat;
-		BuildD3DMatrix(m_ViewMatrix, viewMat);
+		//D3DXMATRIXA16 viewMat;
+		//BuildD3DMatrix(m_ViewMatrix, viewMat);
 
-		m_D3DDevice->SetTransform(D3DTS_VIEW, &viewMat);
+		//m_D3DDevice->SetTransform(D3DTS_VIEW, &viewMat);
 	}
 
 	void D3D9Renderer::EndRender()
@@ -230,7 +240,13 @@ namespace Gen
 		m_D3DDevice->Present(NULL, NULL, NULL, NULL);
 	}
 
-	void D3D9Renderer::RenderVertexBuffer(IVertexBuffer* vbuffer, Material* material, const Matrix4& transform)
+	void D3D9Renderer::BindTextureRenderState(const TextureRenderState& texState, unsigned int texUnit)
+	{
+		if (texState.texture)
+			texState.texture->BindTexture();
+	}
+
+	void D3D9Renderer::RenderVertexBuffer(IVertexBuffer* vbuffer, IIndexBuffer* ibuffer, const Matrix4& transform)
 	{
 		D3DXMATRIXA16 worldMat;
 		BuildD3DMatrix(transform, worldMat);
@@ -238,118 +254,73 @@ namespace Gen
 
 		m_D3DDevice->SetTransform(D3DTS_WORLD, &worldMat);
 
-		SetupMaterial(material);
+		D3D9VertexBuffer* d3d9VB = static_cast<D3D9VertexBuffer*>(vbuffer);
+		D3D9IndexBuffer* d3d9IB = static_cast<D3D9IndexBuffer*>(ibuffer);
 
-		vbuffer->RenderBuffer();
+		d3d9VB->SetAsVertexDataSource();
+		d3d9IB->SetVertexNum(d3d9VB->GetVertexNum());
+		d3d9IB->RenderPrimitive();
 	}
 
 
-	void D3D9Renderer::RenderBox(const Vector3f& vMin, const Vector3f& vMax, const Color4f& color, const Matrix4& transform)
+	void D3D9Renderer::RenderBox(const Vector3f& vMin, const Vector3f& vMax, const Matrix4& transform)
 	{
 
 	}
 
-	void D3D9Renderer::RenderSphere(const Vector3f& point, float radius, const Color4f& color, unsigned int segment)
+	void D3D9Renderer::RenderSphere(const Vector3f& point, float radius, unsigned int segment)
 	{
 
 	}
 
-	void D3D9Renderer::RenderLine(const Vector3f& begin, const Vector3f& end, const Color4f& color)
-	{
-
-	}
-
-	void D3D9Renderer::RenderScreenQuad(float left, float top, float right, float bottom, ITexture* texture, const Color4f& color)
-	{
-
-	}
-
-	void D3D9Renderer::RenderScreenQuad(int x1, int y1, int x2, int y2, ITexture* texture, const Color4f& color)
+	void D3D9Renderer::RenderLine(const Vector3f& begin, const Vector3f& end)
 	{
 
 	}
 
 	void D3D9Renderer::SetAmbientColor(const Color4f& color)
 	{
-
 		m_D3DDevice->SetRenderState(D3DRS_AMBIENT, COLOR4F_TO_D3DCOLOR(color));
 	}
 
-	const Color4f D3D9Renderer::GetAmbientColor()
+	IDeviceTexture* D3D9Renderer::BuildTexture()
 	{
-		DWORD ambientColor;
-		m_D3DDevice->GetRenderState(D3DRS_AMBIENT, &ambientColor);
-		return D3DCOLOR_TO_COLOR4F(ambientColor);
+		return new D3D9Texture;
 	}
 
-	ITexture* D3D9Renderer::BuildTexture(const String& textureName, unsigned int width, unsigned int height, unsigned int bpp, unsigned char* data)
-	{
-		if(m_TextureList.find(textureName) != m_TextureList.end())
-		{
-			delete m_TextureList[textureName];
-		}
-
-		D3DFORMAT format;
-
-		switch (bpp)
-		{
-		case 32:
-			format = D3DFMT_A8B8G8R8;
-			break;
-		case 24:
-			format = D3DFMT_R8G8B8;
-			break;
-		}
-
-		IDirect3DTexture9* d3dtexture;
-		if (FAILED(D3DXCreateTexture(m_D3DDevice, width, height, 0, 0, format, D3DPOOL_MANAGED, &d3dtexture)))
-			return NULL;
-
-		D3DSURFACE_DESC desc;
-		d3dtexture->GetLevelDesc(0, &desc);
-
-		D3DLOCKED_RECT rect;
-		d3dtexture->LockRect(0, &rect, 0, 0);
-
-		// TODO 这里有问题
-		WORD* pDst = (WORD*)rect.pBits;   
-		int DPitch = rect.Pitch >> 1;   
-
-		for (int y=0; y<height; ++y){   
-			for (int x=0; x<width; ++x)   
-			{     
-				pDst[y*DPitch + x] = data[y*width + x];
-				//if (y>(height/2))
-				//	pDst[y*DPitch + x] = 0x00;
-				//else
-				//	pDst[y*DPitch + x] = 0xFF;
-			}   
-		}   
-
-		d3dtexture->UnlockRect(0);
-
-		D3D9Texture* d3dtex = new D3D9Texture();
-		d3dtex->SetD3DTexture(d3dtexture);
-
-		m_TextureList[textureName] = d3dtex;
-
-		return d3dtex;
-	}
-
-	ITexture* D3D9Renderer::BuildCubeTexture(const String& textureName, unsigned int width, unsigned int height, unsigned int bpp, unsigned char* data[6])
+	IDeviceTexture* D3D9Renderer::BuildCubeTexture(const String& textureName, unsigned int width, unsigned int height, unsigned int bpp, unsigned char* data[6])
 	{
 		return NULL;
 	}
 
-
-	ITexture* D3D9Renderer::GetTexture(const String& textureName)
+	void D3D9Renderer::SetVertexColor(const Color4f& color)
 	{
-		TextureList::iterator iter;
+		//m_D3DDevice->SetRenderState
+	}
 
-		if ((iter = m_TextureList.find(textureName)) != m_TextureList.end())
-			return iter->second;
+	void D3D9Renderer::SetMaterialAmbientColor(const Color4f& color)
+	{
 
-		return NULL;
+	}
+
+	void D3D9Renderer::SetMaterialDiffuseColor(const Color4f& color)
+	{
+
+	}
+
+	void D3D9Renderer::SetMaterialSpecularColor(const Color4f& color)
+	{
+
+	}
+
+	void D3D9Renderer::SetMaterialEmissiveColor(const Color4f& color)
+	{
+
+	}
+
+	void D3D9Renderer::SetMaterialSpecularLevel(float level)
+	{
+
 	}
 
 	IGpuProgram* D3D9Renderer::LoadGpuProgram(const String& filename, const String& entry, GpuProgramType type)
@@ -360,6 +331,15 @@ namespace Gen
 	IGpuProgram* D3D9Renderer::GetGpuProgram(const String& filename, const String& entry, GpuProgramType type)
 	{
 		return NULL;
+	}
+	void D3D9Renderer::BindGpuProgram(IGpuProgram* program, GpuProgramType type)
+	{
+
+	}
+
+	void D3D9Renderer::UnbindGpuProgram(GpuProgramType type)
+	{
+
 	}
 
 	int D3D9Renderer::GetMaxLightsNumber()
@@ -383,19 +363,19 @@ namespace Gen
 					d3dlight.Type = D3DLIGHT_DIRECTIONAL;
 					Vector3f dir = light->GetDirection();
 					dir.normalize();
-					VECTOR3F_TO_D3DVECTOR(d3dlight.Direction, dir)
-						break;
+					VECTOR3F_TO_D3DVECTOR(d3dlight.Direction, dir);
+					break;
 				}
 			default:
 				break;
 			}
 
-			VECTOR3F_TO_D3DVECTOR(d3dlight.Position, light->GetPosition())
-				COLOR4F_TO_D3DCOLORVALUE(d3dlight.Ambient, light->GetAmbientColor())
-				COLOR4F_TO_D3DCOLORVALUE(d3dlight.Diffuse, light->GetDiffuseColor())
-				COLOR4F_TO_D3DCOLORVALUE(d3dlight.Specular, light->GetSpecularColor())
+			VECTOR3F_TO_D3DVECTOR(d3dlight.Position, light->GetPosition());
+			COLOR4F_TO_D3DCOLORVALUE(d3dlight.Ambient, light->GetAmbientColor());
+			COLOR4F_TO_D3DCOLORVALUE(d3dlight.Diffuse, light->GetDiffuseColor());
+			COLOR4F_TO_D3DCOLORVALUE(d3dlight.Specular, light->GetSpecularColor());
 
-				d3dlight.Attenuation0 = light->GetConstantAttenuation();
+			d3dlight.Attenuation0 = light->GetConstantAttenuation();
 			d3dlight.Attenuation1 = light->GetLinearAttenuation();
 			d3dlight.Attenuation2 = light->GetQuadraticAttenuation();
 
@@ -414,12 +394,23 @@ namespace Gen
 		return new D3D9VertexBuffer;
 	}
 
+	IIndexBuffer* D3D9Renderer::BuildIndexBuffer()
+	{
+		return new D3D9IndexBuffer;
+	}
+
+
 	IRenderTarget* D3D9Renderer::CreateRenderTarget()
 	{
 		return NULL;
 	}
 
-	void D3D9Renderer::SetRenderTarget(IRenderTarget* rt)
+	void D3D9Renderer::BindRenderTarget(IRenderTarget* rt)
+	{
+
+	}
+
+	void D3D9Renderer::UnbindRenderTarget()
 	{
 
 	}
@@ -432,6 +423,39 @@ namespace Gen
 			{
 				d3dMat.m[y][x] = mat.m[x][y];
 			}
+	}
+
+	// 从引擎的混合因子转换为D3D9混合因子
+	DWORD D3D9Renderer::GetBlendFactor(BlendFactor factor)
+	{
+		switch (factor)
+		{
+		case BLEND_FACTOR_ZERO:
+			return D3DBLEND_ZERO;
+		case BLEND_FACTOR_ONE:
+			return D3DBLEND_ONE;
+		case BLEND_FACTOR_SRC_COLOR:
+			return D3DBLEND_SRCCOLOR;
+		case BLEND_FACTOR_ONE_MINUS_SRC_COLOR:
+			return D3DBLEND_INVSRCCOLOR;
+		case BLEND_FACTOR_SRC_ALPHA:
+			return D3DBLEND_SRCALPHA;
+		case BLEND_FACTOR_ONE_MINUS_SRC_ALPHA:
+			return D3DBLEND_INVSRCALPHA;
+		case BLEND_FACTOR_DST_ALPHA:
+			return D3DBLEND_DESTALPHA;
+		case BLEND_FACTOR_ONE_MINUS_DST_ALPHA:
+			return D3DBLEND_INVDESTALPHA;
+		case BLEND_FACTOR_DST_COLOR:
+			return D3DBLEND_DESTCOLOR;
+		case BLEND_FACTOR_ONE_MINUS_DST_COLOR:
+			return D3DBLEND_INVDESTCOLOR;
+		case BLEND_FACTOR_SRC_ALPHA_SATURATE:
+			return D3DBLEND_SRCALPHASAT;
+		}
+
+		// 不会运行到这里
+		return NULL;
 	}
 
 	void D3D9Renderer::SetupMaterial(Material* material)
@@ -469,53 +493,20 @@ namespace Gen
 				m_D3DDevice->SetTexture(0, d3dtex);
 			}
 			else
-				m_D3DDevice->SetTexture(0, g_NullTexture);
+			{
+				//m_D3DDevice->SetTexture(0, g_NullTexture);
+			}
 		}
 		else
 		{
 			m_D3DDevice->SetRenderState(D3DRS_LIGHTING, FALSE);
 			ToggleDepthWriting(true);
 			ToggleDepthTest(true);
-			m_D3DDevice->SetTexture(0, g_NullTexture);
+			//m_D3DDevice->SetTexture(0, g_NullTexture);
 		}
 	}
 
-	bool D3D9Renderer::UnloadTexture(const String& textureName)
-	{
-		bool result(true);
-		//if this texture ID mapped, unload it's texture, and remove it from the map
-		if(m_TextureList.find(textureName) != m_TextureList.end())
-		{
-			delete m_TextureList[textureName];
-			m_TextureList.erase(textureName);
-		}
-		//otherwise, unload failed
-		else
-		{
-			result = false;
-		}
-
-		return result;
-	}
-
-	void D3D9Renderer::UnloadAllTextures()
-	{
-		//start at the begginning of the texture map
-		TextureList::iterator i = m_TextureList.begin();
-
-		//Unload the textures untill the end of the texture map is found
-		while(i != m_TextureList.end())
-		{
-			UnloadTexture(i->first);
-			i = m_TextureList.begin();
-		}
-
-		//clear the texture map
-		m_TextureList.clear();
-	}
-
-
-	IRenderer* CreateRenderSystem()
+	IRenderDevice* CreateRenderSystem()
 	{
 		return new D3D9Renderer;
 	}

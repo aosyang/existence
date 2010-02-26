@@ -5,17 +5,7 @@
 
 namespace Gen
 {
-	enum CubeMapSide
-	{
-		CUBE_MAP_POSITIVE_X = 0,
-		CUBE_MAP_NEGATIVE_X,
-		CUBE_MAP_POSITIVE_Y,
-		CUBE_MAP_NEGATIVE_Y,
-		CUBE_MAP_POSITIVE_Z,
-		CUBE_MAP_NEGATIVE_Z,
-	};
-
-	class GLCubeTexture : public BaseTexture
+	class GLCubeTexture : public DeviceCubeTexture
 	{
 		friend class GLRenderer;
 	public:
@@ -23,9 +13,6 @@ namespace Gen
 
 		void Create(unsigned int width, unsigned int height, unsigned int bpp, unsigned char* data, int cubePos);
 		void ModifyRectData(int xoffset, int yoffset, int width, int heigh, void* data);
-
-		void SetVertexProgram(const String& filename, const String& entry) {}
-		void SetFragmentProgram(const String& filename, const String& entry) {}
 
 		void BindTexture();
 

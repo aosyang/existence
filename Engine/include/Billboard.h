@@ -31,7 +31,7 @@ namespace Gen
 
 		// ²ÄÖÊ
 		inline Material* GetMaterial() const { return m_Material; }
-		inline void SetMaterial(Material* mat) { m_Material = mat; }
+		void SetMaterial(Material* mat);
 
 		void SetColor(const Color4f& color);
 
@@ -60,6 +60,7 @@ namespace Gen
 		//float			m_TexCoordArray[2 * 4];
 
 		IVertexBuffer*	m_VertexBuffer;
+		IIndexBuffer*	m_IndexBuffer;
 
 		float			m_ZRotataion;
 		float			m_ZOffset;

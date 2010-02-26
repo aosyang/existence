@@ -12,7 +12,7 @@
 
 #include "Vector3f.h"
 #include "Plane3.h"
-#include "IMesh.h"
+#include "BaseMesh.h"
 #include "BspTriangle.h"
 
 #include <vector>
@@ -179,7 +179,7 @@ namespace Gen
 		return *this;
 	}
 
-	bool BuildBspTreeFromMesh(BspTree* bsp, IMesh* mesh);
+	bool BuildBspTreeFromMesh(BspTree* bsp, BaseMesh* mesh);
 }
 
 #endif //_BSPTREE_H

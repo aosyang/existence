@@ -13,9 +13,11 @@
 #include "Platform.h"
 #include "Font.h"
 #include "Color4f.h"
+#include "IVertexBuffer.h"
 
 #include "EString.h"
 #include <vector>
+#include <set>
 
 using namespace std;
 
@@ -42,16 +44,13 @@ namespace Gen
 
 		unsigned int GetTextLength() const { return m_TextLength; }
 
-		void SetRenderTextCount(unsigned int count) { m_RenderTextCount = count; }
-		unsigned int GetRenderTextCount() const { return m_RenderTextCount; }
-
 		// 指定文本颜色
 		void SetTextColor(const Color4f& color) { m_TextColor = color; }
 		Color4f GetTextColor() const { return m_TextColor; }
 
 		// 字体大小
-		void SetFontSize(unsigned int size) { m_FontSize = size; }
-		unsigned int GetFontSize() const { return m_FontSize; }
+		void SetFontSize(float size) { m_FontSize = size; }
+		float GetFontSize() const { return m_FontSize; }
 
 		// 字间距
 		void SetWordSpacing(int spacing) { m_WordSpacing = spacing; }
@@ -64,22 +63,39 @@ namespace Gen
 	private:
 		void RefreshCharacters();
 
+		void BuildVertexBuffer();
+
+		// 扩大字模纹理
+		void EnlargeGlyphTexture();
+
 	private:
-		String			m_Font;				///< 字体
-		Color4f			m_TextColor;		///< 文本颜色
-		wchar_t*		m_WText;			///< 文本
-		unsigned int	m_TextLength;		///< 文本长度
-		unsigned int	m_RenderTextCount;	///< 实际渲染的字数
+		String				m_FontName;				///< 字体名
+		Font*				m_Font;					///< 字体
+		Color4f				m_TextColor;			///< 文本颜色
+		wchar_t*			m_WText;				///< 文本
+		unsigned int		m_TextLength;			///< 文本长度
 
-		unsigned int	m_FontSize;			///< 字体大小
+		float				m_FontSize;				///< 字体大小
 
-		int				m_WordSpacing;		///< 字间距
-		int				m_LineSpacing;		///< 行间距
+		int					m_WordSpacing;			///< 字间距
+		int					m_LineSpacing;			///< 行间距
 
-		bool			m_Dirty;			///< 是否需要更新字符信息
+		bool				m_Dirty;				///< 是否需要更新字符信息
 
-		typedef vector<CharacterInfo> Characters;
-		Characters		m_Characters;		///< 每个字的信息
+		typedef vector<CharGlyphInfo> Characters;
+		Characters			m_Characters;			///< 每个字的信息
+
+		DeviceTexture2D*	m_GlyphTexture;
+		set<wchar_t>		m_WideCharacters;		///< 字符集合，用于统计文本框当前使用的字符数量
+		int					m_CharacterPixelSize;	///< 字符尺寸
+		unsigned int		m_GlyphTexSize;			///< 字模纹理尺寸
+		int					m_VisibleCharCount;		///< 可见字符数目
+
+		typedef map<wchar_t, CharGlyphInfo>		CharacterGlyphInfo;
+		CharacterGlyphInfo	m_CharGlyphInfo;
+
+		IVertexBuffer*		m_VertexBuffer;
+		IIndexBuffer*		m_IndexBuffer;
 	};
 }
 

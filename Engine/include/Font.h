@@ -9,7 +9,10 @@
 #define _FONT_H
 
 #include "Singleton.h"
-#include "ITexture.h"
+#include "Texture.h"
+#include "ResourceManager.h"
+#include "Resource.h"
+#include "IDeviceTexture.h"
 
 #include <ft2build.h>
 #include <freetype/freetype.h>
@@ -25,54 +28,48 @@ namespace Gen
 	class FontManager;
 	class Font;
 
-	struct CharacterInfo
+	struct CharGlyphInfo
 	{
-		ITexture*	texture;			///< 字符所处的纹理
-		float		u1, v1, u2, v2;		///< 纹理坐标
+		float	u1, v1, u2, v2;
 
-		// TODO: remove this, for test only
-		wchar_t		wchar;
+		wchar_t	wchar;
+		int		width, height;
 
-		unsigned int charHeight;		///< 字体高度
-
-		// TODO: 统一单位
-		int			width, height;		///< 纹理宽高
-		int			left, top;
-		int			advance_x;			///< x方向间距
-		//int			advance_y;			// 这个没用
+		// Note: FreeType的BearingX与BearingY相当于这里的left与top
+		int		left, top;
+		int		advance_x;
 	};
 
-	typedef map<const String, CharacterInfo>	CharacterMap;
-	typedef map<const String, Font*>			FontMap;
-
-	class FontManager : public Singleton<FontManager>
+	class FontManager : public Singleton<FontManager>, public ResourceManagerBase
 	{
 		friend class Singleton<FontManager>;
 	public:
 		void Initialize();
 		void Shutdown();
 
-		void UnloadAllFonts();
+		bool CreateResourceHandles(ResourceFileNameInfo* resName);
 
-		// 读取一个字体文件
-		bool LoadFont(const String& fontName, const String& filename);
+		Font* GetByName(const String& resName);
 
-		// 从指定字体中获得一个字符
-		bool GetCharacter(const String& fontName, const wchar_t wch, unsigned int charHeight, CharacterInfo* info);
-
+		// 在纹理上指定位置绘制字符
+		bool BuildTexture(Font* font, const wchar_t wch, unsigned int pixelSize, unsigned int x, unsigned int y, DeviceTexture2D* tex, CharGlyphInfo* charInfo);
 	private:
 		FontManager();
-
-		FT_Library		m_Library;
-
-		FontMap			m_FontMap;
-		CharacterMap	m_CharacterMap;
+		~FontManager();
 	};
 
-	class Font
+	class Font : public Resource
 	{
 		friend class FontManager;
 	public:
+
+	protected:
+		// ----- Overwrite Resource
+		bool LoadImpl();
+		void UnloadImpl();
+
+		// ----- Font Methods
+		Font(const String& filename);
 		~Font();
 
 	private:

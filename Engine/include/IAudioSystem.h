@@ -11,7 +11,7 @@
 #include "Matrix4.h"
 #include "EString.h"
 #include "IAudioSource.h"
-#include "IAudioBuffer.h"
+#include "IDeviceAudioBuffer.h"
 
 namespace Gen
 {
@@ -31,19 +31,15 @@ namespace Gen
 		virtual void Shutdown() = 0;
 
 		// 从文件载入一个音频
-		virtual bool LoadAudioBufferFromFile(const String& bufferName, const String& filename) = 0;
-
-		// 根据音频名返回一格音源
-		virtual IAudioBuffer* GetAudioBuffer(const String& bufferName) = 0;
+		virtual IDeviceAudioBuffer* LoadAudioBufferFromFile(const String& filename) = 0;
 
 		// 指定听者的位置
 		virtual void SetListenerTransform(const Matrix4& transform, const Vector3f& velocity) = 0;
 
-		virtual IAudioSource* CreateSourceInstance(IAudioBuffer* buffer, const Vector3f& position, bool autoRemove=true) = 0;
+		// 创建一个音源
+		virtual IAudioSource* CreateAudioSource() = 0;
 
-		virtual void RemoveSource(IAudioSource* source) = 0;
-
-		virtual void Update() = 0;
+		//virtual IAudioSource* CreateSourceInstance(IAudioBuffer* buffer, const Vector3f& position, bool autoRemove=true) = 0;
 	};
 
 	// 音频系统创建函数，用于插件的生成函数

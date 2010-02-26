@@ -1,36 +1,65 @@
+//-----------------------------------------------------------------------------------
+/// GLVertexBufferObject.cpp OpenGL VBO顶点及索引缓冲实现
+/// 
+/// File Encoding : GB2312
+/// 
+/// Copyright (c) 2009 - 2010 by Mwolf
+//-----------------------------------------------------------------------------------
 #include "GLVertexBufferObject.h"
 
 namespace Gen
 {
-	PFNGLGENBUFFERSARBPROC		GLVertexBufferObject::vbo_glGenBuffers;
-	PFNGLBINDBUFFERARBPROC		GLVertexBufferObject::vbo_glBindBuffer;
-	PFNGLBUFFERSUBDATAARBPROC	GLVertexBufferObject::vbo_glBufferSubData;
-	PFNGLBUFFERDATAARBPROC		GLVertexBufferObject::vbo_glBufferData;
-	PFNGLDELETEBUFFERSARBPROC	GLVertexBufferObject::vbo_glDeleteBuffers;
+	static PFNGLGENBUFFERSARBPROC		vbo_glGenBuffers;
+	static PFNGLBINDBUFFERARBPROC		vbo_glBindBuffer;
+	static PFNGLBUFFERSUBDATAARBPROC	vbo_glBufferSubData;
+	static PFNGLBUFFERDATAARBPROC		vbo_glBufferData;
+	static PFNGLDELETEBUFFERSARBPROC	vbo_glDeleteBuffers;
 
-	GLVertexBufferObject::GLVertexBufferObject()
+	// 安全删除VBO缓冲
+#define DELETE_VBO_BUFFER(buffer) if(buffer) { vbo_glDeleteBuffers(1, &buffer); buffer = 0; }
+
+	void ChooseVBOMethods(bool verOver1_5)
+	{
+		if (verOver1_5)
+		{
+			vbo_glGenBuffers = glGenBuffers;
+			vbo_glBindBuffer = glBindBuffer;
+			vbo_glBufferSubData = glBufferSubData;
+			vbo_glBufferData = glBufferData;
+			vbo_glDeleteBuffers = glDeleteBuffers;
+		}
+		else
+		{
+			vbo_glGenBuffers = glGenBuffersARB;
+			vbo_glBindBuffer = glBindBufferARB;
+			vbo_glBufferSubData = glBufferSubDataARB;
+			vbo_glBufferData = glBufferDataARB;
+			vbo_glDeleteBuffers = glDeleteBuffersARB;
+		}
+	}
+
+	// ------------------------ GLVBOVertexBuffer
+
+	GLVBOVertexBuffer::GLVBOVertexBuffer()
 		: m_Initialized(false),
 		m_VBOVertices(0),
 		m_VBONormals(0),
 		m_VBOColors(0),
-		m_VBOTexCoords(0),
-		m_VBOIndices(0)
+		m_VBOTexCoords(0)
 	{
 	}
 
-	GLVertexBufferObject::~GLVertexBufferObject()
+	GLVBOVertexBuffer::~GLVBOVertexBuffer()
 	{
 		Clear();
 	}
 
-	bool GLVertexBufferObject::CreateBuffer(int vertexFormat,
-		const float* vertexArray,
-		const float* normalArray,
-		const float* colorArray,
-		const float* textureCoordArray,
-		unsigned int vertexNum,
-		unsigned int* faceArray,
-		unsigned int faceNum)
+	bool GLVBOVertexBuffer::CreateBuffer(int vertexFormat,
+										 const float* vertexArray,
+										 const float* normalArray,
+										 const float* colorArray,
+										 const float* textureCoordArray,
+										 unsigned int vertexNum)
 	{
 		if (m_Initialized) return false;
 
@@ -64,19 +93,11 @@ namespace Gen
 			vbo_glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vertexNum * 2, textureCoordArray, GL_STREAM_DRAW);
 		}
 
-
-		vbo_glGenBuffers(1, &m_VBOIndices);
-		vbo_glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_VBOIndices);
-		vbo_glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * faceNum * 3, faceArray, GL_STREAM_DRAW);
-
-		m_FaceNum = faceNum;
 		m_Initialized = true;
 		return true;
 	}
 
-#define DELETE_VBO_BUFFER(buffer) if(buffer) { vbo_glDeleteBuffers(1, &buffer); buffer = 0; }
-
-	void GLVertexBufferObject::Clear()
+	void GLVBOVertexBuffer::Clear()
 	{
 		if (m_Initialized)
 		{
@@ -84,22 +105,18 @@ namespace Gen
 			DELETE_VBO_BUFFER(m_VBONormals);
 			DELETE_VBO_BUFFER(m_VBOColors);
 			DELETE_VBO_BUFFER(m_VBOTexCoords);
-			DELETE_VBO_BUFFER(m_VBOIndices);
 		}
 		m_Initialized = false;
-		m_FaceNum = 0;
 	}
 
-	void GLVertexBufferObject::Lock() {}
-	void GLVertexBufferObject::Unlock() {}
-	void GLVertexBufferObject::SetVertexData(void* vertexData, unsigned int vertexNum)
+	void GLVBOVertexBuffer::Lock() {}
+	void GLVBOVertexBuffer::Unlock() {}
+	void GLVBOVertexBuffer::SetVertexData(void* vertexData, unsigned int vertexNum)
 	{
 		//glBufferSubDataARB()
 	}
 
-	void GLVertexBufferObject::SetIndexData(void* indexData, unsigned int indexNum) {}
-
-	void GLVertexBufferObject::ModifyVertexData(VertexFormat dataFormat, int offset, int size, void* data)
+	void GLVBOVertexBuffer::ModifyVertexData(VertexFormat dataFormat, int offset, int size, void* data)
 	{
 		if (!size || !data) return;
 
@@ -128,30 +145,17 @@ namespace Gen
 		vbo_glBufferSubData(GL_ARRAY_BUFFER, offset, size, data);
 	}
 
-	void GLVertexBufferObject::ModifyIndexData(int offset, int size, void* data)
+	void GLVBOVertexBuffer::SetAsVertexDataSource()
 	{
-		if (!size || !data) return;
-
-		offset *= sizeof(unsigned int);
-		vbo_glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_VBOIndices);
-		vbo_glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, offset, size, data);
-	}
-
-	void GLVertexBufferObject::SetIndexSize(int size)
-	{
-		m_FaceNum = size;
-	}
-
-	void GLVertexBufferObject::RenderBuffer()
-	{
-		if (!m_FaceNum) return;
-
 		if (m_VertexFormat & VFormat_Position)
 		{
 			vbo_glBindBuffer(GL_ARRAY_BUFFER, m_VBOVertices);
 			glVertexPointer(3, GL_FLOAT, 0, NULL);
 			glEnableClientState(GL_VERTEX_ARRAY);
 		}
+		else
+			glDisableClientState(GL_VERTEX_ARRAY);
+
 
 		if (m_VertexFormat & VFormat_Normal)
 		{
@@ -159,6 +163,9 @@ namespace Gen
 			glNormalPointer(GL_FLOAT, 0, NULL);
 			glEnableClientState(GL_NORMAL_ARRAY);
 		}
+		else
+			glDisableClientState(GL_NORMAL_ARRAY);
+
 
 		if (m_VertexFormat & VFormat_Color)
 		{
@@ -166,6 +173,9 @@ namespace Gen
 			glColorPointer(4, GL_FLOAT, 0, NULL);
 			glEnableClientState(GL_COLOR_ARRAY);
 		}
+		else
+			glDisableClientState(GL_COLOR_ARRAY);
+
 
 		vbo_glBindBuffer(GL_ARRAY_BUFFER, m_VBOTexCoords);
 		// TODO: 指定多重纹理的uv坐标
@@ -175,55 +185,84 @@ namespace Gen
 			glTexCoordPointer(2, GL_FLOAT, 0, NULL);
 			glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 		}
+	}
 
+	// ------------------------ GLVBOIndexBuffer
+
+	GLVBOIndexBuffer::GLVBOIndexBuffer()
+	: m_VBOIndices(NULL),
+	  m_FaceNum(0)
+	{
+		
+	}
+
+	GLVBOIndexBuffer::~GLVBOIndexBuffer()
+	{
+		// 销毁时清除数据
+		Clear();
+	}
+
+	bool GLVBOIndexBuffer::CreateBuffer(unsigned int* faceArray, unsigned int faceNum)
+	{
+		// 创建VBO缓冲，指定数据
+		vbo_glGenBuffers(1, &m_VBOIndices);
 		vbo_glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_VBOIndices);
+		vbo_glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * faceNum * 3, faceArray, GL_STREAM_DRAW);
 
-		glDrawElements(GL_TRIANGLES, m_FaceNum * 3, GL_UNSIGNED_INT, NULL);
+		m_FaceNum = faceNum;
 
-		if (m_VertexFormat & VFormat_Position)
+		return true;
+	}
+
+	void GLVBOIndexBuffer::Clear()
+	{
+		DELETE_VBO_BUFFER(m_VBOIndices);
+		m_FaceNum = 0;
+	}
+
+	void GLVBOIndexBuffer::SetIndexData(void* indexData, unsigned int indexNum)
+	{
+		DELETE_VBO_BUFFER(m_VBOIndices);
+
+		vbo_glGenBuffers(1, &m_VBOIndices);
+		vbo_glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_VBOIndices);
+		vbo_glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * indexNum * 3, indexData, GL_STREAM_DRAW);
+
+		m_FaceNum = indexNum;
+	}
+
+	void GLVBOIndexBuffer::ModifyIndexData(int offset, int size, void* data)
+	{
+		if (!size || !data) return;
+
+		offset *= sizeof(unsigned int);
+		vbo_glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_VBOIndices);
+		vbo_glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, offset, size, data);
+	}
+
+	void GLVBOIndexBuffer::SetIndexSize(int size)
+	{
+		m_FaceNum = size;
+	}
+
+	void GLVBOIndexBuffer::RenderPrimitive()
+	{
+		if (m_FaceNum)
 		{
-			glDisableClientState(GL_VERTEX_ARRAY);
-		}
+			// 使用索引缓冲对象
+			vbo_glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_VBOIndices);
 
-		if (m_VertexFormat & VFormat_Normal)
-		{
-			glDisableClientState(GL_NORMAL_ARRAY);
-		}
-
-		if (m_VertexFormat & VFormat_Color)
-		{
-			glDisableClientState(GL_COLOR_ARRAY);
-		}
-
-		for (int i=0; i<8; i++)
-		{
-			glClientActiveTexture(GL_TEXTURE0 + i);
-			glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+			glDrawElements(GL_TRIANGLES, m_FaceNum * 3, GL_UNSIGNED_INT, NULL);
 		}
 	}
 
-	void GLVertexBufferObject::ChooseFunc(bool verOver1_5)
+	IVertexBuffer* FactoryCreateVBOVertexBuffer()
 	{
-		if (verOver1_5)
-		{
-			vbo_glGenBuffers = glGenBuffers;
-			vbo_glBindBuffer = glBindBuffer;
-			vbo_glBufferSubData = glBufferSubData;
-			vbo_glBufferData = glBufferData;
-			vbo_glDeleteBuffers = glDeleteBuffers;
-		}
-		else
-		{
-			vbo_glGenBuffers = glGenBuffersARB;
-			vbo_glBindBuffer = glBindBufferARB;
-			vbo_glBufferSubData = glBufferSubDataARB;
-			vbo_glBufferData = glBufferDataARB;
-			vbo_glDeleteBuffers = glDeleteBuffersARB;
-		}
+		return new GLVBOVertexBuffer;
 	}
 
-	IVertexBuffer* FactoryCreateVertexBufferObject()
+	IIndexBuffer* FactoryCreateVBOIndexBuffer()
 	{
-		return new GLVertexBufferObject;
+		return new GLVBOIndexBuffer;
 	}
 }

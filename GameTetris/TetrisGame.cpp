@@ -42,14 +42,14 @@ void TetrisGame::StartGame()
 	LightingManager::Instance().AddGlobalLight(m_Sun);
 
 	m_UIScore = EGUIManager::Instance().CreateTextUIControl();
-	m_UIScore->SetWidth(640);
-	m_UIScore->SetLeft(50);
-	m_UIScore->SetTop(50);
+	m_UIScore->SetWidth(1.0f);
+	m_UIScore->SetHBorderSize(0.05f);
+	m_UIScore->SetVBorderSize(0.05f);
 
 	m_GameOverText = EGUIManager::Instance().CreateTextUIControl();
-	m_GameOverText->SetWidth(640);
-	m_GameOverText->SetLeft(50);
-	m_GameOverText->SetTop(120);
+	m_GameOverText->SetWidth(1.0f);
+	m_GameOverText->SetHBorderSize(0.05f);
+	m_GameOverText->SetVBorderSize(0.25f);
 	m_GameOverText->SetText("Game Over!!\nPress Enter to restart");
 
 	// 创建边框
@@ -147,10 +147,6 @@ void TetrisGame::OnKeyPressed(unsigned int key)
 		if (m_GameState==GAME_STATE_OVER)
 			Restart();
 		break;
-	case KC_F:
-		bool debugRender = Engine::Instance().GetDebugRender();
-		Engine::Instance().ToggleDebugRender(!debugRender);
-		break;
 	}
 }
 
@@ -228,7 +224,7 @@ void TetrisGame::Update(unsigned long deltaTime)
 				}
 			}
 
-			//renderer->SetViewMatrix(m_Camera->GetViewMatrix());
+			//Renderer::Instance().SetViewMatrix(m_Camera->GetViewMatrix());
 
 			String score;
 			score.Format("High Score: %d\n\nScore: %d", m_HighScore, m_Score);
@@ -254,7 +250,7 @@ void TetrisGame::RenderScene()
 	rv.projMatrix = m_Camera->GetProjMatrix();
 	rv.frustum = m_Camera->GetFrustum();
 
-	renderer->SetViewport(0, 0, 0, 0);
+	Renderer::Instance().SetViewport(0, 0, 0, 0);
 
 	// 设定渲染视点
 	m_Scene->SetupRenderView(rv);
@@ -297,7 +293,7 @@ void TetrisGame::MoveDown()
 		CheckAndRemove();
 	}
 
-	IAudioBuffer* buffer = Engine::Instance().AudioSystem()->GetAudioBuffer("move.wav");
+	AudioBuffer* buffer = AudioManager::Instance().GetByName("move.wav");
 	Engine::Instance().AudioSystem()->CreateSourceInstance(buffer, Vector3f(0.0f, 0.0f, 0.0f));
 }
 
