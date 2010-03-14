@@ -30,7 +30,7 @@ namespace Gen
 		m[3][0] = 0.0f; m[3][1] = 0.0f; m[3][2] = 0.0f; m[3][3] = 1.0f;
 	}
 
-	Matrix4 Matrix4::operator * (const Matrix4& m2) const
+	Matrix4 Matrix4::operator*(const Matrix4& m2) const
 	{
 		Matrix4 r;
 		r.m[0][0] = m[0][0] * m2.m[0][0] + m[0][1] * m2.m[1][0] + m[0][2] * m2.m[2][0] + m[0][3] * m2.m[3][0];
@@ -56,7 +56,7 @@ namespace Gen
 		return r;
 	}
 
-	Vector3f Matrix4::operator * (const Vector3f& vec) const
+	Vector3f Matrix4::operator*(const Vector3f& vec) const
 	{
 		Vector3f r;
 

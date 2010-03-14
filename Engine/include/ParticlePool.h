@@ -28,7 +28,7 @@ namespace Gen
 	class ParticlePool : public RenderableObjectBase
 	{
 		friend class ParticleEmitter;
-		DECLARE_FACTORY_OBJECT(ParticlePool);
+		DECLARE_FACTORY_OBJECT(ParticlePool, RenderableObjectBase);
 	public:
 		// ----- Overwrite ISceneObject
 

@@ -16,82 +16,141 @@ namespace Gen
 	class SkeletalAnimation;
 	class JointPoseAnimation;
 
-	// 骨骼模型对象
-	// 场景中骨骼模型的实例化对象
+	/// @brief
+	/// 骨骼模型对象
+	/// @par
+	///		可以添加到场景的骨骼模型实例化对象
+	/// @remarks
+	///		为骨骼模型对象指定了模型以后，会从模型中复制一份顶点数据用于动画变形
 	class SkeletalMeshObject : public MeshObject
 	{
-		DECLARE_FACTORY_OBJECT(SkeletalMeshObject);
+		DECLARE_FACTORY_OBJECT(SkeletalMeshObject, MeshObject);
 	public:
 		// ----- Overwrite IObject
+		/// @copydoc MeshObject::Update()
 		void Update(unsigned long deltaTime);
 
 		// ----- Overwrite MeshObject
+		/// @copydoc MeshObject::SetMesh()
 		void SetMesh(BaseMesh* mesh);
 
 		// ----- Overwrite SceneObject
+		/// @copydoc SceneObject::DebugRender()
 		void DebugRender();
 
 		// ----- Overwrite IRenderableObject
 		void RenderSingleObject();
 
 		// ----- SkeletalMeshObject
+		/// @brief
+		/// 为骨骼模型对象指定骨骼信息
+		/// @param skeleton
+		///		所要指定的骨骼信息
 		void SetSkeleton(Skeleton* skeleton);
 
-		// 播放动画
+		/// @brief
+		/// 播放一个骨骼动画
+		/// @param animName
+		///		动画名称
+		/// @param resetTargetAnim
+		///		是否重置所播放的动画时间点，为true时将从头开始播放动画，为false时将从上一次动画结束的时间点继续播放
 		void PlayAnimation(const String& animName, bool resetTargetAnim=true);
 
-		// 指定动画播放位置
+		/// @brief
+		///	指定动画播放时间点
+		/// @param time
+		///		动画时间点(单位：秒)
 		void SetAnimationTime(float time);
 
 	protected:
-		// 使用骨骼信息创建骨骼实例
+		/// @brief
+		/// 使用骨骼信息创建骨骼实例
 		void CreateJointInstance();
 
+		/// @brief
+		///	递进骨骼动画的时间
+		/// @param deltaTime
+		///		递进时间(单位：毫秒)
 		void AdvanceTime(unsigned long deltaTime);
 
-		// 使用当前骨骼状态更新模型
+		/// @brief
+		/// 使用当前骨骼状态更新模型的顶点位置及法线方向
 		void UpdateMesh();
 
 	protected:
-		SkeletalJointInstance*		m_RootJoint;
-		Skeleton*					m_Skeleton;
-		IVertexBuffer*				m_VertexBuffer;
+		SkeletalJointInstance*		m_RootJoint;			///< 骨骼根结点
+		Skeleton*					m_Skeleton;				///< 骨骼信息
+		IVertexBuffer*				m_VertexBuffer;			///< 变形用顶点缓冲副本
 
-		float*						m_VertexArray;
-		float*						m_NormalArray;
+		float*						m_VertexArray;			///< 顶点数组
+		float*						m_NormalArray;			///< 法线数组
 
-		map<int, SkeletalJointInstance*>	m_JointInstanceMap;
+		map<int, SkeletalJointInstance*>	m_JointInstanceMap;	///< 骨骼关节实例列表
 
 		SkeletalAnimation*			m_CurrentAnimation;		///< 当前播放的动画
 		float						m_CurAnimationTime;		///< 当前动画时间
 	};
 
 
-	// 骨骼关节实例，记录关节之间某时刻的关系
+	/// @brief
+	/// 骨骼关节实例
+	/// @par
+	///		骨骼关节实例是根据骨骼信息为一个骨骼模型对象创建的关节实例对象。<br>
+	///		每个对象记录一个关节在某时刻的位置及旋转状态，骨骼模型对象记录一组<br>
+	///		骨骼关节实例的信息，并根据蒙皮和骨骼关节实例的状态调整顶点的位置。<br>
 	class SkeletalJointInstance
 	{
 		friend class Skeleton;
 	public:
+		/// @brief
+		///	构造函数
+		///	@param id
+		///		关节id
+		///	@param parentId
+		///		父结点关节id
+		///	@param skeleton
+		///		骨骼信息
 		SkeletalJointInstance(int id, int parentId, Skeleton* skeleton);
 		~SkeletalJointInstance();
 
+		/// @brief
+		///	获取关节的id
 		int GetJointId() const { return m_JointId; }
 
-		// 获取父节点id
+		/// @brief
+		/// 获取父关节id
 		int GetParentId() const { return m_ParentId; }
 
+		/// @brief
+		///	获取该关节相对于骨骼层次根结点的变换
 		inline const Matrix4& GetBoneTransform() const { return m_BoneTransform; }
 
-		// 添加子关节
+		/// @brief
+		/// 添加一个子关节
+		/// @param child
+		///		子关节
 		void AddChildJoint(SkeletalJointInstance* child);
 
-		// debug渲染
+		/// @brief
+		/// 渲染调试信息
+		/// @param world
+		///		骨骼根结点的世界变换矩阵
+		/// @remarks
+		///		这个方法递归调用子结点的相同方法进行渲染输出
 		void DebugRender(const Matrix4& world);
 
-		// 更新骨骼关系
+		/// @brief
+		/// 更新骨骼关系
+		/// @param animTime
+		///		动画当前播放时间(单位：秒)
+		/// @param parentBoneTransform
+		///		父结点骨骼变换矩阵
 		void Update(float animTime, const Matrix4& parentBoneTransform=Matrix4::IDENTITY);
 
-		// 指定动画
+		/// @brief
+		/// 为关节指定动画
+		/// @param anim
+		///		指定的骨骼动画
 		void SetAnimation(SkeletalAnimation* anim);
 	private:
 		int				m_JointId;			///< 关节id

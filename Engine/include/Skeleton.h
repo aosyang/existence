@@ -27,12 +27,15 @@ namespace Gen
 	class SkeletonManager;
 	class SkeletalMeshObject;
 
-	// 每顶点的蒙皮信息，记录了影响这个顶点的矩阵和权重
+	/// @brief
+	/// 蒙皮顶点信息
+	/// @par
+	///		记录了影响这个顶点的矩阵和权重
 	struct SkinnedVertexInfo
 	{
-		unsigned int boneCount;								///< 骨骼数量，最大4
-		unsigned int boneId[MAX_BONE_NUM_PER_VERTEX];		///< 骨骼编号
-		float weight[MAX_BONE_NUM_PER_VERTEX];				///< 对应每个骨骼的权重
+		unsigned int boneCount;								///< 影响该顶点的骨骼数量，最大4
+		unsigned int boneId[MAX_BONE_NUM_PER_VERTEX];		///< 每个骨骼的编号
+		float weight[MAX_BONE_NUM_PER_VERTEX];				///< 对应每个骨骼的权重(和应该为1)
 
 	};
 

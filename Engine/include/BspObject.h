@@ -16,7 +16,7 @@ namespace Gen
 {
 	class BspObject : public RenderableObjectBase
 	{
-		DECLARE_FACTORY_OBJECT(BspObject);
+		DECLARE_FACTORY_OBJECT(BspObject, RenderableObjectBase);
 	public:
 		// ----- Overwrite IRenderableObject
 

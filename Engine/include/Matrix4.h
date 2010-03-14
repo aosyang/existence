@@ -15,20 +15,14 @@
 
 namespace Gen
 {
-	//-----------------------------------------------------------------------------------
-	/// \brief
+	/// @brief
 	/// 4x4变换矩阵
-	/// 
-	/// Write detailed description for Matrix4 here.
-	/// 
-	/// \remarks
-	/// 4x4变换矩阵，成员排布如下<br>
-	/// [m00, m01, m02, m03]<br>
-	/// |m10, m11, m12, m13|<br>
-	/// |m20, m21, m22, m23|<br>
-	/// [m30, m31, m32, m33]<br>
-	/// 
-	//-----------------------------------------------------------------------------------
+	/// @remarks
+	///		4x4变换矩阵，成员排布如下<br>
+	///		[m00, m01, m02, m03]<br>
+	///		|m10, m11, m12, m13|<br>
+	///		|m20, m21, m22, m23|<br>
+	///		[m30, m31, m32, m33]<br>
 	class Matrix4
 	{
 	public:
@@ -52,6 +46,14 @@ namespace Gen
 
 		~Matrix4();
 
+		/// @brief
+		/// 矩阵赋值操作
+		/// @param rhs
+		///		另外一个矩阵
+		/// @returns
+		///		返回当前矩阵
+		/// @remarks
+		///		当自身赋值给自身时，不进行任何操作
 		Matrix4& operator=(const Matrix4& rhs)
 		{
 			if (this != &rhs)
@@ -61,12 +63,24 @@ namespace Gen
 
 			return *this;
 		}
+
+		/// @brief
+		///	将矩阵置为单位矩阵，主对角线值为1.0，其余为0.0
 		void MakeIdentity();
 
 		static Matrix4 IDENTITY;
 
-		Matrix4 operator * (const Matrix4& m2) const;
-		Vector3f operator * (const Vector3f& vec) const;
+		Matrix4 operator*(const Matrix4& m2) const;
+
+		/// @brief
+		///	矩阵与向量乘法运算
+		/// @param vec
+		///		与矩阵进行乘法运算的向量
+		/// @returns
+		///		返回乘法运算之后的向量
+		/// @remarks
+		///		向量视作列向量，与矩阵进行乘法运算时为右乘。三维向量自动扩展为四维向量，其最后一个值w恒为1.0
+		Vector3f operator*(const Vector3f& vec) const;
 
 		Matrix4 operator*=(const Matrix4& m2);
 
@@ -75,14 +89,21 @@ namespace Gen
 		// 根据自身空间方向进行位移
 		void TranslateLocal(const Vector3f& vec);
 
-		// 设置观察方向，仅影响旋转矩阵
+		/// @brief
+		/// 设置矩阵的观察方向
+		/// @param direction
+		///		观察方向向量
+		/// @param up
+		///		上方向向量
+		/// @remarks
+		///		这个方法仅改变当前矩阵的旋转矩阵，即左上角3x3的范围
 		void SetLookAt(const Vector3f& direction, const Vector3f& up);
 
-		// 获取右方向向量
+		/// 获取右方向向量
 		const Vector3f GetRightVector() const;
-		// 获取上方向向量
+		/// 获取上方向向量
 		const Vector3f GetUpVector() const;
-		// 获取前方向向量
+		/// 获取前方向向量
 		const Vector3f GetForwardVector() const;
 
 		void SetRotation(const Quaternion& rot);
@@ -90,6 +111,10 @@ namespace Gen
 		void SetRotation(const Matrix3& rot);
 		Matrix3 GetRotationMatrix() const;
 
+		/// @brief
+		///	计算矩阵的逆矩阵
+		/// @returns
+		///		计算得到的逆矩阵
 		Matrix4 GetInverseMatrix() const;
 
 		void SetPosition(const Vector3f& pos);

@@ -79,6 +79,7 @@ namespace Gen
 	class FileSystem;
 
 	class GameObjectBase;
+	class Actor;
 
 	class EGUIManager;
 	class UIRootObject;
@@ -157,6 +158,7 @@ namespace Gen
 #include "FileSystem.h"
 
 #include "GameObjectBase.h"
+#include "Actor.h"
 
 #include "EGUIManager.h"
 #include "UIRootObject.h"

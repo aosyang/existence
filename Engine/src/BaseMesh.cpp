@@ -196,8 +196,11 @@ namespace Gen
 
 	}
 
-	void MeshBuilder::AddVertex(float pos[3], float normal[3], float texcoord[2], unsigned int meshElementIndex)
+	bool MeshBuilder::AddVertex(float pos[3], float normal[3], float texcoord[2], unsigned int meshElementIndex)
 	{
+		// 如果子模型索引超出上限，添加失败
+		if (meshElementIndex>=m_MeshElementCount) return false;
+
 		unsigned int index;
 		int i;
 		for (i=0; i<m_VertexCount; i++)
@@ -231,6 +234,8 @@ namespace Gen
 			m_OBB.Expand(Vector3f(pos));
 		}
 		AddIndex(i, meshElementIndex);
+
+		return true;
 	}
 
 	void MeshBuilder::AddIndex(unsigned int index, unsigned int meshElementIndex)

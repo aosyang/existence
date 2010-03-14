@@ -160,6 +160,16 @@ namespace Gen
 		}
 	}
 
+	//void SceneObject::DebugRenderAABB()
+	//{
+
+	//}
+
+	//void SceneObject::DebugRenderOBB()
+	//{
+
+	//}
+
 	void SceneObject::SetSceneGraphRecursively(SceneGraph* scene)
 	{
 		m_Scene = scene;

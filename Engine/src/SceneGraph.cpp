@@ -218,7 +218,7 @@ namespace Gen
 			iter!=m_SceneObjects.end();
 			iter++)
 		{
-			(*iter)->DumpToLogRecursively(0);
+			(*iter)->DumpToLogRecursively();
 		}
 		Log.MsgLn("----------- End dumping SceneGraph");
 	}

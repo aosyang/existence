@@ -16,7 +16,7 @@ namespace Gen
 {
 	class DistantViewObject : public MeshObject
 	{
-		DECLARE_FACTORY_OBJECT(DistantViewObject);
+		DECLARE_FACTORY_OBJECT(DistantViewObject, MeshObject);
 	public:
 		// ----- Overwrite IRenderableObject
 

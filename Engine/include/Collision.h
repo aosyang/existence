@@ -28,7 +28,10 @@ namespace Gen
 
 	typedef vector<CollisionResult>		ObjectsCollisionInfos;
 
-#define COLLISION_GROUP_ALL 0xFFFFFFFF
+	enum CollisionGroup
+	{
+		COLLISION_GROUP_ALL = 0xFFFFFFFF,
+	};
 };
 
 #endif

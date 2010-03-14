@@ -16,7 +16,7 @@ namespace Gen
 {
 	class Billboard : public RenderableObjectBase
 	{
-		DECLARE_FACTORY_OBJECT(Billboard);
+		DECLARE_FACTORY_OBJECT(Billboard, RenderableObjectBase);
 	public:
 
 		// ----- Overwrite IObject

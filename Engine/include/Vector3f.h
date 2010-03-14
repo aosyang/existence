@@ -12,18 +12,10 @@
 
 namespace Gen
 {
-	//-----------------------------------------------------------------------------------
-	/// \brief
-	/// 三维向量
-	/// 
-	/// Write detailed description for Vector3f here.
-	/// 
-	/// \remarks
-	/// Write remarks for Vector3f here.
-	/// 
-	/// \see
-	/// Separate items with the '|' character.
-	//-----------------------------------------------------------------------------------
+	/// @brief
+	/// 三维列向量
+	/// @remarks
+	///		引擎中的三维向量在与矩阵进行乘法运算时，向量在矩阵右侧
 	class Vector3f
 	{
 	public:
@@ -45,7 +37,7 @@ namespace Gen
 			return *this;
 		}
 		bool operator ==(const Vector3f &a) const{return FLOAT_EQUAL(x, a.x) && FLOAT_EQUAL(y, a.y) && FLOAT_EQUAL(z, a.z);}
-		bool operator !=(const Vector3f &a) const{return x != a.x || y != a.y || z != a.z;}
+		bool operator !=(const Vector3f &a) const{return !FLOAT_EQUAL(x, a.x) || !FLOAT_EQUAL(y, a.y) || !FLOAT_EQUAL(z, a.z);}
 
 		void zero(){ x = y = z = 0.0f;}
 		Vector3f operator - () const {return Vector3f (-x, -y, -z);}
@@ -64,11 +56,26 @@ namespace Gen
 
 		inline float SquaredLength() const { return x * x + y * y + z * z; }
 
-		// 获取向量长度。慎用，速度慢。仅做比较时候优先考虑SquaredLength
+		/// @brief
+		/// 获取向量的实际长度
+		/// @remarks
+		///		这个方法中含有一个开平方运算，如果仅仅作长度比较时，使用SquaredLength()完成
+		/// @see
+		///		Vector3f::SquaredLength()
 		inline float Length() const { return sqrt(SquaredLength()); }
 
+		/// @brief
+		///	获取数组形式向量的值
+		/// @returns
+		///		向量数组的首地址
 		inline const float* GetArray() const { return &x; }
 
+		/// @brief
+		/// 标准化向量
+		/// @par
+		///		等比缩放向量使向量的长度为1.0
+		/// @remarks
+		///		如果向量长度为0，不做任何操作
 		void normalize()
 		{
 			float magSq = x*x + y*y + z*z;

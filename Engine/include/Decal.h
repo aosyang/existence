@@ -26,7 +26,7 @@ namespace Gen
 	//-----------------------------------------------------------------------------------
 	class Decal : public RenderableObjectBase
 	{
-		DECLARE_FACTORY_OBJECT(Decal);
+		DECLARE_FACTORY_OBJECT(Decal, RenderableObjectBase);
 	public:
 		// ----- Overwrite IRenderableObject
 

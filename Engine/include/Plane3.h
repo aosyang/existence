@@ -35,20 +35,56 @@ namespace Gen
 		Vector3f n;		///< 法线
 		float d;		///< 原点沿法线方向到平面的距离
 
+		/// @brief
+		/// 构造函数
+		/// @param nx
+		///		法线x分量
+		/// @param ny
+		///		法线y分量
+		///	@param nz
+		///		法线z分量
+		/// @param _d
+		///		原点沿法线方向到平面的距离
 		Plane3(float nx, float ny, float nz, float _d)
 			: n(nx, ny , nz), d(_d)
 		{
 		}
 
+		/// @brief
+		/// 构造函数
+		/// @param _n
+		///		法线向量
+		/// @param _d
+		///		原点沿法线方向到平面的距离
 		Plane3(const Vector3f& _n, float _d)
 			: n(_n), d(_d)
 		{
 		}
 
 		// 三点式求得平面
+
+		/// @brief
+		/// 构造函数
+		/// @par
+		///		三点式构造平面方程
+		/// @param a
+		///		顶点1
+		/// @param b
+		///		顶点2
+		/// @param c
+		///		顶点3
 		Plane3(const Vector3f& a, const Vector3f& b, const Vector3f& c);
 
 		// 点法式求得平面
+
+		/// @brief
+		/// 构造函数
+		/// @par
+		///		点法式构造平面方程
+		/// @param normal
+		///		法线向量
+		/// @param p
+		///		平面上一点
 		Plane3(const Vector3f& normal, const Vector3f& p);
 
 		// 多边形求得平面

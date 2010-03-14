@@ -422,6 +422,14 @@
 			Name="Game"
 			>
 			<File
+				RelativePath="..\..\Engine\src\Actor.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Engine\include\Actor.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\Engine\include\IGame.h"
 				>
 			</File>

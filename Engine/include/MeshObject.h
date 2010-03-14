@@ -19,7 +19,7 @@ namespace Gen
 
 	class MeshObject : public RenderableObjectBase
 	{
-		DECLARE_FACTORY_OBJECT(MeshObject);
+		DECLARE_FACTORY_OBJECT(MeshObject, RenderableObjectBase);
 	public:
 		// ----- Overwrite SceneObject
 		bool OnSave(SceneSerializerNode* node);

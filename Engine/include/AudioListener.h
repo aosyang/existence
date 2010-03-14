@@ -20,7 +20,7 @@ namespace Gen
 	//-----------------------------------------------------------------------------------
 	class AudioListener : public SceneObject
 	{
-		DECLARE_FACTORY_OBJECT(AudioListener);
+		DECLARE_FACTORY_OBJECT(AudioListener, SceneObject);
 	public:
 
 		// ----- Overwrite IObject

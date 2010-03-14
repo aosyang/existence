@@ -17,7 +17,7 @@ namespace Gen
 	// 负责对象的碰撞、更新等等
 	class GameObjectBase : public SceneObject
 	{
-		DECLARE_FACTORY_OBJECT(GameObjectBase)
+		DECLARE_FACTORY_OBJECT(GameObjectBase, SceneObject)
 	public:
 		// ----- Overwrite IObject
 		//void Update(unsigned long deltaTime);

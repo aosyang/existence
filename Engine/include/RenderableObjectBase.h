@@ -18,7 +18,7 @@ namespace Gen
 	class RenderableObjectBase : public IRenderableObject,
 		public SceneObject
 	{
-		DECLARE_FACTORY_OBJECT(RenderableObjectBase)
+		DECLARE_FACTORY_OBJECT(RenderableObjectBase, RenderableObjectBase)
 	public:
 
 		// ----- Overwrite SceneObject

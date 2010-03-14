@@ -69,24 +69,6 @@ namespace Gen
 		SceneObject::DebugRender();
 	}
 
-	//-----------------------------------------------------------------------------------
-	/// \brief
-	/// 摄像机本地位移
-	/// 
-	/// \param forwardAmount
-	/// 前方向位移量
-	/// 
-	/// \param rightAmount
-	/// 右方向位移量
-	/// 
-	/// \param upAmount
-	/// 上方向位移量
-	/// 
-	/// 根据摄像机的本地变换向六个方向平移，负数表示向对应方向的反方向移动。
-	/// 
-	/// \remarks
-	/// 如果三个位移量均为0，则不进行更新。
-	//-----------------------------------------------------------------------------------
 	void Camera::MoveLocal(float forwardAmount, float rightAmount, float upAmount)
 	{
 		if (forwardAmount == 0.0f && rightAmount == 0.0f && upAmount == 0.0f)
@@ -97,22 +79,6 @@ namespace Gen
 		m_MatrixOutOfData = true;
 	}
 
-	//-----------------------------------------------------------------------------------
-	/// \brief
-	/// 摄像机本地旋转
-	/// 
-	/// \param headingAmount
-	/// 水平方向旋转量
-	/// 
-	/// \param pitchAmount
-	/// 垂直方向旋转量
-	/// 
-	/// FPS模式的摄像机，只对Yaw和Pitch进行控制，根据成员m_RestrictPitch
-	/// 可以限定Pitch旋转范围。
-	/// 
-	/// \remarks
-	/// 如果两个量均为0则不进行计算。
-	//-----------------------------------------------------------------------------------
 	void Camera::RotateLocal(float headingAmount, float pitchAmount)
 	{
 		if (headingAmount == 0.0f && pitchAmount == 0.0f)
@@ -145,18 +111,6 @@ namespace Gen
 
 	}
 
-	//-----------------------------------------------------------------------------------
-	/// \brief
-	/// 设置摄像机的纵横比
-	/// 
-	/// \param aspect
-	/// 纵横比值
-	///
-	/// 当窗体尺寸发生变化时，应当对每一个摄像机调用该方法重新设置纵横比
-	/// 
-	/// \remarks
-	/// 这个方法将会重新计算平头视截体
-	//-----------------------------------------------------------------------------------
 	void Camera::SetAspect(float aspect)
 	{
 		m_Aspect = aspect;
