@@ -1,12 +1,11 @@
 <?xml version="1.0" encoding="gb2312"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="9.00"
-	Name="PluginCgGL"
-	ProjectGUID="{A473E4A4-0D49-42AB-96E9-69BD861D863E}"
-	RootNamespace="PluginCgGL"
+	Version="8.00"
+	Name="PluginOISInputSystem"
+	ProjectGUID="{F07524DA-6E4D-4790-ADC5-3298A0CEED3F}"
+	RootNamespace="PluginOISInputSystem"
 	Keyword="Win32Proj"
-	TargetFrameworkVersion="0"
 	>
 	<Platforms>
 		<Platform
@@ -19,7 +18,7 @@
 		<Configuration
 			Name="Debug|Win32"
 			OutputDirectory="..\..\bin\plugins"
-			IntermediateDirectory="..\..\$(ProjectName)\obj\$(ConfigurationName)"
+			IntermediateDirectory="obj\$(ProjectName)\$(ConfigurationName)"
 			ConfigurationType="2"
 			CharacterSet="1"
 			>
@@ -42,7 +41,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="..\..\Engine\include;..\..\extra\include"
-				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;PLUGINCGGL_EXPORTS"
+				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;PLUGINOISINPUTSYSTEM_EXPORTS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -62,10 +61,10 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="Engine_d.lib cg.lib cgGL.lib"
+				AdditionalDependencies="OIS_static_d.lib"
 				OutputFile="$(OutDir)\$(ProjectName)_d.dll"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="..\..\bin\libs;..\..\extra\lib;..\..\extra\lib\vc9"
+				AdditionalLibraryDirectories="..\..\bin\libs;..\..\extra\lib;..\..\extra\lib\vc8"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				TargetMachine="1"
@@ -89,13 +88,16 @@
 				Name="VCAppVerifierTool"
 			/>
 			<Tool
+				Name="VCWebDeploymentTool"
+			/>
+			<Tool
 				Name="VCPostBuildEventTool"
 			/>
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
 			OutputDirectory="..\..\bin\plugins"
-			IntermediateDirectory="..\..\$(ProjectName)\obj\$(ConfigurationName)"
+			IntermediateDirectory="obj\$(ProjectName)\$(ConfigurationName)"
 			ConfigurationType="2"
 			CharacterSet="1"
 			WholeProgramOptimization="1"
@@ -118,7 +120,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalIncludeDirectories="..\..\Engine\include;..\..\extra\include"
-				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;PLUGINCGGL_EXPORTS"
+				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;PLUGINOISINPUTSYSTEM_EXPORTS"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
@@ -136,9 +138,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="Engine.lib cg.lib cgGL.lib"
+				AdditionalDependencies="OIS_static.lib"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="..\..\bin\libs;..\..\extra\lib;..\..\extra\lib\vc9"
+				AdditionalLibraryDirectories="..\..\bin\libs;..\..\extra\lib;..\..\extra\lib\vc8"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				OptimizeReferences="2"
@@ -164,6 +166,9 @@
 				Name="VCAppVerifierTool"
 			/>
 			<Tool
+				Name="VCWebDeploymentTool"
+			/>
+			<Tool
 				Name="VCPostBuildEventTool"
 			/>
 		</Configuration>
@@ -177,11 +182,7 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath="..\..\PluginCgGL\CgGLProgram.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\PluginCgGL\PluginCgGL.cpp"
+				RelativePath="..\..\PluginOISInputSystem\OISInputSystem.cpp"
 				>
 			</File>
 		</Filter>
@@ -191,7 +192,7 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath="..\..\PluginCgGL\CgGLProgram.h"
+				RelativePath="..\..\PluginOISInputSystem\OISInputSystem.h"
 				>
 			</File>
 		</Filter>

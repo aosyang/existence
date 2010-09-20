@@ -18,7 +18,7 @@
 		<Configuration
 			Name="Debug|Win32"
 			OutputDirectory="..\..\bin\$(ProjectName)\$(ConfigurationName)"
-			IntermediateDirectory="..\..\MaxExporter\$(ProjectName)\obj\$(ConfigurationName)"
+			IntermediateDirectory="obj\$(ProjectName)\$(ConfigurationName)"
 			ConfigurationType="2"
 			CharacterSet="0"
 			>
@@ -92,12 +92,13 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
+				CommandLine="copy $(TargetPath) &quot;D:\Program Files\Autodesk\3ds Max 9\plugins\&quot; /y"
 			/>
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
 			OutputDirectory="..\..\bin\$(ProjectName)\$(ConfigurationName)"
-			IntermediateDirectory="..\..\MaxExporter\$(ProjectName)\obj\$(ConfigurationName)"
+			IntermediateDirectory="obj\$(ProjectName)\$(ConfigurationName)"
 			ConfigurationType="2"
 			CharacterSet="0"
 			WholeProgramOptimization="1"
@@ -171,6 +172,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
+				CommandLine="copy $(TargetPath) &quot;D:\Program Files\Autodesk\3ds Max 9\plugins\&quot; /y"
 			/>
 		</Configuration>
 	</Configurations>

@@ -22,7 +22,7 @@
 #include <set>
 #include "EString.h"
 
-using namespace std;
+
 
 namespace Gen
 {
@@ -50,10 +50,10 @@ namespace Gen
 	private:
 
 		typedef IAudioFileFormat* (*CreateFileFormatFunc)(const String& filename);
-		map<const String, CreateFileFormatFunc>			m_FileFormatCreator;
+		std::map<const String, CreateFileFormatFunc>			m_FileFormatCreator;
 	};
 
-	extern "C" DLLEXPORT IAudioSystem* CreateAudioSystem();
+	extern "C" DLLEXPORT IPlugin* CreatePluginInstance();
 }
 
 #endif

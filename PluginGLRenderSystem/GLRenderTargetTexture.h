@@ -15,11 +15,11 @@
 
 namespace Gen
 {
-	class GLRenderTargetTexture : public BaseRenderTarget
-	{
-		void BindRenderTarget();
-		void UnbindRenderTarget();
-	};
+	//class GLRenderTargetTexture : public BaseRenderTarget
+	//{
+	//	void BindRenderTarget();
+	//	void UnbindRenderTarget();
+	//};
 }
 
 #endif

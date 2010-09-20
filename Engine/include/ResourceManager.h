@@ -18,14 +18,14 @@
 #pragma warning(disable: 4996)
 #endif	//#if defined __PLATFORM_WIN32
 
-using namespace std;
+
 
 namespace Gen
 {
 	struct ResourceFileNameInfo;
 	class Resource;
 	
-	typedef map<const String, Resource*>	ResourceMap;
+	typedef std::map<const String, Resource*>	ResourceMap;
 
 	// 资源管理器基类
 	class ResourceManagerBase

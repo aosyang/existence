@@ -24,7 +24,10 @@ namespace Gen
 
 		// 没有找到资源则返回NULL
 		if (m_ResourceMap.find(correctedResName)==m_ResourceMap.end())
+		{
+			Log.Warning(String("ResourceManager was unable to find resource with name \'") + resName + "\'");
 			return NULL;
+		}
 
 		return m_ResourceMap[correctedResName];
 	}

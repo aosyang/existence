@@ -105,7 +105,7 @@ void GameFps::StartGame()
 	{
 		matShell->SetTexture(TextureManager::Instance().GetByName("rifle_goldshell.bmp"));
 		matShell->SetTextureLayerEnabled(1, true);
-		matShell->GetTextureRenderState(1)->texture = TextureManager::Instance().GetByName("spheremap.png")->GetDeviceTexture();
+		matShell->SetDeviceTexture(TextureManager::Instance().GetByName("spheremap.png")->GetDeviceTexture(), 1);
 		matShell->GetTextureRenderState(1)->envMode = ENV_MODE_ADD;
 		matShell->GetTextureRenderState(1)->genMode = GEN_MODE_SPHERE;
 
@@ -116,7 +116,7 @@ void GameFps::StartGame()
 	BaseTexture* tex = TextureManager::Instance().GetByName("cubeMap");
 	if (tex)
 	{
-		matCubeSky->GetTextureRenderState(0)->texture = tex->GetDeviceTexture();
+		matCubeSky->SetDeviceTexture(tex->GetDeviceTexture());
 	}
 	matCubeSky->GetTextureRenderState(0)->envMode = ENV_MODE_MODULATE;
 	matCubeSky->GetTextureRenderState(0)->genMode = GEN_MODE_CUBE_MAP;
@@ -156,7 +156,6 @@ void GameFps::StartGame()
 
 	m_ViewGun = FACTORY_CREATE(m_Scene, MeshObject);
 	m_ViewGun->SetMesh(MeshManager::Instance().GetByName("mp5.EMD"));
-	m_ViewGun->CreateLightableObject();
 
 	Material* matSphere = MaterialManager::Instance().Create("metal_sphere");
 	//IGpuProgram* vprogram = Renderer::Instance().LoadGpuProgram("./base_vp.cg", "main", GPU_VERTEX_PROGRAM);
@@ -169,9 +168,6 @@ void GameFps::StartGame()
 	sphere->SetMaterial(matSphere, 0);
 	sphere->SetPosition(Vector3f(0.0f, 30.0f, 0.0f));
 
-	sphere->CreateLightableObject();
-
-
 	m_ViewGunFlare = FACTORY_CREATE(m_Scene, MeshObject);
 	m_ViewGunFlare->SetMesh(MeshManager::Instance().GetByName("gunflare.EMD"));
 	m_ViewGunFlare->SetVisible(false);
@@ -181,7 +177,7 @@ void GameFps::StartGame()
 
 	m_BspScene = FACTORY_CREATE(m_Scene, BspObject);
 	m_BspScene->SetMesh(bspScene);
-	m_BspScene->SetRenderOrder(90);
+	//m_BspScene->SetRenderOrder(90);
 	//LightingManager::Instance().AddLightableObject(&m_BspScene);
 
 	//LightingManager::Instance().AddLight(m_Light);
@@ -201,7 +197,7 @@ void GameFps::StartGame()
 	m_PlayerShadow = FACTORY_CREATE(m_Scene, Decal);
 	m_PlayerShadow->SetSize(10.0f);
 	m_PlayerShadow->SetMaterial(matDecal);
-	m_PlayerShadow->SetRenderOrder(95);
+	//m_PlayerShadow->SetRenderOrder(95);
 
 	System::Instance().ToggleMouseCursor(false);
 
@@ -249,6 +245,14 @@ void GameFps::StartGame()
 	screenQuad->SetMaterial(matScreenQuad, 0);
 	screenQuad->SetFrustumCulling(false);
 #endif
+
+	InputEventHandler<GameFps>* inputHandler =
+		new InputEventHandler<GameFps>(this,
+										  &GameFps::OnKeyPressed,
+										  NULL,
+										  &GameFps::OnMouseMoved);
+	Input->SetEventHandler(inputHandler);
+
 }
 
 void GameFps::Shutdown()
@@ -267,7 +271,7 @@ void GameFps::Shutdown()
 	delete m_Scene;
 }
 
-void GameFps::OnKeyPressed(unsigned int key)
+void GameFps::OnKeyPressed(KeyCode key)
 {
 	switch(key)
 	{
@@ -286,6 +290,21 @@ void GameFps::OnKeyPressed(unsigned int key)
 	case KC_SPACE:
 		g_CameraShake.Create(0.5f, 30.0f, 2000);
 		break;
+	}
+}
+
+void GameFps::OnMouseMoved(int x, int y, int rel_x, int rel_y)
+{
+
+	// 按住鼠标右键调整视角
+	//if (Input->GetMouseButtonDown(MB_Right))
+	{
+		float x = -(float)rel_x / 5.0f;
+		float y = -(float)rel_y / 5.0f;
+
+		System::Instance().CenterMouseCursor();
+
+		m_Camera->RotateLocal(x, y);
 	}
 }
 
@@ -318,7 +337,7 @@ void GameFps::Update(unsigned long deltaTime)
 	char buf[1024] = "\0";
 
 	// 左Shift键加速移动
-	if (Input::Instance().GetKeyDown(KC_LSHIFT))
+	if (Input->GetKeyDown(KC_LSHIFT))
 		boost = 4.0f;
 	else
 		boost = 1.0f;
@@ -327,17 +346,17 @@ void GameFps::Update(unsigned long deltaTime)
 	float right = 0.0f;
 
 	// W S A D控制摄像机移动
-	if (Input::Instance().GetKeyDown(KC_W))
+	if (Input->GetKeyDown(KC_W))
 		forward += 0.1f * deltaTime / 10.0f * boost;
-	if (Input::Instance().GetKeyDown(KC_S))
+	if (Input->GetKeyDown(KC_S))
 		forward += -0.1f * deltaTime / 10.0f * boost;
-	if (Input::Instance().GetKeyDown(KC_A))
+	if (Input->GetKeyDown(KC_A))
 		right += -0.1f * deltaTime / 10.0f * boost;
-	if (Input::Instance().GetKeyDown(KC_D))
+	if (Input->GetKeyDown(KC_D))
 		right += 0.1f * deltaTime / 10.0f * boost;
 
-	forward += -0.1f * deltaTime / 10.0f * boost * Input::Instance().GetJoyStickAbs(2) / 0x7FFF;
-	right += 0.1f * deltaTime / 10.0f * boost * Input::Instance().GetJoyStickAbs(3) / 0x7FFF;
+	forward += -0.1f * deltaTime / 10.0f * boost * Input->GetJoyStickAbs(2) / 0x7FFF;
+	right += 0.1f * deltaTime / 10.0f * boost * Input->GetJoyStickAbs(3) / 0x7FFF;
 
 	//if (toggleCollision && toggleGravity)
 	//{
@@ -350,23 +369,12 @@ void GameFps::Update(unsigned long deltaTime)
 	//else
 		m_Camera->MoveLocal(forward, right, 0.0f);
 
-	if (Input::Instance().GetKeyDown(KC_ESCAPE))
+	if (Input->GetKeyDown(KC_ESCAPE))
 		Engine::Instance().SetQuitting(true);
 
-	// 按住鼠标右键调整视角
-	//if (Input::Instance().GetMouseButtonDown(MB_Right))
-	{
-		float x = -(float)Input::Instance().GetMouseRelX() / 5.0f;
-		float y = -(float)Input::Instance().GetMouseRelY() / 5.0f;
-
-		System::Instance().CenterMouseCursor();
-
-		m_Camera->RotateLocal(x, y);
-	}
-
 	// 使用手柄控制当前摄像机
-	float x = -(float)Input::Instance().GetJoyStickAbs(1) / 0x7FFF * 0.1f * deltaTime;
-	float y = -(float)Input::Instance().GetJoyStickAbs(0) / 0x7FFF * 0.1f * deltaTime;
+	float x = -(float)Input->GetJoyStickAbs(1) / 0x7FFF * 0.1f * deltaTime;
+	float y = -(float)Input->GetJoyStickAbs(0) / 0x7FFF * 0.1f * deltaTime;
 	m_Camera->RotateLocal(x, y);
 
 
@@ -488,7 +496,7 @@ void GameFps::Update(unsigned long deltaTime)
 	// 这里又进行了一次更新，造成了额外的更新开销，但效果正确，需要修改
 	m_Scene->UpdateScene(deltaTime);
 
-	if (Input::Instance().GetMouseButtonDown(MB_Left))
+	if (Input->GetMouseButtonDown(MB_Left))
 	{
 		FireWeapon(deltaTime);
 	}
@@ -541,13 +549,6 @@ void GameFps::Update(unsigned long deltaTime)
 
 void GameFps::RenderScene()
 {
-	RenderView rv;
-
-	rv.position = m_Camera->WorldTransform().GetPosition();
-	rv.viewMatrix = m_Camera->GetViewMatrix();
-	rv.projMatrix = m_Camera->GetProjMatrix();
-	rv.frustum = m_Camera->GetFrustum();
-
 	Renderer::Instance().SetViewport(0, 0, 0, 0);
 
 #ifdef RENDER_TARGET_TEST
@@ -555,7 +556,9 @@ void GameFps::RenderScene()
 #endif
 
 	// 设定渲染视点
-	m_Scene->SetupRenderView(rv);
+	m_Scene->SetupRenderView(m_Camera);
+
+	Renderer::Instance().BeginRender();
 	m_Scene->RenderScene();
 
 #ifdef RENDER_TARGET_TEST
@@ -566,21 +569,19 @@ void GameFps::RenderScene()
 
 	if (toggleWireframe)
 	{
-		Renderer::Instance().BeginRender();
 
-		vector<BspTriangle*> triList;
+		std::vector<BspTriangle*> triList;
 		m_BspScene->TraverseTree(&triList, m_Camera->WorldTransform().GetPosition());
 
-		for (vector<BspTriangle*>::iterator iter=triList.begin(); iter!=triList.end(); iter++)
+		for (std::vector<BspTriangle*>::iterator iter=triList.begin(); iter!=triList.end(); iter++)
 		{
-			Renderer::Instance().RenderLine((*iter)->vertices[0], (*iter)->vertices[1], Color4f(0.5f, 0.5f, 1.0f));
-			Renderer::Instance().RenderLine((*iter)->vertices[1], (*iter)->vertices[2], Color4f(0.5f, 0.5f, 1.0f));
-			Renderer::Instance().RenderLine((*iter)->vertices[2], (*iter)->vertices[0], Color4f(0.5f, 0.5f, 1.0f));
+			DebugRenderer::Instance().DrawLine((*iter)->vertices[0], (*iter)->vertices[1], Color4f(0.5f, 0.5f, 1.0f));
+			DebugRenderer::Instance().DrawLine((*iter)->vertices[1], (*iter)->vertices[2], Color4f(0.5f, 0.5f, 1.0f));
+			DebugRenderer::Instance().DrawLine((*iter)->vertices[2], (*iter)->vertices[0], Color4f(0.5f, 0.5f, 1.0f));
 		}
 
-		Renderer::Instance().EndRender();
 	}
-
+	Renderer::Instance().EndRender();
 }
 
 
@@ -614,7 +615,7 @@ void GameFps::FireWeapon(unsigned long deltaTime)
 			m_BspScene->AttachChildObject(m_Decals[decalIndex]);
 
 			// 位于场景之后渲染
-			m_Decals[decalIndex]->SetRenderOrder(93);
+			//m_Decals[decalIndex]->SetRenderOrder(93);
 		}
 		// 浮起一些距离，防止z-fighting
 		hitPosition = m_BspScene->WorldTransform().GetInverseMatrix() * hitPosition;
@@ -648,8 +649,6 @@ void GameFps::EjectShell(const Vector3f& pos, const Vector3f& dir)
 	{
 		m_Shells[shellIndex].obj = FACTORY_CREATE(m_Scene, MeshObject);
 		m_Shells[shellIndex].obj->SetMesh(MeshManager::Instance().GetByName("shell.EMD"));
-
-		m_Shells[shellIndex].obj->CreateLightableObject();
 	}
 
 	m_Shells[shellIndex].obj->SetPosition(pos);

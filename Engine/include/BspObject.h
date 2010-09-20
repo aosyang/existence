@@ -10,19 +10,16 @@
 #define _BSPOBJECT_H
 
 #include "BspTree.h"
-#include "RenderableObjectBase.h"
+#include "SceneObject.h"
 
 namespace Gen
 {
-	class BspObject : public RenderableObjectBase
+	class BspObject : public SceneObject
 	{
-		DECLARE_FACTORY_OBJECT(BspObject, RenderableObjectBase);
+		DECLARE_FACTORY_OBJECT(BspObject, SceneObject);
 	public:
-		// ----- Overwrite IRenderableObject
-
-		void RenderSingleObject();
-
 		// ----- Overwrite SceneObject
+		void RenderSingleObject();
 
 		bool IntersectsRay(const Ray& ray, CollisionResult& info);
 		bool OnSave(SceneSerializerNode* node);
@@ -36,7 +33,7 @@ namespace Gen
 		// 使用球体进行碰撞，newpos将返回一个合法的位置
 		bool PushSphere(const Vector3f& pos, Vector3f& newpos, float radius);
 		void TraverseTree(
-			vector< BspTriangle* >* polyList,
+			std::vector< BspTriangle* >* polyList,
 			const Vector3f& loc );
 		bool Intersects(const Ray& ray, Vector3f* point, BspTriangle** triangle = NULL);
 

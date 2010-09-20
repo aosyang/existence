@@ -17,13 +17,10 @@ Block::Block()
 {
 	m_Shape = FACTORY_CREATE(GetScene(), MeshObject);
 	m_Shape->SetMesh(m_sBlockMesh);
-
-	m_Shape->CreateLightableObject();
 }
 
 Block::~Block()
 {
-	m_Shape->DestroyLightableObject();
 	GetScene()->RemoveObject(m_Shape);
 }
 

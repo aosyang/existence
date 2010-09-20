@@ -23,8 +23,11 @@ namespace Gen
 		String(const Color4f& color);
 		String(bool val);
 		String(int val);
+		String(unsigned int val);
 		String(long val);
+		String(unsigned long val);
 		String(float val);
+		String(double val);
 
 		bool operator==(const String& rhs) const;
 		bool operator!=(const String& rhs) const;
@@ -35,14 +38,14 @@ namespace Gen
 		const char& operator[](size_t pos) const;
 		char& operator[](size_t pos);
 
-		size_t Find(const String& str, size_t pos = 0) const;
+		size_t Find(const String& str, size_t pos=0) const;
 
 		size_t FindFirstNotOf(const String& str) const;
 		size_t FindLastNotOf(const String& str) const;
 		size_t FindFirstOf(const String& str) const;
 		size_t FindLastOf(const String& str) const;
 
-		String Substr(size_t begin, size_t len=0) const;
+		String Substr(size_t begin, size_t len=npos) const;
 
 		String& Replace(size_t pos, size_t len, const String& str);
 

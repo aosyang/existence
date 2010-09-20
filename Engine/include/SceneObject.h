@@ -14,12 +14,13 @@
 #include "Collision.h"
 #include "EString.h"
 #include "SceneSerializer.h"
+#include "RefPtr.h"
 
 #include <set>
 #include <list>
 #include <map>
 
-using namespace std;
+
 
 namespace Gen
 {
@@ -28,9 +29,7 @@ namespace Gen
 	class RenderableObjectBase;
 	class SceneSerializer;
 	class SceneSerializerNode;
-
-
-
+	class Anchor;
 
 	typedef SceneObject* (*FactoryCreateFuncPtr)(SceneGraph*);
 
@@ -44,6 +43,7 @@ namespace Gen
 	/// @note
 	///		在创建对象之前，必须先使用REGISTER_FACTORY注册类
 	#define DECLARE_FACTORY_OBJECT(className, baseClassName) \
+		protected: \
 		typedef baseClassName BaseClass; \
 		public:	\
 			static SceneObject* FactoryCreateSceneObject(SceneGraph* scene) { \
@@ -59,10 +59,12 @@ namespace Gen
 	// 在场景中创建一个对象并转换为对应类型的指针
 	#define FACTORY_CREATE(scenePtr, className) static_cast<className*>(scenePtr->CreateSceneObject(#className))
 
+	#define FACTORY_CREATE_NO_AUTO_DELETE(scenePtr, className) static_cast<className*>(scenePtr->CreateSceneObject(#className, false))
+
 	// 注册一个类型的工厂函数
 	#define REGISTER_FACTORY(className) SceneObjectFactory::RegisterFactoryCreator(#className, &className::FactoryCreateSceneObject);
 
-	typedef map<const String, FactoryCreateFuncPtr>	SceneObjectFactoryCreators;
+	typedef std::map<const String, FactoryCreateFuncPtr>	SceneObjectFactoryCreators;
 
 	// 场景对象工厂，使用工厂方法创建对象
 	class SceneObjectFactory
@@ -80,9 +82,19 @@ namespace Gen
 
 
 
-	typedef set<RenderableObjectBase*> RenderableObjectSet;
-	typedef set<SceneObject*>	SceneObjectSet;
-	typedef list<SceneObject*>	SceneObjectList;
+	typedef std::set<RenderableObjectBase*> RenderableObjectSet;
+	typedef std::set<SceneObject*>	SceneObjectSet;
+	typedef std::list<SceneObject*>	SceneObjectList;
+	typedef std::map<const String, RefPtr<Anchor> >	AnchorMap;
+
+	/// @brief
+	///	枚举一个场景结点如何绑定到父结点
+	enum SceneObjectAttachType
+	{
+		ATTACH_TYPE_NONE = 0,
+		ATTACH_TYPE_PARENT_OBJECT,
+		ATTACH_TYPE_PARENT_ANCHOR,
+	};
 
 	/// @brief
 	/// 场景对象
@@ -94,6 +106,7 @@ namespace Gen
 	class SceneObject : public MovableObjectBase
 	{
 		friend class SceneSerializer;
+		friend class SceneGraph;
 	public:
 		/// @brief
 		/// 构造函数
@@ -105,6 +118,8 @@ namespace Gen
 		// ----- Overwrite IObject
 
 		/// @copydoc MovableObjectBase::Update()
+		/// @remarks
+		///		场景对象的WorldTransform必须在调用了Update之后才具有可信的值
 		void Update(unsigned long deltaTime);
 
 		/// @copydoc IObject::GetTypeName()
@@ -112,36 +127,18 @@ namespace Gen
 
 		// ----- Overwrite MovableObjectBase
 
-		/// @copydoc MovableObjectBase::IsCulled()
-		/// 场景对象剔除m_Visible=false的对象
-		bool IsCulled(Frustum* frustum);
+		/// @brief
+		/// 对象是否从渲染管线中被剔除
+		/// @param frustum
+		///		用于进行剔除测试的平头视截体
+		/// @returns
+		///		如果对象会被剔除，返回true，需要保留则返回false
+		/// @remarks
+		///		派生类覆写这个方法以控制对象的渲染剔除，场景对象剔除m_Visible=false的对象
+		virtual bool IsCulled(Frustum* frustum);
 
 		// ----- SceneObject methods
 
-		/// @brief
-		/// 渲染调试信息
-		/// @remarks
-		///		子类覆写这个函数以实现渲染不同的调试信息
-		/// @note
-		///		这个方法在物体本身被渲染之后调用
-		/// @see
-		///		SceneGraph::RenderScene()
-		virtual void DebugRender();
-
-	protected:
-		/// @brief
-		/// 渲染AABB
-		/// @remarks
-		///		这个方法在默认继承关系下由DebugRender调用
-		//void DebugRenderAABB();
-
-		/// @brief
-		///	渲染OBB
-		/// @remarks
-		///		这个方法在默认继承关系下由DebugRender调用
-		//void DebugRenderOBB();
-
-	public:
 		// 碰撞检测
 
 		// AABB碰撞查询
@@ -160,6 +157,16 @@ namespace Gen
 		/// @returns
 		///		true为可见，false为不可见
 		bool GetVisible() const { return m_Visible; }
+
+		/// @brief
+		/// 指定渲染顺序
+		/// @param order
+		///		渲染序号
+		void SetRenderOrder(unsigned int order) { m_RenderOrder = order; }
+
+		/// @brief
+		/// 获取渲染顺序
+		unsigned int GetRenderOrder() const { return m_RenderOrder; }
 
 		/// @brief
 		/// 指定该对象所在的场景
@@ -182,15 +189,6 @@ namespace Gen
 		/// @returns
 		///		返回对象当前的场景指针
 		SceneGraph* GetSceneGraph() { return m_Scene; }
-
-		/// @brief
-		/// 递归收集场景中需要渲染的对象
-		/// @param renderableObjs
-		///		渲染对象列表，需要渲染的对象加到这个列表中
-		/// @param frustum
-		///		当前渲染使用的平头视截体
-		virtual void CollectRenderableObject(RenderableObjectList& renderableObjs, Frustum* frustum);
-
 
 		// Collision
 
@@ -237,6 +235,14 @@ namespace Gen
 		void AttachChildObject(SceneObject* child, bool keepRotation = false, bool keepWorldTransform = false);
 
 		/// @brief
+		/// 将一个对象绑定到当前对象的锚点上
+		/// @param child
+		///		子对象
+		/// @param anchorName
+		///		锚点名称
+		void AttachChildObjectToAnchor(SceneObject* child, const String& anchorName);
+
+		/// @brief
 		/// 将该对象从父结点上拆下
 		/// @param keepWorldTransform
 		///		是否维持对象从父结点分离以后的世界坐标
@@ -275,14 +281,60 @@ namespace Gen
 		///		保持当前对象的旋转信息不受到父对象影响
 		void SetParentObject(SceneObject* parent, bool keepRotation);
 
-	protected:
-		//// 添加一个可渲染物体
-		//void AddRenderableObject(RenderableObjectBase* renderable);
+		/// @brief
+		///	递归准备对象渲染
+		/// @param frustum
+		///		渲染所使用的视截体
+		/// @remarks
+		///		这个方法由引擎调用，递归将场景对象送去渲染
+		void PrepareObjectRendering(Frustum* frustum);
 
-		//// 删除一个可渲染物体
-		//void RemoveRenderableObject(RenderableObjectBase* renderable);
+		/// @brief
+		///	渲染当前对象
+		/// @par
+		///		调用渲染器对当前对象进行渲染
+		/// @remarks
+		///		派生类覆写此方法以实现不同的渲染效果
+		virtual void RenderSingleObject();
+
+	public:
+		/// @brief
+		///	为渲染对象准备光照
+		/// @remarks
+		///		默认下对象渲染关闭所有光照
+		virtual void SetupLightForRendering();
 
 	protected:
+		/// @brief
+		/// 渲染调试信息
+		/// @remarks
+		///		子类覆写这个函数以实现渲染不同的调试信息
+		/// @note
+		///		这个方法在物体本身被渲染之后调用
+		/// @see
+		///		SceneGraph::RenderScene()
+		virtual void DebugRender();
+
+		/// @brief
+		/// 渲染AABB
+		/// @remarks
+		///		这个方法在默认继承关系下由DebugRender调用
+		void DebugRenderAABB();
+
+		/// @brief
+		///	渲染OBB
+		/// @remarks
+		///		这个方法在默认继承关系下由DebugRender调用
+		void DebugRenderOBB();
+
+		void AddAnchor(const String& anchorName, RefPtr<Anchor> anchor);
+
+	public:
+		static bool						m_sDebugRender;				///< 控制是否渲染场景对象调试信息的静态成员变量
+
+	protected:
+		SceneObjectAttachType			m_AttachType;				///< 记录该对象如何绑定到父结点
+
 		bool							m_Visible;					///< 可见性
 		SceneGraph*						m_Scene;					///< 对象所处的场景指针
 
@@ -290,10 +342,29 @@ namespace Gen
 		SceneObjectSet					m_ChildrenObjects;			///< 子结点对象集合
 		SceneObject*					m_ParentObject;				///< 父对象
 
+		AnchorMap						m_Anchors;					///< 对象所具有的锚点集合
+		RefPtr<Anchor>					m_ParentAnchor;				///< 父对象锚点
+
 		bool							m_KeepRotation;				///< 当前对象的旋转不会受到父结点旋转的影响
 		int								m_CollisionGroupMask;		///< 碰撞组掩码
-		//RenderableObjectSet				m_RenderableObjects;
+
+		unsigned int					m_RenderOrder;				///< 渲染顺序
+
 		bool							m_Serializable;				///< 该对象是否可以保存到数据
+	};
+
+	/// @brief
+	///	锚点
+	/// @par
+	///		场景对象上的锚点是用于定位或者挂载其他对象的辅助定位点
+	class Anchor : public RefObject
+	{
+	public:
+		/// @brief
+		///	获取锚点基于对象的变换
+		virtual const Matrix4& GetTransformToParentObject() const { return m_Transform; }
+	protected:
+		Matrix4		m_Transform;
 	};
 }
 

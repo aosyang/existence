@@ -7,7 +7,7 @@
 namespace Gen
 {
 	BspObject::BspObject(SceneGraph* scene)
-	: RenderableObjectBase(scene),
+	: BaseClass(scene),
 	  m_Mesh(NULL),
 	  m_Bsp(NULL)
 	{
@@ -21,14 +21,25 @@ namespace Gen
 
 	void BspObject::RenderSingleObject()
 	{
-		RenderableObjectBase::RenderSingleObject();
+		BaseClass::RenderSingleObject();
 
 		for (int i=0; i<m_Mesh->GetElementCount(); i++)
 		{
 			MeshElement* elem = m_Mesh->GetElement(i);
 
-			Renderer::Instance().SetupMaterial(m_Mesh->GetMaterial(i));
-			Renderer::Instance().RenderPrimitives(m_Mesh->GetVertexBuffer(), elem->GetIndexBuffer(), m_WorldTransform);
+			RenderCommand cmd;
+			cmd.indexBuffer = elem->GetIndexBuffer();
+			cmd.vertexBuffer = m_Mesh->GetVertexBuffer();
+			cmd.primType = PRIM_TRIANGLES;
+			cmd.transform = m_WorldTransform;
+			cmd.material = m_Mesh->GetMaterial(i);
+			cmd.renderOrder = m_RenderOrder;
+			cmd.sceneObj = this;
+
+			Renderer::Instance().SubmitRenderCommand(cmd);
+
+			//Renderer::Instance().SetupMaterial(m_Mesh->GetMaterial(i));
+			//Renderer::Instance().RenderPrimitives(m_Mesh->GetVertexBuffer(), elem->GetIndexBuffer(), m_WorldTransform);
 		}
 	}
 
@@ -37,7 +48,7 @@ namespace Gen
 		CollisionResult local_info;
 
 		// 先对碰撞盒进行判断
-		if (RenderableObjectBase::IntersectsRay(ray, local_info))
+		if (BaseClass::IntersectsRay(ray, local_info))
 		{
 			// 如果射线从solid空间射出，认定直接碰撞
 			if (IsPointInSolid(ray.origin))
@@ -70,7 +81,7 @@ namespace Gen
 
 	bool BspObject::OnSave(SceneSerializerNode* node)
 	{
-		if (!RenderableObjectBase::OnSave(node)) return false;
+		if (!BaseClass::OnSave(node)) return false;
 
 		node->SaveAttribute("MeshName", m_Mesh->GetResourceName());
 		return true;
@@ -78,7 +89,7 @@ namespace Gen
 
 	void BspObject::OnRestore(SceneSerializerNode* node)
 	{
-		RenderableObjectBase::OnRestore(node);
+		BaseClass::OnRestore(node);
 		SetMesh(MeshManager::Instance().GetByName(node->GetAttribute("MeshName")));
 	}
 
@@ -89,7 +100,7 @@ namespace Gen
 		mesh->Trigger();
 
 		// 根据mesh的包围球半径更新对象包围球半径
-		m_BoundingSphereRadius = m_Mesh->GetBoundingRadius();
+		//m_BoundingSphereRadius = m_Mesh->GetBoundingRadius();
 
 		SAFE_DELETE(m_Bsp)
 			m_Bsp = new BspTree();
@@ -121,7 +132,7 @@ namespace Gen
 
 
 		// 调用基类函数，做递归调用
-		if (RenderableObjectBase::PushSphere(tmpPos, tmpNewpos, radius))
+		if (BaseClass::PushSphere(tmpPos, tmpNewpos, radius))
 		{
 			result = true;
 			newpos = tmpNewpos;
@@ -138,7 +149,7 @@ namespace Gen
 
 	// TODO: 这个修改使得bsp与worldtransform相关
 	void BspObject::TraverseTree(
-		vector< BspTriangle* >* polyList,
+		std::vector< BspTriangle* >* polyList,
 		const Vector3f& loc )
 	{
 		m_Bsp->TraverseTree(polyList, loc);

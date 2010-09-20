@@ -87,7 +87,7 @@ namespace Gen
 	//	return al_source;
 	//}
 
-	IAudioSystem* CreateAudioSystem()
+	IPlugin* CreatePluginInstance()
 	{
 		return new ALAudioSystem;
 	}

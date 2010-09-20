@@ -7,6 +7,7 @@
 //-----------------------------------------------------------------------------------
 
 #include "GLVertexArray.h"
+#include "GLEnums.h"
 
 namespace Gen
 {
@@ -158,6 +159,10 @@ namespace Gen
 		}
 	}
 
+	void GLVertexArray::RenderPrimitive(PrimitiveType type)
+	{
+		glDrawArrays(GetGLPrimtiveType(type), 0, m_VertexNum);
+	}
 
 	GLIndexArray::GLIndexArray()
 		: m_FaceNum(0), m_FaceArray(NULL)
@@ -208,9 +213,9 @@ namespace Gen
 		m_FaceNum = size;
 	}
 
-	void GLIndexArray::RenderPrimitive()
+	void GLIndexArray::RenderPrimitive(PrimitiveType type)
 	{
-		glDrawElements(GL_TRIANGLES, m_FaceNum * 3, GL_UNSIGNED_INT, m_FaceArray);
+		glDrawElements(GetGLPrimtiveType(type), m_FaceNum * 3, GL_UNSIGNED_INT, m_FaceArray);
 	}
 
 

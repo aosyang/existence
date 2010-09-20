@@ -15,8 +15,8 @@ public:
 
 	bool OnNotifyQuitting();
 
-	void OnKeyPressed(unsigned int key);
-	void OnKeyReleased(unsigned int key) {}
+	void OnKeyPressed(KeyCode key);
+	void OnMouseMoved(int x, int y, int rel_x, int rel_y);
 
 	void OnResizeWindow(unsigned int width, unsigned int height);
 
@@ -34,8 +34,6 @@ private:
 
 	SkeletalMeshObject*	m_SkelMesh1;
 	SkeletalMeshObject*	m_SkelMesh2;
-
-	bool				m_DebugRender;
 };
 
 #endif

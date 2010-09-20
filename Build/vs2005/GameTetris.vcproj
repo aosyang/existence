@@ -18,7 +18,7 @@
 		<Configuration
 			Name="Debug|Win32"
 			OutputDirectory="..\..\bin\$(ProjectName)\$(ConfigurationName)"
-			IntermediateDirectory="..\..\$(ProjectName)\obj\$(ConfigurationName)"
+			IntermediateDirectory="obj\$(ProjectName)\$(ConfigurationName)"
 			ConfigurationType="1"
 			CharacterSet="1"
 			>
@@ -62,7 +62,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="Engine_d.lib FreeImaged.lib OIS_static_d.lib libfreetype.lib"
+				AdditionalDependencies="Engine_d.lib FreeImaged.lib libfreetype.lib"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="..\..\bin\libs;..\..\extra\lib;..\..\extra\lib\vc8"
 				GenerateDebugInformation="true"
@@ -97,7 +97,7 @@
 		<Configuration
 			Name="Release|Win32"
 			OutputDirectory="..\..\bin\$(ProjectName)\$(ConfigurationName)"
-			IntermediateDirectory="..\..\$(ProjectName)\obj\$(ConfigurationName)"
+			IntermediateDirectory="obj\$(ProjectName)\$(ConfigurationName)"
 			ConfigurationType="1"
 			CharacterSet="1"
 			WholeProgramOptimization="1"
@@ -139,7 +139,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="Engine.lib FreeImage.lib OIS_static.lib libfreetype.lib"
+				AdditionalDependencies="Engine.lib FreeImage.lib libfreetype.lib"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="..\..\bin\libs;..\..\extra\lib;..\..\extra\lib\vc8"
 				IgnoreDefaultLibraryNames=""

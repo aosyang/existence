@@ -13,40 +13,37 @@
 #include "Matrix4.h"
 #include "Color4f.h"
 #include "Frustum.h"
-#include "ILight.h"
-#include "IRenderTarget.h"
+#include "IGpuProgram.h"
 #include "IVertexBuffer.h"
 #include "EString.h"
+#include "IPlugin.h"
 
 #include <map>
 
-using namespace std;
 
 namespace Gen
 {
-	enum ProjectionMatrixMode
+	class ILight;
+	class IRenderTarget;
+	class IEffect;
+
+	enum GpuProfile
 	{
-		PROJECTION_MODE_PERSPECTIVE,
-		PROJECTION_MODE_ORTHO
+		GPU_PROFILE_VERTEX,
+		GPU_PROFILE_FRAGMENT,
+		GPU_PROFILE_UNKNOWN,
 	};
 
 	/// @brief
 	/// 渲染器接口
 	/// @remarks
 	///		这个接口包括了所有渲染器所需要使用的公共方法，所有渲染器必须继承自这个接口
-	class IRenderDevice
+	class IRenderDevice : public IPlugin
 	{
 	public:
 		virtual ~IRenderDevice() {}
 
-
-		/// @brief
-		/// 指定Gpu插件的文件名
-		/// @param filename
-		///		插件文件名
-		/// @remarks
-		///		这个方法在需要使用Gpu插件时使用，如果文件名留空，将不会加载任何插件
-		virtual void SetGpuPluginName(const String& filename) = 0;
+		PluginType GetPluginType() const { return PLUGIN_TYPE_RENDER_SYSTEM; }
 
 		/// @brief
 		/// 初始化渲染器
@@ -92,6 +89,10 @@ namespace Gen
 		/// @remarks
 		///		视口的坐标原点位于屏幕左下方，不是左上方
 		virtual void SetViewport(int left, int bottom, unsigned int width, unsigned int height) = 0;
+
+		/// @brief
+		/// 指定渲染设备的模型矩阵
+		virtual void SetModelMatrix(const Matrix4& modelMat) = 0;
 
 		/// @brief
 		/// 指定渲染设备的视图矩阵
@@ -178,7 +179,7 @@ namespace Gen
 
 
 		/// 开始一帧的绘制操作
-		virtual void BeginRender() = 0;
+		virtual void BeginRender(IRenderTarget* rt = NULL) = 0;
 		/// 结束一帧的绘制操作
 		virtual void EndRender() = 0;
 		/// 完成绘制，交换缓冲区
@@ -186,6 +187,8 @@ namespace Gen
 
 		/// @brief
 		/// 绑定纹理渲染状态
+		/// @param deviceTex
+		///		使用的设备纹理
 		/// @param texState
 		///		要绑定的纹理渲染状态信息
 		/// @param texUnit
@@ -193,7 +196,11 @@ namespace Gen
 		/// @remarks
 		///		纹理渲染状态指定了纹理如何采样、纹理坐标如何生成等信息
 		///		调用了这个方法以后，接下来的纹理操作将会始终针对最后一次指定的纹理单元，直到手动修改纹理单元
-		virtual void BindTextureRenderState(const TextureRenderState& texState, unsigned int texUnit = 0) = 0;
+		virtual void BindTextureRenderState(IDeviceTexture* deviceTex, const TextureRenderState& texState, unsigned int texUnit = 0) = 0;
+
+		/// @brief
+		///	使用顶点缓冲渲染几何体
+		virtual void RenderVertexBuffer(IVertexBuffer* vbuffer, PrimitiveType type) = 0;
 
 		/// @brief
 		///	使用顶点及索引缓冲渲染几何体
@@ -201,45 +208,9 @@ namespace Gen
 		///		渲染使用的顶点缓冲
 		/// @param ibuffer
 		///		渲染使用的索引缓冲
-		/// @param transform
-		///		渲染使用的模型矩阵
 		/// @remarks
 		///		实现这个方法时需要在调用结束之前恢复模型矩阵
-		virtual void RenderVertexBuffer(IVertexBuffer* vbuffer, IIndexBuffer* ibuffer, const Matrix4& transform) = 0;
-
-
-		/// @brief
-		/// 渲染线框方盒
-		/// @param vMin
-		///		方盒x、y、z最小值构成的向量
-		/// @param vMax
-		///		方盒x、y、z最大值构成的向量
-		/// @param transform
-		///		方盒的世界变换矩阵
-		virtual void RenderBox(const Vector3f& vMin, const Vector3f& vMax, const Matrix4& transform = Matrix4::IDENTITY) = 0;
-
-		/// @brief
-		///	渲染线框球体
-		///	@param point
-		///		球心坐标
-		/// @param radius
-		///		球体半径
-		/// @param segment
-		///		绘制球体时的分段数量
-		/// @remarks
-		///		坐标为世界空间
-		virtual void RenderSphere(const Vector3f& point, float radius, unsigned int segment = 18) = 0;
-
-		/// @brief
-		///	渲染线段
-		/// @param begin
-		///		线段起始坐标
-		/// @param end
-		///		线段终止坐标
-		/// @remarks
-		///		坐标为世界空间
-		virtual void RenderLine(const Vector3f& begin, const Vector3f& end) = 0;
-
+		virtual void RenderVertexBuffer(IVertexBuffer* vbuffer, IIndexBuffer* ibuffer, PrimitiveType type) = 0;
 
 		/// @brief
 		///	指定环境光颜色
@@ -266,9 +237,6 @@ namespace Gen
 		/// @returns
 		///		返回设备纹理指针
 		virtual IDeviceTexture* BuildCubeTexture() = 0;
-		virtual IDeviceTexture* BuildDepthTexture(const String& textureName, unsigned int width, unsigned int height) = 0;
-
-		//virtual IDeviceTexture* GetTexture(const String& textureName) = 0;
 
 		// Materials
 		virtual void SetVertexColor(const Color4f& color) = 0;
@@ -286,8 +254,12 @@ namespace Gen
 		// 获取一个已有Shader
 		virtual IGpuProgram* GetGpuProgram(const String& filename, const String& entry, GpuProgramType type) = 0;
 
-		virtual void BindGpuProgram(IGpuProgram* program, GpuProgramType type) = 0;
-		virtual void UnbindGpuProgram(GpuProgramType type) = 0;
+		virtual void EnableGpuProfile(GpuProfile profile) = 0;
+		virtual void DisableGpuProfile(GpuProfile profile) = 0;
+		virtual void BindGpuProgram(IGpuProgram* program) = 0;
+
+		// Effect
+		virtual IEffect* LoadEffect(const String& filename) = 0;
 
 		// Lighting
 
@@ -318,16 +290,6 @@ namespace Gen
 		/// @returns
 		///		返回新的渲染目标指针
 		virtual IRenderTarget* CreateRenderTarget() = 0;
-
-		/// @brief
-		/// 指定渲染到一个渲染目标
-		/// @param rt
-		///		要渲染到的渲染目标
-		virtual void BindRenderTarget(IRenderTarget* rt) = 0;
-
-		/// @brief
-		///	取消渲染到当前的渲染目标，渲染回后台缓冲
-		virtual void UnbindRenderTarget() = 0;
 	};
 
 	typedef IRenderDevice*(*RenderSystemFactoryCreateFunc)();

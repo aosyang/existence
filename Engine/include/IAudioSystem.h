@@ -12,6 +12,7 @@
 #include "EString.h"
 #include "IAudioSource.h"
 #include "IDeviceAudioBuffer.h"
+#include "IPlugin.h"
 
 namespace Gen
 {
@@ -21,10 +22,12 @@ namespace Gen
 	/// 
 	/// 提供音频系统的基本操作接口
 	//-----------------------------------------------------------------------------------
-	class IAudioSystem
+	class IAudioSystem : public IPlugin
 	{
 	public:
 		virtual ~IAudioSystem() {}
+
+		PluginType GetPluginType() const { return PLUGIN_TYPE_AUDIO_SYSTEM; }
 
 		// 初始化与关闭
 		virtual bool Initialize() = 0;

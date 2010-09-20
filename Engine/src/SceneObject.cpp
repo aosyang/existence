@@ -25,6 +25,7 @@
 #include "Engine.h"
 #include "StringConverter.h"
 #include "Renderer.h"
+#include "DebugRenderer.h"
 
 namespace Gen
 {
@@ -62,26 +63,30 @@ namespace Gen
 		return (*m_FactoryCreators[className])(scene);
 	}
 
+	bool SceneObject::m_sDebugRender = false;
 
 	SceneObject::SceneObject(SceneGraph* scene)
 	: MovableObjectBase(),
+	  m_AttachType(ATTACH_TYPE_NONE),
 	  m_Visible(true),
 	  m_Scene(scene),
 	  m_ParentObject(NULL),
+	  m_ParentAnchor(NULL),
 	  m_KeepRotation(false),
 	  m_CollisionGroupMask(0),		// 默认不参与任何碰撞
+	  m_RenderOrder(100),
 	  m_Serializable(false)
 	{
 	}
 
 	SceneObject::~SceneObject()
 	{
-		// 删除所有的可渲染子对象
-
-		//RenderableObjectSet::iterator iter;
-		//for (iter=m_RenderableObjects.begin(); iter!=m_RenderableObjects.end(); iter++)
+		// 删除所有锚点
+		// NOTE: 骨骼动画的锚点应由骨骼动画自身负责删除
+		//AnchorMap::iterator iter;
+		//for (iter=m_Anchors.begin(); iter!=m_Anchors.end(); iter++)
 		//{
-		//	delete *iter;
+		//	SAFE_DELETE(iter->second);
 		//}
 	}
 
@@ -90,20 +95,20 @@ namespace Gen
 		// 调用基类函数，重置AABB
 		MovableObjectBase::Update(deltaTime);
 
-		if (m_ParentObject)
+		switch (m_AttachType)
 		{
-			// 如果父对象没有被更新，则进行更新
-			if (!m_ParentObject->IsUpdated())
-				m_ParentObject->Update(deltaTime);
-
+		case ATTACH_TYPE_NONE:
+			m_WorldTransform = m_Transform;
+			break;
+		case ATTACH_TYPE_PARENT_OBJECT:
 			if (m_KeepRotation)
 				m_WorldTransform.SetPosition((m_ParentObject->WorldTransform() * m_Transform).GetPosition());
 			else
 				m_WorldTransform = m_ParentObject->WorldTransform() * m_Transform;
-		}
-		else
-		{
-			m_WorldTransform = m_Transform;
+			break;
+		case ATTACH_TYPE_PARENT_ANCHOR:
+			m_WorldTransform = m_ParentObject->WorldTransform() * m_ParentAnchor->GetTransformToParentObject() * m_Transform;
+			break;
 		}
 
 		// 重新根据obb计算aabb
@@ -121,54 +126,19 @@ namespace Gen
 			m_AABB.Expand((*iter)->m_AABB);
 		}
 	}
-	//
-	//void SceneObject::AddRenderableObject(RenderableObjectBase* renderable)
-	//{
-	//	// 合法性判断
-	//	AssertFatal(m_RenderableObjects.find(renderable)==m_RenderableObjects.end(), "SceneObject::AddRenderableObject(): Scene object owns this renderable already.");
-	//
-	//	m_RenderableObjects.insert(renderable);
-	//}
-	//
-	//void SceneObject::RemoveRenderableObject(RenderableObjectBase* renderable)
-	//{
-	//	// 合法性判断
-	//	AssertFatal(m_RenderableObjects.find(renderable)!=m_RenderableObjects.end(), "SceneObject::RemoveRenderableObject(): Scene object doesn't own this renderable.");
-	//
-	//	m_RenderableObjects.erase(renderable);
-	//	delete renderable;
-	//}
+
 
 	bool SceneObject::IsCulled(Frustum* frustum)
 	{
 		if (m_Visible)
-			return MovableObjectBase::IsCulled(frustum);
+		{
+			if (!frustum) return false;
+
+			if (frustum->IntersectsAABB(m_AABB)) return false;
+		}
 
 		return true;
 	}
-
-	// Debug渲染
-	void SceneObject::DebugRender()
-	{
-		Renderer::Instance().RenderBox(m_AABB.worldMin, m_AABB.worldMax);
-		Renderer::Instance().RenderBox(m_OBB.localMin, m_OBB.localMax, Color4f(0.0f, 1.0f, 0.0f), WorldTransform());
-
-		SceneObjectSet::iterator iter;
-		for (iter=m_ChildrenObjects.begin(); iter!=m_ChildrenObjects.end(); iter++)
-		{
-			(*iter)->DebugRender();
-		}
-	}
-
-	//void SceneObject::DebugRenderAABB()
-	//{
-
-	//}
-
-	//void SceneObject::DebugRenderOBB()
-	//{
-
-	//}
 
 	void SceneObject::SetSceneGraphRecursively(SceneGraph* scene)
 	{
@@ -178,15 +148,6 @@ namespace Gen
 		for (iter=m_ChildrenObjects.begin(); iter!=m_ChildrenObjects.end(); iter++)
 		{
 			(*iter)->SetSceneGraphRecursively(scene);
-		}
-	}
-
-	void SceneObject::CollectRenderableObject(RenderableObjectList& renderableObjs, Frustum* frustum)
-	{
-		SceneObjectSet::iterator iter;
-		for (iter=m_ChildrenObjects.begin(); iter!=m_ChildrenObjects.end(); iter++)
-		{
-			(*iter)->CollectRenderableObject(renderableObjs, frustum);
 		}
 	}
 
@@ -260,20 +221,22 @@ namespace Gen
 		m_ChildrenObjects.insert(child);
 
 		// 如果已有父对象，解除关系
-		if (child->m_ParentObject)
+		if (child->m_AttachType!=ATTACH_TYPE_NONE)
 		{
 			child->DetachFromParent(keepWorldTransform);
 		}
 		child->SetParentObject(this, keepRotation);
+		child->m_AttachType = ATTACH_TYPE_PARENT_OBJECT;
 
 		// 递归指定物体的场景
+		// TODO: 不需要了吧？
 		child->SetSceneGraphRecursively(m_Scene);
 
 		// 维持子对象在世界空间中的变换
 		if (keepWorldTransform)
 		{
-			// TODO: Implement this...
-			//child->Transform() = child->WorldTransform() * child->;
+			// 将子结点的空间变换到父结点空间中
+			child->m_Transform = child->WorldTransform() * WorldTransform().GetInverseMatrix();
 		}
 		else // 维持对象当前的局部空间变换
 		{
@@ -282,19 +245,50 @@ namespace Gen
 
 	}
 
+	void SceneObject::AttachChildObjectToAnchor(SceneObject* child, const String& anchorName)
+	{
+		// 所附加对象必须确保在同一个场景中
+		AssertFatal(child->GetSceneGraph()==GetSceneGraph(),
+			"SceneObject::AttachChildObjectToAnchor(): Unable to attach a object that in a different scene graph.");
+
+		// 没有指定名称的锚点，返回
+		if (m_Anchors.find(anchorName)==m_Anchors.end()) return;
+
+		// 检查child是否已经存在于列表中
+		if (m_ChildrenObjects.find(child) != m_ChildrenObjects.end())
+		{
+			return;
+		}
+
+		m_ChildrenObjects.insert(child);
+
+		// 如果已有父对象，解除关系
+		if (child->m_AttachType!=ATTACH_TYPE_NONE)
+		{
+			child->DetachFromParent(false);
+		}
+		child->SetParentObject(this, false);
+		child->m_AttachType = ATTACH_TYPE_PARENT_ANCHOR;
+
+		RefPtr<Anchor> anchor = m_Anchors[anchorName];
+		child->m_ParentAnchor = anchor;
+	}
+
 	void SceneObject::DetachFromParent(bool keepWorldTransform)
 	{
 		AssertFatal(m_ParentObject, "SceneObject::DetachFromParent(): Object has got no parent.");
 
 		if (keepWorldTransform)
 		{
-			// TODO: 修改Transform
+			m_Transform = m_ParentObject->WorldTransform() * m_Transform;
 		}
 
 		// 从父对象的子对象列表中移除自己
 		m_ParentObject->m_ChildrenObjects.erase(this);
 		m_ParentObject = NULL;
 		//SetSceneGraph(NULL);
+		m_ParentAnchor = NULL;
+		m_AttachType = ATTACH_TYPE_NONE;
 	}
 
 	void SceneObject::DeleteAllChildren()
@@ -359,4 +353,70 @@ namespace Gen
 		m_ParentObject = parent;
 		m_KeepRotation = keepRotation;
 	}
+
+	void SceneObject::PrepareObjectRendering(Frustum* frustum)
+	{
+		// 如果对象不可见，返回
+		if (IsCulled(frustum)) return;
+
+		RenderSingleObject();
+		if (m_sDebugRender)
+		{
+			DebugRender();
+		}
+
+		// 遍历所有子节点
+		SceneObjectSet::iterator iter;
+		for (iter = m_ChildrenObjects.begin();
+			iter != m_ChildrenObjects.end();
+			iter++)
+		{
+			(*iter)->PrepareObjectRendering(frustum);
+		}
+	}
+
+	void SceneObject::RenderSingleObject()
+	{
+
+	}
+
+	void SceneObject::SetupLightForRendering()
+	{
+		// Disable all lights
+		int maxLightNum = Renderer::Instance().GetMaxLightCount();
+
+		for (int i=0; i<maxLightNum; i++)
+		{
+			Renderer::Instance().SetupLight(i, NULL);
+		}
+	}
+
+	// Debug渲染
+	void SceneObject::DebugRender()
+	{
+		DebugRenderAABB();
+		DebugRenderOBB();
+	}
+
+	void SceneObject::DebugRenderAABB()
+	{
+		DebugRenderer::Instance().DrawBox(m_AABB.worldMin, m_AABB.worldMax);
+	}
+
+	void SceneObject::DebugRenderOBB()
+	{
+		DebugRenderer::Instance().DrawBox(m_OBB.localMin, m_OBB.localMax, Color4f(0.0f, 1.0f, 0.0f), WorldTransform());
+
+	}
+
+	void SceneObject::AddAnchor(const String& anchorName, RefPtr<Anchor> anchor)
+	{
+		AssertFatal(m_Anchors.find(anchorName)==m_Anchors.end(),
+					"SceneObject::AddAnchor() : Duplicated anchor name found.");
+
+		if (!anchor) return;
+
+		m_Anchors[anchorName] = anchor;
+	}
 }
+

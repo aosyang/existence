@@ -61,17 +61,13 @@ namespace Gen
 
 		void BindTextureRenderState(const TextureRenderState& texState, unsigned int texUnit = 0);
 
+		void RenderVertexBuffer(IVertexBuffer* vbuffer, PrimitiveType type, const Matrix4& transform);
 		void RenderVertexBuffer(IVertexBuffer* vbuffer, IIndexBuffer* ibuffer, const Matrix4& transform);
-
-		void RenderBox(const Vector3f& vMin, const Vector3f& vMax, const Matrix4& transform);
-		void RenderSphere(const Vector3f& point, float radius, unsigned int segment);
-		void RenderLine(const Vector3f& begin, const Vector3f& end);
 
 		void SetAmbientColor(const Color4f& color);
 
 		IDeviceTexture* BuildTexture();
-		IDeviceTexture* BuildCubeTexture(const String& textureName, unsigned int width, unsigned int height, unsigned int bpp, unsigned char* data[6]);
-		IDeviceTexture* BuildDepthTexture(const String& textureName, unsigned int width, unsigned int height) { return NULL; }
+		IDeviceTexture* BuildCubeTexture();
 
 		// Materials
 		void SetVertexColor(const Color4f& color);
@@ -118,7 +114,7 @@ namespace Gen
 		D3DCOLOR			m_ClearColor;
 	};
 
-	extern "C" __declspec(dllexport) IRenderDevice* CreateRenderSystem();
+	extern "C" DLLEXPORT IPlugin* CreatePluginInstance();
 }
 
 #endif

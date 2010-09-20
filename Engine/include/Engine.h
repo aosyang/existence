@@ -21,18 +21,23 @@
 #include <vector>
 #include "EString.h"
 
-using namespace std;
+
 
 namespace Gen
 {
+#define Input Engine::Instance().InputSystem()
+
+	class IInputSystem;
+	class Plugin;
+
 	struct ConfigFileLine
 	{
 		String key;
 		String value;
 	};
 
-	typedef vector<ConfigFileLine> ConfigFileKeys;
-	typedef map<const String, ConfigFileKeys> ConfigGroups;
+	typedef std::vector<ConfigFileLine> ConfigFileKeys;
+	typedef std::map<const String, ConfigFileKeys> ConfigGroups;
 
 	// 读入配置文件
 	void LoadConfigFile(const String& filename, ConfigGroups& group, String groupName = "common");
@@ -77,6 +82,9 @@ namespace Gen
 		//-----------------------------------------------------------------------------------
 		inline IAudioSystem* AudioSystem() { return m_AudioSystem; }
 
+		void SetInputSystem(IInputSystem* input) { m_InputSystem = input; }
+		IInputSystem* InputSystem() { return m_InputSystem; }
+
 		inline void SetRenderBatchCount(unsigned int count) { m_RenderBatchCount = count; }
 		inline unsigned int GetRenderBatchCount() const { return m_RenderBatchCount; }
 
@@ -92,6 +100,7 @@ namespace Gen
 		Engine();
 
 		IAudioSystem*	m_AudioSystem;
+		IInputSystem*	m_InputSystem;
 
 		unsigned int	m_RenderBatchCount;
 
@@ -102,6 +111,8 @@ namespace Gen
 
 		// FPS相关
 		unsigned int	m_FPS;
+
+		std::vector<Plugin*>	m_Plugins;
 	};
 }
 

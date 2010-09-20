@@ -779,10 +779,19 @@ void TiXmlElement::Print( FILE* cfile, int depth ) const
 	fprintf( cfile, "<%s", value.c_str() );
 
 	const TiXmlAttribute* attrib;
+	bool hasAttributes = false;
 	for ( attrib = attributeSet.First(); attrib; attrib = attrib->Next() )
 	{
 		fprintf( cfile, " " );
 		attrib->Print( cfile, depth );
+		hasAttributes = true;
+	}
+
+	if (hasAttributes)
+	{
+		fprintf(cfile, "\n");
+		for (i=0; i<=depth; i++)
+			fprintf(cfile, "    ");
 	}
 
 	// There are 3 different formatting approaches:
@@ -1211,7 +1220,7 @@ TiXmlAttribute* TiXmlAttribute::Previous()
 }
 */
 
-void TiXmlAttribute::Print( FILE* cfile, int /*depth*/, TIXML_STRING* str ) const
+void TiXmlAttribute::Print( FILE* cfile, int depth, TIXML_STRING* str ) const
 {
 	TIXML_STRING n, v;
 
@@ -1220,7 +1229,10 @@ void TiXmlAttribute::Print( FILE* cfile, int /*depth*/, TIXML_STRING* str ) cons
 
 	if (value.find ('\"') == TIXML_STRING::npos) {
 		if ( cfile ) {
-		fprintf (cfile, "%s=\"%s\"", n.c_str(), v.c_str() );
+			fprintf(cfile, "\n");
+			for (int i=0; i<=depth; i++)
+				fprintf(cfile, "    ");
+			fprintf (cfile, "%s=\"%s\"", n.c_str(), v.c_str() );
 		}
 		if ( str ) {
 			(*str) += n; (*str) += "=\""; (*str) += v; (*str) += "\"";
@@ -1228,7 +1240,10 @@ void TiXmlAttribute::Print( FILE* cfile, int /*depth*/, TIXML_STRING* str ) cons
 	}
 	else {
 		if ( cfile ) {
-		fprintf (cfile, "%s='%s'", n.c_str(), v.c_str() );
+			fprintf(cfile, "\n");
+			for (int i=0; i<=depth; i++)
+				fprintf(cfile, "    ");
+			fprintf (cfile, "%s='%s'", n.c_str(), v.c_str() );
 		}
 		if ( str ) {
 			(*str) += n; (*str) += "='"; (*str) += v; (*str) += "'";

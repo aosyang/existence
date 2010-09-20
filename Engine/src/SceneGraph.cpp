@@ -11,16 +11,17 @@
 #include "LightingManager.h"
 #include "ShadowManager.h"
 #include "Renderer.h"
+#include "DebugRenderer.h"
 
 #include <algorithm>
 
 namespace Gen
 {
-	bool RenderableObjectBaseComparer(RenderableObjectBase* lhs, RenderableObjectBase* rhs)
-	{
-		// TODO: 对可渲染物体的排序要从材质是否透明、与镜头距离等方向来比较
-		return lhs->GetRenderOrder() < rhs->GetRenderOrder();
-	}
+	//bool RenderableObjectBaseComparer(RenderableObjectBase* lhs, RenderableObjectBase* rhs)
+	//{
+	//	// TODO: 对可渲染物体的排序要从材质是否透明、与镜头距离等方向来比较
+	//	return lhs->GetRenderOrder() < rhs->GetRenderOrder();
+	//}
 
 	SceneGraph::SceneGraph()
 		: //m_RootObject(NULL),
@@ -97,10 +98,10 @@ namespace Gen
 		}
 	}
 
-	SceneObject* SceneGraph::CreateSceneObject(const String& className)
+	SceneObject* SceneGraph::CreateSceneObject(const String& className, bool autoDelete)
 	{
 		SceneObject* sceneObj = m_ObjectFactory.CreateSceneObject(this, className);
-		AddObject(sceneObj);
+		AddObject(sceneObj, autoDelete);
 
 		return sceneObj;
 	}
@@ -115,7 +116,11 @@ namespace Gen
 		for (iter=m_SceneObjects.begin(); iter!=m_SceneObjects.end(); iter++)
 		{
 			//if (!(*iter)->IsUpdated())
-			(*iter)->Update(deltaTime);
+
+			// hack: 如果对象具有父节点，由父节点负责更新
+			// 另：这个方法应当考虑使用根节点替代
+			if (!(*iter)->GetParent())
+				(*iter)->Update(deltaTime);
 		}
 
 		m_ProcessingUpdate = false;
@@ -134,60 +139,65 @@ namespace Gen
 		Renderer::Instance().SetProjectionMatrix(view.projMatrix);
 	}
 
-	void SceneGraph::RenderScene(bool debugRender)
+	void SceneGraph::SetupRenderView(Camera* camera)
+	{
+		RenderView rv;
+
+		rv.position = camera->WorldTransform().GetPosition();
+		rv.viewMatrix = camera->GetViewMatrix();
+		rv.projMatrix = camera->GetProjMatrix();
+		rv.frustum = camera->GetFrustum();
+
+		SetupRenderView(rv);
+	}
+
+	void SceneGraph::RenderScene()
 	{
 		//ShadowManager::Instance().RenderLightViewScene(m_RootObject);
 
 		// 渲染场景
 
-		RenderableObjectList renderList;
-
-		SceneObjectSet::iterator iter;
-		for (iter=m_SceneObjects.begin(); iter!=m_SceneObjects.end(); iter++)
-		{
-			(*iter)->CollectRenderableObject(renderList, m_RenderView.frustum);
-		}
-
-		Engine::Instance().SetRenderBatchCount(renderList.size());
+		//Engine::Instance().SetRenderBatchCount(renderList.size());
 
 		// 对所有对象进行排序
-		sort(renderList.begin(), renderList.end(), RenderableObjectBaseComparer);
+		//sort(renderList.begin(), renderList.end(), RenderableObjectBaseComparer);
 
 		//m_RootObject->CollectRenderObjects(m_RenderView);
 		//Renderer::Instance().SetProjectionMode(PROJECTION_MODE_PERSPECTIVE);
-		Renderer::Instance().ClearBuffer(
-#if defined __PLATFORM_LINUX	// 为何在glx下面清除深度缓冲会崩溃？
-			true, false
-#endif
-			);
-		Renderer::Instance().BeginRender();
-		//m_RootObject->Render();
-		RenderableObjectList::iterator renderIter;
+		DebugRenderer::Instance().RenderToScreenWithDepthTest();
 
-		for (renderIter=renderList.begin(); renderIter!=renderList.end(); renderIter++)
+		// 渲染所有场景对象
+		SceneObjectSet::iterator iter;
+		for (iter=m_SceneObjects.begin(); iter!=m_SceneObjects.end(); iter++)
 		{
-			(*renderIter)->RenderSingleObject();
+			(*iter)->PrepareObjectRendering(m_RenderView.frustum);
 		}
 
-		if (debugRender)
-		{
-			// 渲染场景对象的调试信息
-			for (iter=m_SceneObjects.begin(); iter!=m_SceneObjects.end(); iter++)
-			{
-				(*iter)->DebugRender();
-			}
-		}
+		Renderer::Instance().CommandRender();
+		Renderer::Instance().ClearRenderCommand();
 
-		Renderer::Instance().EndRender();
+		Renderer::Instance().ClearBuffer(false);
+
+		// 将调试信息渲染到屏幕
+		DebugRenderer::Instance().RenderToScreen();
 	}
 
-	void SceneGraph::RayPickingSceneObject(const Ray& ray, ObjectsCollisionInfos& sceneObjects, int type, int collisionGroup)
+	// 对碰撞结果按照距离进行排序
+	bool CollisionResultComparer(const CollisionResult& lhs, const CollisionResult& rhs)
+	{
+		return lhs.distance < rhs.distance;
+	}
+
+	void SceneGraph::RayPickingSceneObject(const Ray& ray, ObjectsCollisionInfos& sceneObjects, int type, int collisionGroup, bool sortResult)
 	{
 		SceneObjectSet::iterator iter;
 		for (iter=m_SceneObjects.begin(); iter!=m_SceneObjects.end(); iter++)
 		{
 			(*iter)->RayPickingSceneObject(ray, sceneObjects, type, collisionGroup);
 		}
+
+		if (sortResult)
+			sort(sceneObjects.begin(), sceneObjects.end(), CollisionResultComparer);
 	}
 
 	// Push a sphere thoughout all the scene objects and get a valid position without collision
@@ -266,7 +276,7 @@ namespace Gen
 
 	void SceneGraph::ProcessRemove()
 	{
-		vector<RemoveListElement>::iterator remove_iter;
+		std::vector<RemoveListElement>::iterator remove_iter;
 		for (remove_iter=m_RemoveList.begin(); remove_iter!=m_RemoveList.end(); remove_iter++)
 		{
 			RemoveSceneObjectInternal(remove_iter->obj, remove_iter->deleteObj, remove_iter->recursive);

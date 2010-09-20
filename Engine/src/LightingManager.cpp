@@ -6,6 +6,7 @@
 /// Copyright (c) 2009 by Mwolf
 //-----------------------------------------------------------------------------------
 #include "LightingManager.h"
+#include "GameObject.h"
 
 namespace Gen
 {
@@ -23,7 +24,7 @@ namespace Gen
 	/// \remarks
 	/// 没有添加到管理器的物体不会受到光照影响
 	//-----------------------------------------------------------------------------------
-	void LightingManager::AddLightableObject(LightableObject* lightableObj)
+	void LightingManager::AddLightableObject(GameObject* lightableObj)
 	{
 		if (m_LightableObjects.find(lightableObj)==m_LightableObjects.end())
 			m_LightableObjects.insert(lightableObj);
@@ -38,7 +39,7 @@ namespace Gen
 	/// 
 	/// 物体将不会再受到光照影响
 	//-----------------------------------------------------------------------------------
-	void LightingManager::RemoveLightableObject(LightableObject* lightableObj)
+	void LightingManager::RemoveLightableObject(GameObject* lightableObj)
 	{
 		LightableObjectList::iterator iter;
 		if ((iter = m_LightableObjects.find(lightableObj))!=m_LightableObjects.end())
@@ -161,7 +162,7 @@ namespace Gen
 			iter_obj!=m_LightableObjects.end();
 			iter_obj++)
 		{
-			(*iter_obj)->ClearLights();
+			(*iter_obj)->ClearEffectiveLights();
 
 			// 使对象受到全局光照的影响
 			for (LightList::iterator iter_light=m_GlobalLights.begin();
@@ -171,7 +172,7 @@ namespace Gen
 				// 未开启该光源，忽略
 				if (!(*iter_light)->GetActive()) continue;
 
-				(*iter_obj)->AddLight(*iter_light);
+				(*iter_obj)->AddEffectiveLight(*iter_light);
 			}
 
 			// 局部光照影响
@@ -182,14 +183,14 @@ namespace Gen
 				// 未开启该光源，忽略
 				if (!(*iter_light)->GetActive()) continue;
 
-				Vector3f light_pos = (*iter_light)->WorldTransform().GetPosition();
-				Vector3f obj_pos = (*iter_obj)->GetRenderableObject()->WorldTransform().GetPosition();
+				Vector3f light_pos = (*iter_light)->GetWorldPosition();
+				Vector3f obj_pos = (*iter_obj)->GetWorldPosition();
 
-				float squaredRadius = (*iter_light)->GetRange() + (*iter_obj)->GetRenderableObject()->GetBoundingRadius();
+				float squaredRadius = (*iter_light)->GetRange() + (*iter_obj)->GetBoundingRadius();
 				squaredRadius *= squaredRadius;
 				if ((light_pos - obj_pos).SquaredLength() < squaredRadius)
 				{
-					(*iter_obj)->AddLight(*iter_light);
+					(*iter_obj)->AddEffectiveLight(*iter_light);
 				}
 			}
 		}

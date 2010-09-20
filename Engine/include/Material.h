@@ -10,20 +10,21 @@
 
 #include "Texture.h"
 #include "Color4f.h"
-#include "ResourceManager.h"
+#include "BaseMaterial.h"
 #include <map>
 
-using namespace std;
+
 
 namespace Gen
 {
 	class Material;
+	class IGpuProgram;
 
 	typedef void(*SetMaterialAttribFunc)(Material*, const String&);
-	typedef map<const String, SetMaterialAttribFunc> MaterialLoadFuncMap;
+	typedef std::map<const String, SetMaterialAttribFunc> MaterialLoadFuncMap;
 
 	typedef void(*SetRenderStateAttribFunc)(TextureRenderState*, const String&);
-	typedef map<const String, SetRenderStateAttribFunc> RenderStateLoadFuncMap;
+	typedef std::map<const String, SetRenderStateAttribFunc> RenderStateLoadFuncMap;
 
 	class MaterialManager;
 
@@ -31,15 +32,21 @@ namespace Gen
 	///	材质类
 	/// @par
 	///		材质类记录模型表面的材质信息，包括受光属性、使用的纹理信息等
-	class Material : public Resource
+	class Material : public BaseMaterial
 	{
-		//friend class ResourceManager<Material>;
 		friend class MaterialManager;
 	public:
 		// ----- Overwrite Resource
 
 		/// @copydoc Resource::Trigger()
 		bool Trigger();
+
+		// ----- Overwrite BaseMaterial
+		void UsePassState(unsigned int i);
+		void ResetPassState(unsigned int i);
+
+		// TODO: 目前假设常规材质只有一个pass
+		unsigned int GetPassCount() { return 1; }
 
 		// ----- Material Methods
 
@@ -104,6 +111,14 @@ namespace Gen
 
 		/// @brief
 		/// 指定某一个纹理层所使用的纹理
+		/// @param texName
+		///		要设定的纹理名称
+		/// @param index
+		///		要指定的纹理层索引
+		void SetTexture(const String& texName, unsigned int index = 0);
+
+		/// @brief
+		/// 指定某一个纹理层所使用的纹理
 		/// @param tex
 		///		要设定的纹理
 		/// @param index
@@ -135,6 +150,9 @@ namespace Gen
 		///	@returns
 		///		如果指定纹理层已启用，返回true；否则返回false
 		inline bool GetTextureLayerEnabled(unsigned int index = 0) const { return m_TextureLayerEnabled[index]; }
+
+		inline void SetDeviceTexture(IDeviceTexture* deviceTex, unsigned int index = 0) { m_DeviceTextures[index] = deviceTex; }
+		inline IDeviceTexture* GetDeviceTexture(unsigned int index = 0) const { return m_DeviceTextures[index]; }
 
 
 		// 深度缓冲写入控制
@@ -201,10 +219,10 @@ namespace Gen
 		/// 获取颜色混合的目标混合因子
 		inline BlendFactor GetDstBlendFactor() const { return m_DstBlendFactor; }
 
-		inline void SetVertexProgram(IGpuProgram* program) { m_VertexProgram = program; }
+		void SetVertexProgram(IGpuProgram* program);
 		inline IGpuProgram* GetVertexProgram() { return m_VertexProgram; }
 
-		inline void SetFragmentProgram(IGpuProgram* program) { m_FragmentProgram = program; }
+		void SetFragmentProgram(IGpuProgram* program);
 		inline IGpuProgram* GetFragmentProgram() { return m_FragmentProgram; }
 
 		// 从文件读取材质
@@ -270,6 +288,7 @@ namespace Gen
 		float			m_SpecularLevel;	///< 高光级别
 
 		TextureRenderState	m_TextureRenderState[8];
+		IDeviceTexture*	m_DeviceTextures[8];
 		bool			m_TextureLayerEnabled[8];
 
 		bool			m_DepthWriting;		///< 是否写入深度缓冲
@@ -287,40 +306,6 @@ namespace Gen
 		IGpuProgram*	m_FragmentProgram;
 	};
 
-	/// @brief
-	///	材质管理器
-	/// @par
-	///		引擎中所有材质的容器，使用管理器创建材质后，材质将于管理器销毁时一同卸载
-	/// @see
-	///		ResourceManagerBase
-	class MaterialManager : public Singleton<MaterialManager>, public ResourceManagerBase
-	{
-		friend class Singleton<MaterialManager>;
-	public:
-		/// @copydoc ResourceManagerBase::CreateResourceHandles()
-		bool CreateResourceHandles(ResourceFileNameInfo* resName);
-
-		// 创建一个新的材质
-		/// @brief
-		/// 创建一个新的材质
-		/// @param resName
-		///		新材质使用的资源名称
-		/// @returns
-		///		返回成功创建的材质指针
-		/// @remarks
-		///		资源名称可以留空，管理器将会自动分配
-		Material* Create(const String& resName="");
-
-		/// @brief
-		/// 获取指定资源名称的材质
-		/// @param resName
-		///		要获取的材质名称
-		/// @returns
-		///		如果找到指定名称资源，返回资源指针；否则返回NULL
-		Material* GetByName(const String& resName);
-	protected:
-		MaterialManager();
-	};
 }
 
 #endif

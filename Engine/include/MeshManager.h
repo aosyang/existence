@@ -17,7 +17,7 @@
 
 #include <map>
 
-using namespace std;
+
 
 namespace Gen
 {

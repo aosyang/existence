@@ -22,7 +22,7 @@
 #include "EString.h"
 #include <fstream>
 
-using namespace std;
+
 
 namespace Gen
 {
@@ -53,9 +53,9 @@ namespace Gen
 
 	public:
 		// ----- EmdMesh Methods
-		bool LoadMesh_020(ifstream& fin);
+		bool LoadMesh_020(std::ifstream& fin);
 
-		void AddMaterial(Material* mat) { m_Materials.push_back(mat); }
+		void AddMaterial(BaseMaterial* mat) { m_Materials.push_back(mat); }
 		//size_t GetMaterialsNum() const { return m_Materials.size(); }
 
 	protected:

@@ -11,7 +11,7 @@
 namespace Gen
 {
 	Actor::Actor(SceneGraph* scene)
-		: GameObjectBase(scene)
+		: GameObject(scene)
 	{
 	}
 

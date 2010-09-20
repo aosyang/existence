@@ -19,15 +19,15 @@
 #include <set>
 #include <vector>
 
-using namespace std;
+
 
 namespace Gen
 {
 	class MovableObjectBase;
 	class RenderableObjectBase;
 
-	typedef set<RenderableObjectBase*>	RenderableObjectSet;
-	typedef vector<RenderableObjectBase*> RenderableObjectList;
+	typedef std::set<RenderableObjectBase*>	RenderableObjectSet;
+	//typedef std::vector<RenderableObjectBase*> RenderableObjectList;
 
 	/// @brief
 	///	可移动对象基类
@@ -45,13 +45,6 @@ namespace Gen
 		/// @copydoc IObject::Update()
 		/// 每次更新对象时同时更新对象的轴对齐包围盒
 		void Update(unsigned long deltaTime);
-
-		/// 判断对象在这个周期内是否已经被更新过
-		/// @returns
-		///		如果对象更新过，返回true，否则返回false
-		/// @note
-		///		这个方法暂时没有实际使用
-		bool IsUpdated();
 
 		// ----- MovableObjectBase methods
 
@@ -113,20 +106,7 @@ namespace Gen
 		const OBB& GetOBB();
 
 		// Render Collection
-
-		/// @brief
-		/// 对象是否从渲染管线中被剔除
-		/// @param frustum
-		///		用于进行剔除测试的平头视截体
-		/// @returns
-		///		如果对象会被剔除，返回true，需要保留则返回false
-		/// @remarks
-		///		派生类覆写这个方法以控制对象的渲染剔除
-		virtual bool IsCulled(Frustum* frustum);
-
 	protected:
-		bool							m_Updated;
-
 		Quaternion						m_Rotation;					///< 局部空间旋转的四元数
 		Matrix4							m_Transform;				///< 局部空间变换
 		Matrix4							m_WorldTransform;			///< 世界空间变换，注：通常不需要手动更新，由Update方法负责从父对象更新

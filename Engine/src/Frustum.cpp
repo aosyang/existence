@@ -19,20 +19,6 @@ namespace Gen
 	{
 	}
 
-	Matrix4 Frustum::BuildPrespectiveProjMatrix(float fovy, float aspect, float _near, float _far)
-	{
-		float range = _near * tan(DEG_TO_RAD(fovy / 2));
-
-		// 保存这些值，方便计算视截体的范围
-		//m_Left = -range * aspect;
-		//m_Right = range * aspect;
-		//m_Bottom = -range;
-		//m_Top = range;
-
-		m_ProjMatrix = Matrix4::BuildPerspectiveProjection(-range * aspect, range * aspect, -range, range, _near, _far);
-		return m_ProjMatrix;
-	}
-
 	// 这些代码从这里复制过来：http://www.racer.nl/reference/vfc_markmorley.htm
 
 	void Frustum::BuildFrustumPlanes(const Matrix4& projMatrix, const Matrix4& viewMatrix)

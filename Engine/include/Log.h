@@ -12,9 +12,10 @@
 #include <time.h>
 #include <iostream>
 #include <fstream>
+#include <set>
 #include "EString.h"
 
-using namespace std;
+
 
 // 屏蔽警告(for win32 only)
 #if defined __PLATFORM_WIN32
@@ -26,120 +27,118 @@ using namespace std;
 
 namespace Gen
 {
-	class Log : public Singleton<Log>
+	class ILogReciever;
+
+	class LogManager : public Singleton<LogManager>
 	{
-		friend class Singleton<Log>;
+		friend class Singleton<LogManager>;
 	public:
 
-		~Log()
-		{
-			logfile.close();
-		}
+		~LogManager();
 
-		void CreateLog(const String& filename)
-		{
-			if (logfile.is_open())
-				logfile.close();
+		/// @brief
+		///	向日志管理器中增加一个日志接收器
+		/// @param reciever
+		///		接收器指针
+		/// @remarks
+		///		添加后的接收器将在引擎销毁时一同销毁，如果需要手动销毁请及时从管理器中移除
+		void AddReciever(ILogReciever* reciever);
 
-			logfile.open(filename.Data());
+		/// @brief
+		/// 移除日志接收器
+		/// @param reciever
+		///		要移除的日志接收器
+		void RemoveReciever(ILogReciever* reciever);
 
-			assert(logfile.is_open());
-		}
+		void Msg(const String& msg);
 
-		void Msg(const String& msg)
-		{
-			logfile << msg.Data();
-			cout << msg.Data();
-		}
-
-		void MsgLn(const String& msg)
-		{
-			OutputTime();
-			logfile << msg.Data() << endl;
-			cout << msg.Data() << endl;
-
-			//logfile.flush();
-		}
+		void MsgLn(const String& msg);
 
 		// 输出时间
-		void OutputTime()
-		{
-			time_t curtime = time(0); 
-			tm t = *localtime(&curtime);
-
-			String msg;
-			msg.Format("%02d:%02d:%02d - ", t.tm_hour, t.tm_min, t.tm_sec);
-
-			logfile << msg.Data();
-			cout << msg.Data();
-		}
+		void OutputTime();
 
 		// 警告消息
-		void Warning(const String& msg)
-		{
-			OutputTime();
-
-			logfile << "!! Warning !! : ";
-			cout << "!! Warning !! : ";
-
-			logfile << msg.Data() << endl;
-			cout << msg.Data() << endl;
-
-			//logfile.flush();
-		}
+		void Warning(const String& msg);
 
 		// 错误消息
-		void Error(const String& msg)
-		{
-			OutputTime();
-
-			logfile << ">> ERROR << : ";
-			cout << ">> ERROR << : ";
-
-			logfile << msg.Data() << endl;
-			cout << msg.Data() << endl;
-
-			//logfile.flush();
-		}
-
+		void Error(const String& msg);
 
 #define LOGREGTYPE(type) \
-	Log& operator << (type _Val) \
+		inline LogManager& operator << (type _Val) \
 		{ \
-		cout << _Val; \
-		logfile << _Val; \
-		return *this; \
+			operator<<(String(_Val)); \
+			return *this; \
 		} \
 
 		LOGREGTYPE(bool)
-			LOGREGTYPE(int)
-			LOGREGTYPE(unsigned int)
-			LOGREGTYPE(long)
-			LOGREGTYPE(unsigned long)
-			LOGREGTYPE(float)
-			LOGREGTYPE(double)
-			LOGREGTYPE(const string&)
-			LOGREGTYPE(const char*)
+		LOGREGTYPE(int)
+		LOGREGTYPE(unsigned int)
+		LOGREGTYPE(long)
+		LOGREGTYPE(unsigned long)
+		LOGREGTYPE(float)
+		LOGREGTYPE(double)
+		LOGREGTYPE(const std::string&)
+		LOGREGTYPE(const char*)
 
-			Log& operator<<(const String& rhs)
-		{
-			cout << rhs.Data();
-			logfile << rhs.Data();
-			return *this;
-		}
+		LogManager& operator<<(const String& rhs);
 
 
 	private:
-		Log() {}
+		LogManager();
 
-		ofstream  logfile;
+		std::set<ILogReciever*>		m_LogRecievers;		///< 日志接收器列表
+	};
+
+	/// @brief
+	///	日志接收器接口
+	/// @par
+	///		用户的日志接受对象从这个接口派生，并在日志管理器中注册，便可接受到引擎发送的日志
+	class ILogReciever
+	{
+	public:
+		/// 虚析构函数
+		virtual ~ILogReciever() {}
+
+		/// @brief
+		///	输出日志接口
+		/// @par
+		///		覆写这个方法可以将日志输出到不同的对象中去
+		/// @param rhs
+		///		要写入的日志内容
+		virtual void OutputLog(const String& rhs) = 0;
+	};
+
+	/// @brief
+	///	文件日志接收器
+	/// @par
+	///		向文件中写入日志内容的接收器
+	class IOLogReciever : public ILogReciever
+	{
+	public:
+		~IOLogReciever();
+
+		/// @brief
+		///	打开文件作为日志输出
+		/// @param filename
+		///		输出日志的文件名
+		/// @remarks
+		///		如果未能正确打开文件，该方法将触发assert
+		void OpenFileForOutput(const String& filename);
+
+		/// @brief
+		/// 输出日志
+		/// @copydoc ILogReciever::OutputLog(const String&)
+		void OutputLog(const String& rhs);
+
+	private:
+		std::ofstream	m_LogFile;			///< 日志文件输出流
 	};
 
 #if defined __PLATFORM_WIN32
 #pragma warning(pop)
 #endif	//#if defined __PLATFORM_WIN32
 
-#define Log Log::Instance()
+#define Log LogManager::Instance()
 }
 
 #endif

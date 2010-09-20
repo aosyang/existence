@@ -1,7 +1,5 @@
 #include "ParticleGame.h"
 
-bool g_DebugRender = false;
-
 particleGame::particleGame()
 : m_Scene(NULL),
   m_Camera(NULL),
@@ -17,45 +15,6 @@ particleGame::~particleGame()
 
 Material*		m_MatSmoke;
 CameraShakeEffect	g_CameraShake;
-// 粒子初始状态设置
-void ParticleState(Particle* particle, ParticleEmitter* emitter)
-{
-	particle->m_Age = 0;
-	particle->m_Duration= 5000;
-	particle->m_Velocity = particle->m_Position - emitter->WorldTransform().GetPosition();
-	particle->m_Velocity.normalize();
-	particle->m_Velocity *= 2.0f;
-
-	particle->m_Color = Color4f(1.0f, 1.0f, 1.0f, 1.0f);
-	//particle->m_Color = Color4f(0.0f, 0.0f, 0.0f, 1.0f);
-	//particle->m_Color = Color4f(Math::Random(0.0f, 1.0f), Math::Random(0.0f, 1.0f), Math::Random(0.0f, 1.0f), 1.0f);
-	particle->m_Scale = Math::Random(10.0f, 15.f);
-	particle->m_ScaleInc = 20.0f;
-	particle->m_ZRotation = Math::Random(-Math::kPi, Math::kPi);
-	particle->m_ZRotationInc = Math::Random(-0.5f, 0.5f);
-}
-
-// 单一粒子更新行为
-bool ParticleUpdate(Particle* particle, unsigned long deltaTime)
-{
-	if (particle->m_Duration == -1)
-	{
-		// 粒子寿命无限
-	}
-	else if (particle->m_Age < particle->m_Duration)
-		particle->m_Age += deltaTime;
-	else
-		particle->m_Active = false;
-
-	particle->m_Position += particle->m_Velocity * (float)deltaTime * 0.001f;
-	particle->m_ZRotation += particle->m_ZRotationInc * (float)deltaTime * 0.001f;
-	particle->m_Scale += particle->m_ScaleInc * (float)deltaTime * 0.001f;
-
-	float alpha = (float)particle->m_Age / particle->m_Duration * Math::kPi;
-	particle->m_Color.a = sinf(alpha)/* * 0.1f*/;
-
-	return particle->m_Active;
-}
 
 ParticleEmitter* emitter;
 Billboard* bb;
@@ -100,9 +59,9 @@ void particleGame::StartGame()
 		p.m_Active = true;
 		//p.m_Color = Color4f(0.0f, 0.0f, 0.0f, 0.5f);
 		p.m_Color = Color4f(1.0f, 1.0f, 1.0f, 0.5f);
-		p.m_Scale = Math::Random(50.0f, 100.0f);
-		p.m_ZRotation = Math::Random(-Math::kPi, Math::kPi);
-		p.m_ZRotationInc = Math::Random(-0.1f, 0.1f);
+		p.scale = Math::Random(50.0f, 100.0f);
+		p.spin = Math::Random(-Math::kPi, Math::kPi);
+		p.spinInc = Math::Random(-0.1f, 0.1f);
 		//p.m_ScreenScaleX = Math::Random(0.5f, 1.5f);
 		//p.m_ScreenScaleY = Math::Random(0.5f, 1.5f);
 		p.m_Position = Vector3f(Math::Random(-50.0f, 50.0f), Math::Random(0.0f, 10.0f), Math::Random(-50.0f, 50.0f));
@@ -128,16 +87,21 @@ void particleGame::StartGame()
 	bb->SetScale(10.0f);
 	bb->SetScreenSpaceScale(10.0f, 1.0f);
 	bb->SetColor(Color4f(1.0f, 0.5f, 0.0f, 1.0f));
-	bb->SetRenderOrder(120);
+	//bb->SetRenderOrder(120);
 
 	emitter = static_cast<ParticleEmitter*>(m_Scene->CreateSceneObject("ParticleEmitter"));
 	emitter->SetInterval(50);
 	emitter->SetMaterial(m_MatSmoke);
 	emitter->SetEmitterShape(EMITTER_SHAPE_BOX);
 	emitter->SetBoxRange(Vector3f(-1.0f, -1.0f, -1.0f), Vector3f(1.0f, 1.0f, 1.0f));
-	emitter->SetParticleInitStateFunc(ParticleState);
+	//emitter->SetParticleInitStateFunc(ParticleState);
 	emitter->SetPosition(Vector3f(0.0f, 150.0f, 0.0f));
-	emitter->SetParticleBehaviorFunc(&ParticleUpdate);
+	//emitter->SetParticleBehaviorFunc(&ParticleUpdate);
+	emitter->SetParticleLifetime(5000);
+	emitter->SetInitialScale(10.0f);
+	emitter->SetScaleInc(20.0f);
+	emitter->SetSpinVar(Math::kPi);
+	emitter->SetSpinIncVar(0.5f);
 	//m_Camera->AttachChildObject(emitter, true);
 	emitter->AttachChildObject(bb);
 
@@ -160,6 +124,13 @@ void particleGame::StartGame()
 	//IAudioSource* source2 = Engine::Instance().AudioSystem()->CreateSourceInstance(buffer, Vector3f(5.0f, 0.0f, 0.0f));
 	//source2->SetLoop(true);
 	//source2->Play();
+
+	InputEventHandler<particleGame>* inputHandler =
+		new InputEventHandler<particleGame>(this,
+										    &particleGame::OnKeyPressed,
+										    NULL,
+										    &particleGame::OnMouseMoved);
+	Input->SetEventHandler(inputHandler);
 }
 
 void particleGame::Shutdown()
@@ -177,7 +148,7 @@ void particleGame::Shutdown()
 	SAFE_DELETE(m_Scene);
 }
 
-void particleGame::OnKeyPressed(unsigned int key)
+void particleGame::OnKeyPressed(KeyCode key)
 {
 	switch (key)
 	{
@@ -191,8 +162,24 @@ void particleGame::OnKeyPressed(unsigned int key)
 		FontManager::Instance().DumpToLog();
 		break;
 	case KC_P:
-		g_DebugRender = !g_DebugRender;
+		{
+			static bool debugRender = false;
+			debugRender = !debugRender;
+			DebugRenderer::ToggleSceneObjectDebugRender(debugRender);
+		}
 		break;
+	}
+}
+
+void particleGame::OnMouseMoved(int x, int y, int rel_x, int rel_y)
+{
+	// 按住鼠标右键调整视角
+	if (Input->GetMouseButtonDown(MB_Right))
+	{
+		float x = -(float)rel_x / 5.0f;
+		float y = -(float)rel_y / 5.0f;
+
+		m_Camera->RotateLocal(x, y);
 	}
 }
 
@@ -218,7 +205,7 @@ void particleGame::Update(unsigned long deltaTime)
 	float boost;
 	String text;
 
-	if (Input::Instance().GetKeyDown(KC_LSHIFT))
+	if (Input->GetKeyDown(KC_LSHIFT))
 		boost = 4.0f;
 	else
 		boost = 1.0f;
@@ -226,32 +213,22 @@ void particleGame::Update(unsigned long deltaTime)
 	float forward = 0.0f;
 	float right = 0.0f;
 
-	if (Input::Instance().GetKeyDown(KC_W))
+	if (Input->GetKeyDown(KC_W))
 		forward += 0.1f * deltaTime / 10.0f * boost;
-	if (Input::Instance().GetKeyDown(KC_S))
+	if (Input->GetKeyDown(KC_S))
 		forward += -0.1f * deltaTime / 10.0f * boost;
-	if (Input::Instance().GetKeyDown(KC_A))
+	if (Input->GetKeyDown(KC_A))
 		right += -0.1f * deltaTime / 10.0f * boost;
-	if (Input::Instance().GetKeyDown(KC_D))
+	if (Input->GetKeyDown(KC_D))
 		right += 0.1f * deltaTime / 10.0f * boost;
 
-	forward += -0.1f * deltaTime / 10.0f * boost * Input::Instance().GetJoyStickAbs(2) / 0x7FFF;
-	right += 0.1f * deltaTime / 10.0f * boost * Input::Instance().GetJoyStickAbs(3) / 0x7FFF;
+	forward += -0.1f * deltaTime / 10.0f * boost * Input->GetJoyStickAbs(2) / 0x7FFF;
+	right += 0.1f * deltaTime / 10.0f * boost * Input->GetJoyStickAbs(3) / 0x7FFF;
 
 	m_Camera->MoveLocal(forward, right, 0.0f);
 
-	if (Input::Instance().GetKeyDown(KC_ESCAPE))
+	if (Input->GetKeyDown(KC_ESCAPE))
 		Engine::Instance().SetQuitting(true);
-
-
-	// 按住鼠标右键调整视角
-	if (Input::Instance().GetMouseButtonDown(MB_Right))
-	{
-		float x = -(float)Input::Instance().GetMouseRelX() / 5.0f;
-		float y = -(float)Input::Instance().GetMouseRelY() / 5.0f;
-
-		m_Camera->RotateLocal(x, y);
-	}
 
 	//m_EmitTime -= deltaTime;
 
@@ -310,24 +287,17 @@ void particleGame::Update(unsigned long deltaTime)
 
 void particleGame::RenderScene()
 {
-	RenderView rv;
-
-	rv.position = m_Camera->WorldTransform().GetPosition();
-	rv.viewMatrix = m_Camera->GetViewMatrix();
-	rv.projMatrix = m_Camera->GetProjMatrix();
-	rv.frustum = m_Camera->GetFrustum();
-
 	// 全屏渲染
 	Renderer::Instance().SetViewport(0, 0, 0, 0);
 	//Renderer::Instance().SetViewport(160, 120, 320, 240);
 
 	// 设定渲染视点
-	m_Scene->SetupRenderView(rv);
-	m_Scene->RenderScene(g_DebugRender);
+	m_Scene->SetupRenderView(m_Camera);
+	Renderer::Instance().BeginRender();
+	m_Scene->RenderScene();
 
 	// 使用BeginRender和EndRender方法，进行其他自定义渲染操作
-	Renderer::Instance().BeginRender();
-	Renderer::Instance().RenderLine(Vector3f(0.0f, 0.0f, 0.0f), Vector3f(5000.0f, 0.0f, 0.0f), Color4f(0.0f, 1.0f, 1.0f));
+	DebugRenderer::Instance().DrawLine(Vector3f(0.0f, 0.0f, 0.0f), Vector3f(5000.0f, 0.0f, 0.0f), Color4f(0.0f, 1.0f, 1.0f));
 	Renderer::Instance().EndRender();
 }
 

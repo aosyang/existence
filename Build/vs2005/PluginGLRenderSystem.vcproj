@@ -18,7 +18,7 @@
 		<Configuration
 			Name="Debug|Win32"
 			OutputDirectory="..\..\bin\plugins"
-			IntermediateDirectory="..\..\$(ProjectName)\obj\$(ConfigurationName)"
+			IntermediateDirectory="obj\$(ProjectName)\$(ConfigurationName)"
 			ConfigurationType="2"
 			CharacterSet="2"
 			>
@@ -61,7 +61,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="Engine_d.lib opengl32.lib glu32.lib glaux.lib"
+				AdditionalDependencies="Engine_d.lib opengl32.lib glu32.lib glaux.lib cg.lib cgGL.lib"
 				OutputFile="$(OutDir)\$(ProjectName)_d.dll"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="..\..\bin\libs;..\..\extra\lib;..\..\extra\lib\vc8"
@@ -97,7 +97,7 @@
 		<Configuration
 			Name="Release|Win32"
 			OutputDirectory="..\..\bin\plugins"
-			IntermediateDirectory="..\..\$(ProjectName)\obj\$(ConfigurationName)"
+			IntermediateDirectory="obj\$(ProjectName)\$(ConfigurationName)"
 			ConfigurationType="2"
 			CharacterSet="2"
 			WholeProgramOptimization="1"
@@ -138,7 +138,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="Engine.lib opengl32.lib glu32.lib glaux.lib"
+				AdditionalDependencies="Engine.lib opengl32.lib glu32.lib glaux.lib cg.lib cgGL.lib"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="..\..\bin\libs;..\..\extra\lib;..\..\extra\lib\vc8"
 				GenerateDebugInformation="true"
@@ -182,7 +182,23 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath="..\..\PluginGLRenderSystem\CgEffect.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\PluginGLRenderSystem\CgGLDevice.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\PluginGLRenderSystem\CgGLProgram.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\PluginGLRenderSystem\GLCubeTexture.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\PluginGLRenderSystem\GLEnums.cpp"
 				>
 			</File>
 			<File
@@ -224,11 +240,27 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
+				RelativePath="..\..\PluginGLRenderSystem\CgEffect.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\PluginGLRenderSystem\CgGLDevice.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\PluginGLRenderSystem\CgGLProgram.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\PluginGLRenderSystem\GLBaseRenderTarget.h"
 				>
 			</File>
 			<File
 				RelativePath="..\..\PluginGLRenderSystem\GLCubeTexture.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\PluginGLRenderSystem\GLEnums.h"
 				>
 			</File>
 			<File

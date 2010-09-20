@@ -10,6 +10,7 @@
 #include "LightingManager.h"
 #include "Engine.h"
 #include "Renderer.h"
+#include "DebugRenderer.h"
 
 namespace Gen
 {
@@ -34,18 +35,18 @@ namespace Gen
 
 	void Light::DebugRender()
 	{
-		//Renderer::Instance().RenderSphere(m_WorldTransform.GetPosition(), m_BoundingSphereRadius);
+		//DebugRenderer::Instance().DrawSphere(m_WorldTransform.GetPosition(), m_BoundingSphereRadius);
 	
 		switch (m_Type)
 		{
 		case LIGHT_TYPE_POINT:
 		case LIGHT_TYPE_SPOT:
 			// π‚’’∑∂Œß
-			Renderer::Instance().RenderSphere(m_WorldTransform.GetPosition(), m_Range, Color4f(1.0f, 1.0f, 0.0f));
+			DebugRenderer::Instance().DrawSphere(m_WorldTransform.GetPosition(), m_Range, Color4f(1.0f, 1.0f, 0.0f));
 			break;
 	
 		case LIGHT_TYPE_DIRECTIONAL:
-			Renderer::Instance().RenderLine(m_WorldTransform.GetPosition() + m_Direction * 10, m_WorldTransform.GetPosition());
+			DebugRenderer::Instance().DrawLine(m_WorldTransform.GetPosition() + m_Direction * 10, m_WorldTransform.GetPosition());
 			break;
 		}
 

@@ -36,14 +36,6 @@ using namespace std;
 
 // 记录骨骼的初始矩阵
 typedef map<int, GMatrix>	BoneInitMatrix;
-//
-//
-//enum EmdlLump
-//{
-//	EMDL_LUMP_TEXTURES = 100,
-//	EMDL_LUMP_MESH_ELEMENTS,
-//	EMDL_LUMP_VERTICES,
-//};
 
 // 获取采样关键帧，每4帧进行一次采样
 static int sampleRate = 4;
@@ -130,7 +122,8 @@ void ExportNode_r(IGameNode* node)
 	if (node->IsTarget())
 		return;
 
-	ExportKeyFrame(node);
+	// 导出结点的关键帧动画
+	//ExportKeyFrame(node);
 
 	for (int i=0; i<node->GetChildCount(); i++)
 	{
@@ -588,6 +581,13 @@ void ExportMesh(IGameNode* node)
 		{
 			// 具有单一材质的模型
 			materialCount = 1;
+
+			// 修整材质id
+			for (int i=0; i<mesh->GetNumberOfFaces(); i++)
+			{
+				FaceEx* face = mesh->GetFace(i);
+				face->matID = 0;
+			}
 
 			ExportMaterial(material);
 		}

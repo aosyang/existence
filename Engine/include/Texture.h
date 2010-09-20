@@ -10,11 +10,9 @@
 
 #include "Matrix4.h"
 #include "EString.h"
-#include "IGpuProgram.h"
 #include "Resource.h"
 #include "IDeviceTexture.h"
 
-using namespace std;
 
 namespace Gen
 {
@@ -79,7 +77,6 @@ namespace Gen
 	// 纹理渲染状态
 	typedef struct TextureRenderStateType
 	{
-		IDeviceTexture*		texture;			///< 纹理
 		String				textureName;		///< 纹理名称		NOTE: 这个变量是为了记录只有纹理名称而没有数据的情况
 
 		TextureWrapType		wrapType;			///< 纹理环绕模式
@@ -99,16 +96,9 @@ namespace Gen
 			InitValues();
 		}
 
-		TextureRenderStateType(IDeviceTexture* tex)
-		{
-			InitValues();
-			texture = tex;
-		}
-
 		// 初始化RenderState的初值
 		void InitValues()
 		{
-			texture = NULL;
 			wrapType = WRAP_TYPE_CLAMP_TO_EDGE;
 			minFilterType = FILTER_TYPE_LINEAR_MIPMAP_NEAREST;
 			magFilterType = FILTER_TYPE_LINEAR;

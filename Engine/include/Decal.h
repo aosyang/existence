@@ -9,7 +9,7 @@
 #ifndef _DECAL_H
 #define _DECAL_H
 
-#include "RenderableObjectBase.h"
+#include "SceneObject.h"
 #include "Material.h"
 #include "IVertexBuffer.h"
 
@@ -24,11 +24,11 @@ namespace Gen
 	/// \remarks
 	/// Write remarks for Decal here.
 	//-----------------------------------------------------------------------------------
-	class Decal : public RenderableObjectBase
+	class Decal : public SceneObject
 	{
-		DECLARE_FACTORY_OBJECT(Decal, RenderableObjectBase);
+		DECLARE_FACTORY_OBJECT(Decal, SceneObject);
 	public:
-		// ----- Overwrite IRenderableObject
+		// ----- Overwrite SceneObject
 
 		void RenderSingleObject();
 

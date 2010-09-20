@@ -10,7 +10,7 @@
 #include <fstream>
 #include "EString.h"
 
-using namespace std;
+
 
 #include "Plugin.h"
 #include "Input.h"
@@ -23,6 +23,8 @@ using namespace std;
 #include "Renderer.h"
 #include "SkeletonManager.h"
 #include "AudioManager.h"
+#include "DebugRenderer.h"
+#include "RenderTarget.h"
 
 namespace Gen
 {
@@ -37,7 +39,7 @@ namespace Gen
 		//
 		// 注：在第一个分组名出现之前的键将被分配在common组中
 
-		ifstream fs;
+		std::ifstream fs;
 		fs.open(filename.Data());
 
 		if (!fs.is_open())
@@ -122,6 +124,7 @@ namespace Gen
 
 	Engine::Engine()
 	: m_AudioSystem(NULL),
+	  m_InputSystem(NULL),
 	  m_RenderBatchCount(0),
 	  m_MessageNotifier(NULL),
 	  m_Game(NULL),
@@ -129,10 +132,12 @@ namespace Gen
 	  m_FPS(0)
 	{
 		// 设置语言，正确读取带中文名的文件
-		locale   langLocale("");
+		std::locale   langLocale("");
 		setlocale(LC_ALL, langLocale.name().data());
 
-		Log.CreateLog("engine.log");
+		IOLogReciever* logReciever = new IOLogReciever();
+		logReciever->OpenFileForOutput("Engine.log");
+		Log.AddReciever(logReciever);
 
 		Log.MsgLn("Initializing engine");
 
@@ -153,7 +158,10 @@ namespace Gen
 
 		//AssertFatal(System::Instance().GetRenderWindowParameters()->handle, "Engine::Initialize(): Render window handle is never expected to be null.");
 
-		Renderer::Instance().Initialize(System::Instance().GetRenderWindowParameters());
+		RenderWindowParam* param = System::Instance().GetRenderWindowParameters();
+
+		Renderer::Instance().Initialize(param);
+		DebugRenderer::Instance().Initialize();
 
 		Log.MsgLn("Initializing AudioSystem");
 		m_AudioSystem->Initialize();
@@ -162,12 +170,15 @@ namespace Gen
 
 		FontManager::Instance().Initialize();
 
-		if (input)
+		if (input && m_InputSystem)
 		{
-			Input::Instance().Initialize();
+			m_InputSystem->Initialize(param->handle);
 		}
 
 		EGUIManager::Instance().Initialize();
+
+		// 更新窗口尺寸
+		ResizeWindow(param->width, param->height);
 
 		// 创建默认的空白纹理
 		// 需要在渲染器初始化以后调用
@@ -190,6 +201,8 @@ namespace Gen
 		SkeletonManager::Instance().UnloadAllResources();
 		AudioManager::Instance().UnloadAllResources();
 
+		RenderTarget::DestroyAllObjects();
+
 		// 卸载系统
 		EGUIManager::Instance().Shutdown();
 		FontManager::Instance().Shutdown();
@@ -201,9 +214,22 @@ namespace Gen
 		m_AudioSystem->Shutdown();
 		delete m_AudioSystem;
 
+		DebugRenderer::Instance().Shutdown();
 		Renderer::Instance().Shutdown();
 		
-		Input::Instance().Shutdown();
+		if (m_InputSystem)
+		{
+			m_InputSystem->Shutdown();
+			SAFE_DELETE(m_InputSystem);
+		}
+
+		// 删除全部插件
+		std::vector<Plugin*>::iterator iter;
+		for (iter=m_Plugins.begin(); iter!=m_Plugins.end(); iter++)
+		{
+			delete (*iter);
+		}
+		m_Plugins.clear();
 	}
 
 	void Engine::Run()
@@ -252,7 +278,10 @@ namespace Gen
 			frameNumber = 0;
 		}
 
-		Input::Instance().CaptureDevice();
+		if (m_InputSystem)
+		{
+			m_InputSystem->CaptureDevice();
+		}
 
 		m_Game->Update(deltaTime);
 		EGUIManager::Instance().Update(deltaTime);
@@ -271,10 +300,14 @@ namespace Gen
 		// TODO: SceneGraph renders here.
 		//if (Renderer::Instance().GetActive())
 		{
+			Renderer::Instance().ClearBuffer();
+
 			m_Game->RenderScene();
 
 			// 渲染EGUI
 			EGUIManager::Instance().RenderUI();
+
+			DebugRenderer::Instance().ClearBuffer();
 
 			Renderer::Instance().SwapBuffer();
 		}
@@ -282,7 +315,10 @@ namespace Gen
 	void Engine::ResizeWindow(unsigned int width, unsigned int height)
 	{
 		System::Instance().ResizeWindow(width, height);
-		Input::Instance().ResizeWindow();
+		if (m_InputSystem)
+		{
+			m_InputSystem->ResizeWindow(width, height);
+		}
 		m_Game->OnResizeWindow(width, height);
 		Renderer::Instance().ResizeRenderWindow(width, height);
 	}
@@ -302,65 +338,56 @@ namespace Gen
 		// 渲染器插件名称，如OpenGL使用的CG插件等
 		String renderSystemPluginName;
 
-		// TODO: 精简此处代码，使用插件基类接口及注册调用函数等方法
 		for (iter=list->begin(); iter!=list->end(); iter++)
 		{
-			if (iter->key == "RenderSystem")
+			String msg;
+			Plugin* plugin = new Plugin;
+			if (plugin->LoadModule(iter->value))
 			{
-				Module_t hDLL = 0;
-				hDLL = LoadModule(iter->value.Data());
-
-				if (!hDLL)
+				IPlugin* iplugin = plugin->CreatePluginInstance();
+				if (iplugin)
 				{
-					String msg;
-					msg.Format("Failed to open %s", iter->value.Data());
-					Log.Error(msg);
+					switch (iplugin->GetPluginType())
+					{
+					case PLUGIN_TYPE_RENDER_SYSTEM:
+						Renderer::Instance().SetRenderDevice(static_cast<IRenderDevice*>(iplugin));
+						break;
+					case PLUGIN_TYPE_AUDIO_SYSTEM:
+						m_AudioSystem = static_cast<IAudioSystem*>(iplugin);
+						break;
+					case PLUGIN_TYPE_INPUT_SYSTEM:
+						m_InputSystem = static_cast<IInputSystem*>(iplugin);
+						break;
+					default:
+						{
+							msg.Format("Ignored unrecognized plugin type in %s.", iter->value.Data());
+							Log.Warning(msg);
 
-					//String error;
-					//error.Format("Error: %s", dlerror());
-					//Log.Error(error);
+							SAFE_DELETE(plugin);
 
-					continue;
+							continue;
+						}
+						break;
+					}
+
+					m_Plugins.push_back(plugin);
 				}
-
-				RenderSystemFactoryCreateFunc rendererCreator = (RenderSystemFactoryCreateFunc)GetFunction(hDLL, "CreateRenderSystem");
-				if (rendererCreator == NULL)
+				else
 				{
-					String msg;
-					msg.Format("Failed to load render system from %s, unable to find entrance func CreateRenderSystem", iter->value.Data());
-					Log.Error(msg);
-					continue;
+					msg.Format("Unable to create plugin instance from %s.", iter->value.Data());
+					Log.Warning(msg);
+					SAFE_DELETE(plugin);
 				}
-
-				Renderer::Instance().SetRenderDevice((*rendererCreator)());
-
-				//UnloadModule(hDLL);
 			}
-			else if (iter->key == "AudioSystem")
+			else
 			{
-				Module_t hDLL;
-				hDLL = LoadModule(iter->value.Data());
-
-				AudioSystemFactoryCreateFunc audioCreator = (AudioSystemFactoryCreateFunc)GetFunction(hDLL, "CreateAudioSystem");
-				if (audioCreator == NULL)
-				{
-					String msg;
-					msg.Format("Failed to load audio system from %s, unable to find entrance func CreateAudioSystem", iter->value.Data());
-					Log.Error(msg);
-
-					continue;
-				}
-
-				m_AudioSystem = (*audioCreator)();
-			}
-			else if (iter->key == "RenderSystemPlugin")
-			{
-				renderSystemPluginName = iter->value;
+				msg.Format("Unable to open plugin from file in %s.", iter->value.Data());
+				Log.Warning(msg);
+				SAFE_DELETE(plugin);
 			}
 		}
 
 		AssertFatal(Renderer::Instance().GetRenderDevice(), "Engine::LoadModules() : Failed to create render system from plugin.");
-		Renderer::Instance().GetRenderDevice()->SetGpuPluginName(renderSystemPluginName);
 
 		// Use a null audio system if we don't find one from plugins
 		if (!m_AudioSystem)

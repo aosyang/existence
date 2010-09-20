@@ -8,30 +8,31 @@
 #ifndef _BILLBOARD_H
 #define _BILLBOARD_H
 
-#include "RenderableObjectBase.h"
+#include "SceneObject.h"
 #include "Material.h"
 #include "IVertexBuffer.h"
 
 namespace Gen
 {
-	class Billboard : public RenderableObjectBase
+	class Billboard : public SceneObject
 	{
-		DECLARE_FACTORY_OBJECT(Billboard, RenderableObjectBase);
+		DECLARE_FACTORY_OBJECT(Billboard, SceneObject);
 	public:
 
 		// ----- Overwrite IObject
 
 		void Update(unsigned long deltaTime);
 
-		// ----- Overwrite IRenderableObject
+		// ----- Overwrite SceneObject
 
 		void RenderSingleObject();
 
 		// ----- Billboard Methods
 
 		// ²ÄÖÊ
-		inline Material* GetMaterial() const { return m_Material; }
-		void SetMaterial(Material* mat);
+		inline BaseMaterial* GetMaterial() const { return m_Material; }
+		void SetMaterial(const String& matName);
+		void SetMaterial(BaseMaterial* mat);
 
 		void SetColor(const Color4f& color);
 
@@ -51,8 +52,8 @@ namespace Gen
 		void UpdateVertexData();
 
 	protected:
-		Material*	m_Material;
-		float		m_Radius;
+		BaseMaterial*	m_Material;
+		float			m_Radius;
 
 		//unsigned int	m_FaceArray[3 * 2];
 		//float			m_VertexArray[3 * 4];

@@ -19,6 +19,14 @@ namespace Gen
 		VFormat_Texcoord0 = 1 << 3,
 	};
 
+	/// @brief
+	///	渲染几何体的类型
+	enum PrimitiveType
+	{
+		PRIM_LINES,
+		PRIM_TRIANGLES,
+	};
+
 	// 顶点缓冲接口
 	class IVertexBuffer
 	{
@@ -45,6 +53,10 @@ namespace Gen
 
 		// 指定为顶点数据来源
 		virtual void SetAsVertexDataSource() = 0;
+
+		/// @brief
+		///	使用顶点缓冲渲染几何体
+		virtual void RenderPrimitive(PrimitiveType type) = 0;
 	};
 
 	// 索引缓冲接口
@@ -67,7 +79,7 @@ namespace Gen
 		virtual void SetIndexSize(int size) = 0;
 
 		// 使用已指定的顶点数据渲染多边形
-		virtual void RenderPrimitive() = 0;
+		virtual void RenderPrimitive(PrimitiveType type) = 0;
 	};
 }
 

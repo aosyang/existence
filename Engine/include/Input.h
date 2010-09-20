@@ -8,18 +8,16 @@
 #ifndef _INPUT_H
 #define _INPUT_H
 
-#include "Engine.h"
 
+#include "Platform.h"
 #include "Singleton.h"
-#include "OIS/OIS.h"
-
-//using namespace OIS;
+#include "IPlugin.h"
 
 namespace Gen
 {
 	// TODO: 使用自己定义的KeyCode替代OIS，并且暴露给用户
 
-	class Input;
+	//class Input;
 	class InputHandler;
 
 	// This comes from OIS...
@@ -180,90 +178,186 @@ namespace Gen
 		MAX_MB_NUM,
 	};
 
-	class InputHandler : public OIS::KeyListener, public OIS::MouseListener, public OIS::JoyStickListener
+	/// @brief
+	/// 输入事件处理器接口
+	class IInputEventHandler
 	{
 	public:
-		InputHandler() {}
-		~InputHandler() {}
+		virtual ~IInputEventHandler() {}
 
-		// 键盘事件
-		bool keyPressed( const OIS::KeyEvent &arg );
-		bool keyReleased( const OIS::KeyEvent &arg );
+		virtual void OnKeyPressed(KeyCode key) = 0;
+		virtual void OnKeyReleased(KeyCode key) = 0;
 
-		// 鼠标事件
-		bool mouseMoved( const OIS::MouseEvent &arg );
-		bool mousePressed( const OIS::MouseEvent &arg, OIS::MouseButtonID id );
-		bool mouseReleased( const OIS::MouseEvent &arg, OIS::MouseButtonID id );
+		virtual void OnMouseMoved(int x, int y, int rel_x, int rel_y) = 0;
+		virtual void OnMouseButtonPressed(MouseButtonID id) = 0;
+		virtual void OnMouseButtonReleased(MouseButtonID id) = 0;
 
-		// 控制器事件
-		bool buttonPressed( const OIS::JoyStickEvent &arg, int button );
-		bool buttonReleased( const OIS::JoyStickEvent &arg, int button );
-		bool axisMoved( const OIS::JoyStickEvent &arg, int axis );
+		virtual void OnJoyStickButtonPressed(int button) = 0;
+		virtual void OnJoyStickButtonReleased(int button) = 0;
 	};
 
-	class Input : public Singleton<Input>
+	/// @brief
+	/// 输入事件接受器模板
+	/// @par
+	///		使用这个模板将任何类的输入响应函数转换为输入系统可接受的对象
+	template <typename T>
+	class InputEventHandler : public IInputEventHandler
 	{
-		friend class Singleton<Input>;
+		typedef void(T::*KeyHandlerFunc)(KeyCode key);
+		typedef void(T::*MouseMoveHandlerFunc)(int, int, int, int);
+		typedef void(T::*MouseButtonHandlerFunc)(MouseButtonID id);
+		typedef void(T::*JoyStickButtonHandlerFunc)(int button);
 	public:
+		InputEventHandler(T* recieverObj,
+						  KeyHandlerFunc keyDown = 0,
+						  KeyHandlerFunc keyUp = 0,
+						  MouseMoveHandlerFunc mouseMove = 0,
+						  MouseButtonHandlerFunc mouseButtonDown = 0,
+						  MouseButtonHandlerFunc mouseButtonUp = 0
+						  )
+			: m_Object(recieverObj),
+			  m_KeyDownFunc(keyDown),
+			  m_KeyUpFunc(keyUp),
+			  m_MouseMoveFunc(mouseMove),
+			  m_MouseButtonDownFunc(mouseButtonDown),
+			  m_MouseButtonUpFunc(mouseButtonUp)
 
-		void Initialize();
-		void Shutdown();
+		{
+		}
 
-		void CaptureDevice();
+		void OnKeyPressed(KeyCode key)
+		{
+			if (m_KeyDownFunc) (m_Object->*m_KeyDownFunc)(key);
+		}
 
-		void ResizeWindow();
+		void OnKeyReleased(KeyCode key)
+		{
+			if (m_KeyUpFunc) (m_Object->*m_KeyUpFunc)(key);
+		}
 
-		// 键盘状态
-		bool GetKeyDown(KeyCode key) const { return m_KeyState[key]; }
-		void SetKeyDown(KeyCode key, bool val) { m_KeyState[key] = val; }
+		void OnMouseMoved(int x, int y, int rel_x, int rel_y)
+		{
+			if (m_MouseMoveFunc) (m_Object->*m_MouseMoveFunc)(x, y, rel_x, rel_y);
+		}
 
-		// 鼠标按钮状态
-		bool GetMouseButtonDown(MouseButtonID ButtonCode) const { return m_MouseButtonState[ButtonCode]; }
-		void SetMouseButtonDown(MouseButtonID ButtonCode, bool val) { m_MouseButtonState[ButtonCode] = val; }
+		void OnMouseButtonPressed(MouseButtonID id)
+		{
+			if (m_MouseButtonDownFunc) (m_Object->*m_MouseButtonDownFunc)(id);
+		}
 
-		// 控制杆按键状态
-		bool GetJoyStickButtonDown(int button) const { return m_JoyStickButton[button]; }
-		void SetJoyStickButtonDown(int button, bool val) { m_JoyStickButton[button] = val; }
+		void OnMouseButtonReleased(MouseButtonID id)
+		{
+			if (m_MouseButtonUpFunc) (m_Object->*m_MouseButtonUpFunc)(id);
+		}
 
-		// 控制杆摇杆坐标
-		int GetJoyStickAbs(int axis) const { return m_JoyStickAxis[axis]; }
-		void SetJoyStickAbs(int axis, int val) { m_JoyStickAxis[axis] = val; }
+		void OnJoyStickButtonPressed(int button)
+		{
+		}
 
+		void OnJoyStickButtonReleased(int button)
+		{
+		}
 
-		float GetJoyStickDeadZone() const { return m_DeadZone; }
-		void SetJoyStickDeadZone(float deadZone) { m_DeadZone = deadZone; }
-
-		int GetMouseRelX() { return m_MouseRelX; }
-		void SetMouseRelX(int val) { m_MouseRelX = val; }
-		int GetMouseRelY() { return m_MouseRelY; }
-		void SetMouseRelY(int val) { m_MouseRelY = val; }
-
-		int GetMouseAbsX() { return m_MouseAbsX; }
-		void SetMouseAbsX(int val) { m_MouseAbsX = val; }
-		int GetMouseAbsY() { return m_MouseAbsY; }
-		void SetMouseAbsY(int val) { m_MouseAbsY = val; }
-
-	protected:
-		Input();
-
-		bool				m_Initialized;
-
-		OIS::InputManager*	m_InputManager;
-		OIS::Keyboard*		m_Keyboard;
-		OIS::Mouse*			m_Mouse;
-		OIS::JoyStick*		m_JoyStick;
-
-		InputHandler		m_Handler;
-		bool				m_KeyState[MAX_KC_NUM];
-		bool				m_MouseButtonState[MAX_MB_NUM];
-		bool				m_JoyStickButton[24];
-
-		int					m_JoyStickAxis[6];
-		float				m_DeadZone;
-
-		int					m_MouseRelX, m_MouseRelY;
-		int					m_MouseAbsX, m_MouseAbsY;
+	private:
+		T*						m_Object;			///< 事件接受对象
+		KeyHandlerFunc			m_KeyDownFunc;
+		KeyHandlerFunc			m_KeyUpFunc;
+		MouseMoveHandlerFunc	m_MouseMoveFunc;
+		MouseButtonHandlerFunc	m_MouseButtonDownFunc;
+		MouseButtonHandlerFunc	m_MouseButtonUpFunc;
 	};
+
+	class IInputSystem : public IPlugin
+	{
+	public:
+		PluginType GetPluginType() const { return PLUGIN_TYPE_INPUT_SYSTEM; }
+
+		/// 初始化输入系统
+		virtual void Initialize(RenderWindowHandle rw) = 0;
+
+		/// 关闭输入系统
+		virtual void Shutdown() = 0;
+
+		/// 捕获输入设备当前状态
+		virtual void CaptureDevice() = 0;
+
+		virtual void ResizeWindow(unsigned int width, unsigned int height) = 0;
+
+		/// 注册输入事件处理对象
+		virtual void SetEventHandler(IInputEventHandler* handler) = 0;
+
+		virtual bool GetKeyDown(KeyCode key) = 0;
+
+		virtual bool GetMouseButtonDown(MouseButtonID ButtonCode) = 0;
+		virtual int GetMousePosX() = 0;
+		virtual int GetMousePosY() = 0;
+
+		virtual int GetJoyStickAbs(int axis) = 0;
+	};
+
+	//class Input : public Singleton<Input>
+	//{
+	//	friend class Singleton<Input>;
+	//public:
+
+	//	void Initialize();
+	//	void Shutdown();
+
+	//	void CaptureDevice();
+
+	//	void ResizeWindow();
+
+	//	// 键盘状态
+	//	bool GetKeyDown(KeyCode key) const { return m_KeyState[key]; }
+	//	void SetKeyDown(KeyCode key, bool val) { m_KeyState[key] = val; }
+
+	//	// 鼠标按钮状态
+	//	bool GetMouseButtonDown(MouseButtonID ButtonCode) const { return m_MouseButtonState[ButtonCode]; }
+	//	void SetMouseButtonDown(MouseButtonID ButtonCode, bool val) { m_MouseButtonState[ButtonCode] = val; }
+
+	//	// 控制杆按键状态
+	//	bool GetJoyStickButtonDown(int button) const { return m_JoyStickButton[button]; }
+	//	void SetJoyStickButtonDown(int button, bool val) { m_JoyStickButton[button] = val; }
+
+	//	// 控制杆摇杆坐标
+	//	int GetJoyStickAbs(int axis) const { return m_JoyStickAxis[axis]; }
+	//	void SetJoyStickAbs(int axis, int val) { m_JoyStickAxis[axis] = val; }
+
+
+	//	float GetJoyStickDeadZone() const { return m_DeadZone; }
+	//	void SetJoyStickDeadZone(float deadZone) { m_DeadZone = deadZone; }
+
+	//	int GetMouseRelX() { return m_MouseRelX; }
+	//	void SetMouseRelX(int val) { m_MouseRelX = val; }
+	//	int GetMouseRelY() { return m_MouseRelY; }
+	//	void SetMouseRelY(int val) { m_MouseRelY = val; }
+
+	//	int GetMouseAbsX() { return m_MouseAbsX; }
+	//	void SetMouseAbsX(int val) { m_MouseAbsX = val; }
+	//	int GetMouseAbsY() { return m_MouseAbsY; }
+	//	void SetMouseAbsY(int val) { m_MouseAbsY = val; }
+
+	//protected:
+	//	Input();
+
+	//	bool				m_Initialized;
+
+	//	OIS::InputManager*	m_InputManager;
+	//	OIS::Keyboard*		m_Keyboard;
+	//	OIS::Mouse*			m_Mouse;
+	//	OIS::JoyStick*		m_JoyStick;
+
+	//	InputHandler		m_Handler;
+	//	bool				m_KeyState[MAX_KC_NUM];
+	//	bool				m_MouseButtonState[MAX_MB_NUM];
+	//	bool				m_JoyStickButton[24];
+
+	//	int					m_JoyStickAxis[6];
+	//	float				m_DeadZone;
+
+	//	int					m_MouseRelX, m_MouseRelY;
+	//	int					m_MouseAbsX, m_MouseAbsY;
+	//};
 }
 
 #endif

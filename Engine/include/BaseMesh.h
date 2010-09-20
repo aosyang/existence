@@ -13,16 +13,16 @@
 
 #include <vector>
 
-using namespace std;
+
 
 namespace Gen
 {
 	class IVertexBuffer;
-	class Material;
 	struct SkinnedVertexInfo;
 	class Skeleton;
 	class MeshElement;
 	class MeshBuilder;
+	class BaseMaterial;
 
 	// TODO: 创建一个static mesh类，使顶点无法修改，节约内存占用
 
@@ -76,7 +76,7 @@ namespace Gen
 		///		材质数目与子模型数目相同
 		/// @returns
 		///		成功获取材质返回指向材质的指针，如果索引超出材质范围则返回NULL
-		Material* GetMaterial(unsigned int index);
+		BaseMaterial* GetMaterial(unsigned int index);
 
 		/// 获取模型的包围球半径
 		inline float GetBoundingRadius() const { return m_BoundingRadius; }
@@ -132,8 +132,8 @@ namespace Gen
 		float					m_BoundingRadius;		///< 包围球半径
 		OBB						m_OBB;					///< 包围盒尺寸
 
-		vector<MeshElement*>	m_MeshElements;			///< 子网格元素集合
-		vector<Material*>		m_Materials;			///< 子网格元素材质列表
+		std::vector<MeshElement*>	m_MeshElements;			///< 子网格元素集合
+		std::vector<BaseMaterial*>	m_Materials;			///< 子网格元素材质列表
 
 		int						m_VertexNum;			///< 顶点数目
 		float*					m_VertexArray;			///< 顶点数组

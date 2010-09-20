@@ -15,15 +15,15 @@ namespace Gen
 		{
 		}
 
-		void SetTexture(DeviceTexture2D* texture)
-		{
-			AssertFatal(texture, "BaseRenderTarget::SetTexture(): Texture cannot be null");
-			AssertFatal(texture->GetType()==TEXTURE_TYPE_2D, "BaseRenderTarget::SetTexture(): GLRenderTargetFBO supports only target GL_TEXTURE_2D for now.");
-			m_Texture = static_cast<GLTexture*>(texture);
+		//void SetTexture(DeviceTexture2D* texture)
+		//{
+		//	AssertFatal(texture, "BaseRenderTarget::SetTexture(): Texture cannot be null");
+		//	AssertFatal(texture->GetType()==TEXTURE_TYPE_2D, "BaseRenderTarget::SetTexture(): GLRenderTargetFBO supports only target GL_TEXTURE_2D for now.");
+		//	m_Texture = static_cast<GLTexture*>(texture);
 
-			m_Width = texture->GetWidth();
-			m_Height = texture->GetHeight();
-		}
+		//	m_Width = texture->GetWidth();
+		//	m_Height = texture->GetHeight();
+		//}
 
 		DeviceTexture2D* GetTexture() const { return m_Texture; }
 
@@ -36,8 +36,8 @@ namespace Gen
 		}
 	protected:
 		GLTexture*		m_Texture;
-		unsigned int	m_Width;
-		unsigned int	m_Height;
+		//unsigned int	m_Width;
+		//unsigned int	m_Height;
 	};
 }
 

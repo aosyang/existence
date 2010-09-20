@@ -101,7 +101,7 @@ namespace Gen
 		ALint loop;
 		alGetSourcei(m_Source, AL_LOOPING, &loop);
 
-		return (bool)loop;
+		return (loop==AL_TRUE);
 	}
 
 	void ALAudioSource::SetPlaybackTime(float time)

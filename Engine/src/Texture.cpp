@@ -12,7 +12,7 @@
 #include "FileSystem.h"
 #include <fstream>
 
-using namespace std;
+
 
 namespace Gen
 {
@@ -92,7 +92,7 @@ namespace Gen
 		// 读取.ect立方体材质文件
 		// 去掉注释
 
-		ifstream fin(m_Filename.Data());
+		std::ifstream fin(m_Filename.Data());
 
 		if (!fin.is_open()) return false;
 

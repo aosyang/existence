@@ -40,6 +40,9 @@ namespace Gen
 
 		void SetAsVertexDataSource();
 
+		/// @copydoc IVertexBuffer::RenderPrimitive(PrimitiveType)
+		void RenderPrimitive(PrimitiveType type);
+
 	protected:
 		int				m_VertexFormat;
 
@@ -73,7 +76,7 @@ namespace Gen
 		void SetIndexSize(int size);
 
 		// 渲染多边形
-		void RenderPrimitive();
+		void RenderPrimitive(PrimitiveType type);
 	private:
 		unsigned int*		m_FaceArray;	///< 三角形数组
 		unsigned int		m_FaceNum;		///< 多边形数量

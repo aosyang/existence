@@ -6,6 +6,7 @@
 /// Copyright (c) 2009 - 2010 by Mwolf
 //-----------------------------------------------------------------------------------
 #include "GLVertexBufferObject.h"
+#include "GLEnums.h"
 
 namespace Gen
 {
@@ -45,7 +46,8 @@ namespace Gen
 		m_VBOVertices(0),
 		m_VBONormals(0),
 		m_VBOColors(0),
-		m_VBOTexCoords(0)
+		m_VBOTexCoords(0),
+		m_VertexNum(0)
 	{
 	}
 
@@ -64,6 +66,7 @@ namespace Gen
 		if (m_Initialized) return false;
 
 		m_VertexFormat = vertexFormat;
+		m_VertexNum = vertexNum;
 
 		if (m_VertexFormat & VFormat_Position)
 		{
@@ -105,6 +108,7 @@ namespace Gen
 			DELETE_VBO_BUFFER(m_VBONormals);
 			DELETE_VBO_BUFFER(m_VBOColors);
 			DELETE_VBO_BUFFER(m_VBOTexCoords);
+			m_VertexNum = 0;
 		}
 		m_Initialized = false;
 	}
@@ -176,15 +180,32 @@ namespace Gen
 		else
 			glDisableClientState(GL_COLOR_ARRAY);
 
-
-		vbo_glBindBuffer(GL_ARRAY_BUFFER, m_VBOTexCoords);
-		// TODO: 指定多重纹理的uv坐标
-		for (int i=0; i<8; i++)
+		
+		// TODO: 多重纹理...
+		if (m_VertexFormat & VFormat_Texcoord0)
 		{
-			glClientActiveTexture(GL_TEXTURE0 + i);
-			glTexCoordPointer(2, GL_FLOAT, 0, NULL);
-			glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+			vbo_glBindBuffer(GL_ARRAY_BUFFER, m_VBOTexCoords);
+			
+			for (int i=0; i<8; i++)
+			{
+				glClientActiveTexture(GL_TEXTURE0 + i);
+				glTexCoordPointer(2, GL_FLOAT, 0, NULL);
+				glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+			}
 		}
+		else
+		{
+			for (int i=0; i<8; i++)
+			{
+				glClientActiveTexture(GL_TEXTURE0 + i);
+				glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+			}
+		}
+	}
+
+	void GLVBOVertexBuffer::RenderPrimitive(PrimitiveType type)
+	{
+		glDrawArrays(GetGLPrimtiveType(type), 0, m_VertexNum);
 	}
 
 	// ------------------------ GLVBOIndexBuffer
@@ -245,14 +266,15 @@ namespace Gen
 		m_FaceNum = size;
 	}
 
-	void GLVBOIndexBuffer::RenderPrimitive()
+	void GLVBOIndexBuffer::RenderPrimitive(PrimitiveType type)
 	{
 		if (m_FaceNum)
 		{
 			// 使用索引缓冲对象
 			vbo_glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_VBOIndices);
 
-			glDrawElements(GL_TRIANGLES, m_FaceNum * 3, GL_UNSIGNED_INT, NULL);
+			// TODO: GL_TRIANGLES应当变成可以选择的多边形模式
+			glDrawElements(GetGLPrimtiveType(type), m_FaceNum * 3, GL_UNSIGNED_INT, NULL);
 		}
 	}
 

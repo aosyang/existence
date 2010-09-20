@@ -11,7 +11,6 @@
 namespace Gen
 {
 	MovableObjectBase::MovableObjectBase()
-		: m_Updated(false)
 	{
 		// OBB默认尺寸，长宽高各为1
 		m_OBB.localMin = Vector3f(-0.5f, -0.5f, -0.5f);
@@ -27,16 +26,7 @@ namespace Gen
 
 	void MovableObjectBase::Update(unsigned long deltaTime)
 	{
-		// 先标记自己为已更新，否则会造成循环引用
-		//   注：尽管如此，循环引用依旧会造成不正确的结果
-		m_Updated = true;
 		m_AABB.Reset();
-	}
-
-	// 对象在这个周期内是否已经被更新过
-	bool MovableObjectBase::IsUpdated()
-	{
-		return m_Updated;
 	}
 
 	void MovableObjectBase::SetPosition(const Vector3f& pos)
@@ -76,13 +66,4 @@ namespace Gen
 		return m_OBB;
 	}
 
-
-	bool MovableObjectBase::IsCulled(Frustum* frustum)
-	{
-		if (!frustum) return false;
-
-		if (frustum->IntersectsAABB(m_AABB)) return false;
-
-		return true;
-	}
 }

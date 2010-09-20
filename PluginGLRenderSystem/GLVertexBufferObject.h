@@ -39,12 +39,17 @@ namespace Gen
 
 		void SetAsVertexDataSource();
 
+		/// @copydoc IVertexBuffer::RenderPrimitive(PrimitiveType)
+		void RenderPrimitive(PrimitiveType type);
+
 	protected:
 		int					m_VertexFormat;
 		unsigned int		m_VBOVertices;
 		unsigned int		m_VBONormals;
 		unsigned int		m_VBOColors;
 		unsigned int		m_VBOTexCoords;
+
+		unsigned int		m_VertexNum;
 
 		bool				m_Initialized : 1;
 
@@ -72,7 +77,7 @@ namespace Gen
 		void SetIndexSize(int size);
 
 		// 渲染多边形
-		void RenderPrimitive();
+		void RenderPrimitive(PrimitiveType type);
 	private:
 		unsigned int		m_VBOIndices;	///< VBO索引对象
 		unsigned int		m_FaceNum;		///< 多边形数量

@@ -4,8 +4,7 @@ GameSkeletal::GameSkeletal()
  : m_Scene(NULL),
    m_Camera(NULL),
    m_Sky(NULL),
-   m_UIFps(NULL),
-   m_DebugRender(false)
+   m_UIFps(NULL)
 {
 }
 
@@ -51,7 +50,7 @@ void GameSkeletal::StartGame()
 	m_SkelMesh1->SetSkeleton(skel);
 	m_SkelMesh1->PlayAnimation("default");
 	m_SkelMesh1->SetMaterial(white, 0);
-	m_SkelMesh1->CreateLightableObject();
+	//m_SkelMesh1->CreateLightableObject();
 	m_SkelMesh1->SetPosition(Vector3f(-25.0f, 0.0f, -30.0f));
 
 	m_SkelMesh2 = FACTORY_CREATE(m_Scene, SkeletalMeshObject);
@@ -60,10 +59,17 @@ void GameSkeletal::StartGame()
 	m_SkelMesh2->PlayAnimation("default");
 	m_SkelMesh2->SetAnimationTime(5.0f);
 	m_SkelMesh2->SetMaterial(white, 0);
-	m_SkelMesh2->CreateLightableObject();
+	//m_SkelMesh2->AttachChildObject(m_SkelMesh1);
 	m_SkelMesh2->SetPosition(Vector3f(25.0f, 0.0f, -30.0f));
 
 	m_UIFps = EGUIManager::Instance().CreateTextUIControl();
+
+	InputEventHandler<GameSkeletal>* inputHandler =
+		new InputEventHandler<GameSkeletal>(this,
+											&GameSkeletal::OnKeyPressed,
+											NULL,
+											&GameSkeletal::OnMouseMoved);
+	Input->SetEventHandler(inputHandler);
 }
 
 void GameSkeletal::Shutdown()
@@ -71,13 +77,29 @@ void GameSkeletal::Shutdown()
 	delete m_Scene;
 }
 
-void GameSkeletal::OnKeyPressed(unsigned int key)
+void GameSkeletal::OnKeyPressed(KeyCode key)
 {
 	switch(key)
 	{
 	case KC_P:
-		m_DebugRender = !m_DebugRender;
+		static bool debugRender = false;
+		debugRender = !debugRender;
+		DebugRenderer::ToggleSceneObjectDebugRender(debugRender);
 		return;
+	}
+}
+
+void GameSkeletal::OnMouseMoved(int x, int y, int rel_x, int rel_y)
+{
+	// 按住鼠标右键调整视角
+	if (Input->GetMouseButtonDown(MB_Right))
+	{
+		float fx = -(float)rel_x / 5.0f;
+		float fy = -(float)rel_y / 5.0f;
+
+		System::Instance().CenterMouseCursor();
+
+		m_Camera->RotateLocal(fx, fy);
 	}
 }
 
@@ -109,7 +131,7 @@ void GameSkeletal::Update(unsigned long deltaTime)
 	char buf[1024] = "\0";
 
 	// 左Shift键加速移动
-	if (Input::Instance().GetKeyDown(KC_LSHIFT))
+	if (Input->GetKeyDown(KC_LSHIFT))
 		boost = 4.0f;
 	else
 		boost = 1.0f;
@@ -118,38 +140,27 @@ void GameSkeletal::Update(unsigned long deltaTime)
 	float right = 0.0f;
 
 	// W S A D控制摄像机移动
-	if (Input::Instance().GetKeyDown(KC_W))
+	if (Input->GetKeyDown(KC_W))
 		forward += 0.1f * deltaTime / 10.0f * boost;
-	if (Input::Instance().GetKeyDown(KC_S))
+	if (Input->GetKeyDown(KC_S))
 		forward += -0.1f * deltaTime / 10.0f * boost;
-	if (Input::Instance().GetKeyDown(KC_A))
+	if (Input->GetKeyDown(KC_A))
 		right += -0.1f * deltaTime / 10.0f * boost;
-	if (Input::Instance().GetKeyDown(KC_D))
+	if (Input->GetKeyDown(KC_D))
 		right += 0.1f * deltaTime / 10.0f * boost;
 
-	forward += -0.1f * deltaTime / 10.0f * boost * Input::Instance().GetJoyStickAbs(2) / 0x7FFF;
-	right += 0.1f * deltaTime / 10.0f * boost * Input::Instance().GetJoyStickAbs(3) / 0x7FFF;
+	//forward += -0.1f * deltaTime / 10.0f * boost * Input->GetJoyStickAbs(2) / 0x7FFF;
+	//right += 0.1f * deltaTime / 10.0f * boost * Input->GetJoyStickAbs(3) / 0x7FFF;
 
 	m_Camera->MoveLocal(forward, right, 0.0f);
 
-	if (Input::Instance().GetKeyDown(KC_ESCAPE))
+	if (Input->GetKeyDown(KC_ESCAPE))
 		Engine::Instance().SetQuitting(true);
 
-	// 按住鼠标右键调整视角
-	if (Input::Instance().GetMouseButtonDown(MB_Right))
-	{
-		float x = -(float)Input::Instance().GetMouseRelX() / 5.0f;
-		float y = -(float)Input::Instance().GetMouseRelY() / 5.0f;
-
-		System::Instance().CenterMouseCursor();
-
-		m_Camera->RotateLocal(x, y);
-	}
-
 	// 使用手柄控制当前摄像机
-	float x = -(float)Input::Instance().GetJoyStickAbs(1) / 0x7FFF * 0.1f * deltaTime;
-	float y = -(float)Input::Instance().GetJoyStickAbs(0) / 0x7FFF * 0.1f * deltaTime;
-	m_Camera->RotateLocal(x, y);
+	//float x = -(float)Input->GetJoyStickAbs(1) / 0x7FFF * 0.1f * deltaTime;
+	//float y = -(float)Input->GetJoyStickAbs(0) / 0x7FFF * 0.1f * deltaTime;
+	//m_Camera->RotateLocal(x, y);
 
 	static float angle = 0.0f;
 	angle += 0.001f * deltaTime;
@@ -172,14 +183,7 @@ void GameSkeletal::Update(unsigned long deltaTime)
 
 void GameSkeletal::RenderScene()
 {
-	RenderView rv;
-
-	rv.position = m_Camera->WorldTransform().GetPosition();
-	rv.viewMatrix = m_Camera->GetViewMatrix();
-	rv.projMatrix = m_Camera->GetProjMatrix();
-	rv.frustum = m_Camera->GetFrustum();
-
 	// 设定渲染视点
-	m_Scene->SetupRenderView(rv);
-	m_Scene->RenderScene(m_DebugRender);
+	m_Scene->SetupRenderView(m_Camera);
+	m_Scene->RenderScene();
 }

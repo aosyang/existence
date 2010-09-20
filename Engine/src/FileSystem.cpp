@@ -10,7 +10,7 @@
 #include "Debug.h"
 
 #include <vector>
-using namespace std;
+
 
 #if defined __PLATFORM_WIN32
 #include <shlwapi.h>
@@ -53,7 +53,7 @@ namespace Gen
 
 #elif defined __PLATFORM_LINUX
 		String s;
-		vector<String> tab;
+		std::vector<String> tab;
 
 		size_t len = path.Size();
 		size_t i;
@@ -132,7 +132,7 @@ namespace Gen
 		if (!tab.size())
 			tab.push_back(CORRECT_SLASH);
 
-		for (vector<String>::iterator iter=tab.begin();
+		for (std::vector<String>::iterator iter=tab.begin();
 			iter!=tab.end();
 			iter++)
 		{
@@ -203,7 +203,7 @@ namespace Gen
 		return result;
 	}
 
-	void FileSystem::FindFilesInDir(const String& basePath, vector<ResourceFileNameInfo>& foundFileList, bool recursive, const String& subPath)
+	void FileSystem::FindFilesInDir(const String& basePath, std::vector<ResourceFileNameInfo>& foundFileList, bool recursive, const String& subPath)
 	{
 		String fullPath = basePath + CORRECT_SLASH + subPath;
 

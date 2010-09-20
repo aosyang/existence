@@ -13,7 +13,7 @@
 namespace Gen
 {
 	Decal::Decal(SceneGraph* scene)
-	: RenderableObjectBase(scene),
+	: BaseClass(scene),
 	  m_Material(NULL)
 	{
 		m_VertexBuffer = Renderer::Instance().BuildVertexBuffer();
@@ -30,10 +30,21 @@ namespace Gen
 
 	void Decal::RenderSingleObject()
 	{
-		RenderableObjectBase::RenderSingleObject();
+		BaseClass::RenderSingleObject();
 
-		Renderer::Instance().SetupMaterial(m_Material);
-		Renderer::Instance().RenderPrimitives(m_VertexBuffer, m_IndexBuffer, m_WorldTransform);
+		RenderCommand cmd;
+		cmd.indexBuffer = m_IndexBuffer;
+		cmd.vertexBuffer = m_VertexBuffer;
+		cmd.primType = PRIM_TRIANGLES;
+		cmd.transform = m_WorldTransform;
+		cmd.material = m_Material;
+		cmd.renderOrder = m_RenderOrder;
+		cmd.sceneObj = this;
+
+		Renderer::Instance().SubmitRenderCommand(cmd);
+
+		//Renderer::Instance().SetupMaterial(m_Material);
+		//Renderer::Instance().RenderPrimitives(m_VertexBuffer, m_IndexBuffer, m_WorldTransform);
 	}
 	
 	void Decal::SetMaterial(Material* mat)
@@ -100,7 +111,7 @@ namespace Gen
 		m_IndexBuffer->Clear();
 		m_IndexBuffer->CreateBuffer(face, 2);
 
-		m_BoundingSphereRadius = m_Size * 0.5f;
+		//m_BoundingSphereRadius = m_Size * 0.5f;
 		m_OBB.localMax = Vector3f(m_Size * 0.5f, m_Size * 0.5f, m_Size * 0.5f);
 		m_OBB.localMin = Vector3f(-m_Size * 0.5f, -m_Size * 0.5f, -m_Size * 0.5f);
 	}

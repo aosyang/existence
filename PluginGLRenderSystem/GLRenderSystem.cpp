@@ -6,7 +6,6 @@
 /// Copyright (c) 2009 by Mwolf
 //-----------------------------------------------------------------------------------
 
-#include "GLRenderSystem.h"
 
 #include "Plugin.h"
 #include "Debug.h"
@@ -14,25 +13,20 @@
 #include "GLTexture.h"
 #include "GLCubeTexture.h"
 #include "MathUtil.h"
+#include "GLEnums.h"
+#include "ILight.h"
+
+#include "GLRenderSystem.h"
 #include "GLVertexArray.h"
 #include "GLVertexBufferObject.h"
 #include "GLRenderTargetFBO.h"
 #include "GLRenderTargetTexture.h"
+#include "CgEffect.h"
 
 #include "GL/glu.h"
 
 namespace Gen
 {
-	// gpu插件句柄
-	Module_t	g_GpuPluginHandle = NULL;
-
-	// gpu插件函数
-	CREATEGPUPLUGIN				g_CreateGpuPluginFunc = NULL;
-	DESTROYGPUPLUGIN			g_DestroyGpuPluginFunc = NULL;
-	LOADGPUPROGRAM				g_LoadGpuProgramFunc = NULL;
-	BINDGPUPROGRAM				g_BindGpuProgramFunc = NULL;
-	UNBINDGPUPROGRAM			g_UnbindGpuProgramFunc = NULL;
-
 
 	GLRenderer::GLRenderer()
 	:
@@ -47,6 +41,7 @@ namespace Gen
 		m_VertexBufferFactoryFunc(NULL),
 		m_IndexBufferFactoryFunc(NULL)
 	{
+		m_ModelMatrix.MakeIdentity();
 		m_ViewMatrix.MakeIdentity();
 	}
 
@@ -57,11 +52,6 @@ namespace Gen
 	RenderWindowHandle GLRenderer::GetRenderWindowHandle()
 	{
 		return m_WindowHandle;
-	}
-
-	void GLRenderer::SetGpuPluginName(const String& filename)
-	{
-		m_PluginName = filename;
 	}
 
 	bool GLRenderer::Initialize(RenderWindowParam* windowParam)
@@ -140,23 +130,6 @@ namespace Gen
 		AssertFatal(GLEW_OK == glewInit(), "GLRenderer::Initialize() : Failed to init glew.");
 		m_HardwareFeature.DetectFeature();
 
-		if (m_PluginName!="")
-		{
-			g_GpuPluginHandle = LoadModule(m_PluginName.Data());
-
-			if (g_GpuPluginHandle)
-			{
-				g_CreateGpuPluginFunc = (CREATEGPUPLUGIN)GetFunction(g_GpuPluginHandle, "CreateGpuPlugin");
-				g_DestroyGpuPluginFunc = (DESTROYGPUPLUGIN)GetFunction(g_GpuPluginHandle, "DestroyGpuPlugin");
-				g_LoadGpuProgramFunc = (LOADGPUPROGRAM)GetFunction(g_GpuPluginHandle, "LoadGpuProgram");
-				g_BindGpuProgramFunc = (BINDGPUPROGRAM)GetFunction(g_GpuPluginHandle, "BindGpuProgram");
-				g_UnbindGpuProgramFunc = (UNBINDGPUPROGRAM)GetFunction(g_GpuPluginHandle, "UnbindGpuProgram");
-
-				// 初始化插件
-				(*g_CreateGpuPluginFunc)();
-			}
-		}
-
 		glShadeModel(GL_SMOOTH);								// Enable Smooth Shading
 		glClearDepth(1.0f);										// Depth Buffer Setup
 
@@ -206,15 +179,17 @@ namespace Gen
 		if (!m_HardwareFeature.supportedNonPowOf2Texture)
 			GLTexture::m_sForcePowOfTwo = true;
 
+		// 初始化CgGL
+		m_CgGLDevice.Initialize();
+		CgGLDevice::m_sGLRenderer = this;
+
 		return true;
 	}
 
 	void GLRenderer::Shutdown()
 	{
 		UnloadGpuPrograms();
-
-		if (g_GpuPluginHandle)
-			(*g_DestroyGpuPluginFunc)();
+		m_CgGLDevice.Shutdown();
 
 #if defined __PLATFORM_WIN32
 		if (m_hRC)												// Do We Have A Rendering Context?
@@ -256,12 +231,23 @@ namespace Gen
 		glViewport(left, bottom, width, height);
 	}
 
+	void GLRenderer::SetModelMatrix(const Matrix4& modelMat)
+	{
+		glMatrixMode(GL_MODELVIEW);
+
+		float glMat[16];
+		BuildGLMatrix(m_ViewMatrix * modelMat, glMat);
+		glLoadMatrixf(glMat);
+
+		m_ModelMatrix = modelMat;
+	}
+
 	void GLRenderer::SetViewMatrix(const Matrix4& viewMat)
 	{
 		glMatrixMode(GL_MODELVIEW);
 
 		float glMat[16];
-		BuildGLMatrix(viewMat, glMat);
+		BuildGLMatrix(viewMat * m_ModelMatrix, glMat);
 		glLoadMatrixf(glMat);
 
 		// hack: 当RenderState移至Renderer中以后，删除这里
@@ -280,6 +266,10 @@ namespace Gen
 
 	void GLRenderer::ClearBuffer(bool color, bool depth, bool stencil)
 	{
+		// Hack: 这里有个未能解决的问题，在glx下面清除深度缓冲会崩溃
+#if defined __PLATFORM_LINUX
+		depth = false;
+#endif	// #if defined __PLATFORM_LINUX
 
 		GLbitfield clearMask = 0;
 		if (color) clearMask |= GL_COLOR_BUFFER_BIT;
@@ -437,19 +427,26 @@ namespace Gen
 		}
 	}
 
-	void GLRenderer::BeginRender()
+	void GLRenderer::BeginRender(IRenderTarget* rt)
 	{
-		//glMatrixMode(GL_MODELVIEW);
 
-		//float viewMat[16];
-		//BuildGLMatrix(m_ViewMatrix, viewMat);
-		//glLoadMatrixf(viewMat);
+		// 如果当前渲染目标与指定渲染目标一致，不作改动
+		if (m_RenderTarget!=rt)
+		{
 
-		// 灯光位置
-		// 注：必须在每次更新了ViewMatrix之后也更新灯光位置，否则灯光位置就会相对视点固定
+			if (rt)
+			{
+				// 绑定这个RT作为渲染目标
+				rt->BindRenderTarget();
+			}
+			else
+			{
+				// 取消绑定渲染目标，使用最后一次的RT恢复渲染到屏幕缓冲区
+				if (m_RenderTarget) m_RenderTarget->UnbindRenderTarget();
+			}
 
-		//float lightDir[] = { 0.2f, 1.0f, 0.5f, 0.0f };		// w = 0.0f 代表这是一个方向光
-		//glLightfv(GL_LIGHT0, GL_POSITION, lightDir);
+			m_RenderTarget = rt;
+		}
 	}
 
 	void GLRenderer::EndRender()
@@ -465,101 +462,16 @@ namespace Gen
 #endif	// #if defined __PLATFORM_WIN32
 	}
 
-	void GLRenderer::RenderVertexBuffer(IVertexBuffer* vbuffer, IIndexBuffer* ibuffer, const Matrix4& transform)
+	void GLRenderer::RenderVertexBuffer(IVertexBuffer* vbuffer, PrimitiveType type)
 	{
-		m_ModelMatrix = transform;
-
-		glMatrixMode(GL_MODELVIEW);
-		glPushMatrix();
-
-		float mat[16];
-		BuildGLMatrix(transform, mat);
-
-		glMultMatrixf(mat);
-
 		vbuffer->SetAsVertexDataSource();
-		ibuffer->RenderPrimitive();
-		glPopMatrix();
-
-		//glMatrixMode(GL_TEXTURE);
-		//glPopMatrix();
-		//glMatrixMode(GL_MODELVIEW);
+		vbuffer->RenderPrimitive(type);
 	}
 
-	void GLRenderer::RenderBox(const Vector3f& vMin, const Vector3f& vMax, const Matrix4& transform)
+	void GLRenderer::RenderVertexBuffer(IVertexBuffer* vbuffer, IIndexBuffer* ibuffer, PrimitiveType type)
 	{
-		glMatrixMode(GL_MODELVIEW);
-		glPushMatrix();
-
-		float mat[16];
-		BuildGLMatrix(transform, mat);
-
-		glMultMatrixf(mat);
-
-		// 左矩形
-		glBegin(GL_LINE_LOOP);
-		glVertex3f(vMin.x, vMin.y, vMin.z);
-		glVertex3f(vMin.x, vMax.y, vMin.z);
-		glVertex3f(vMin.x, vMax.y, vMax.z);
-		glVertex3f(vMin.x, vMin.y, vMax.z);
-		glEnd();
-
-		// 右矩形
-		glBegin(GL_LINE_LOOP);
-		glVertex3f(vMax.x, vMin.y, vMin.z);
-		glVertex3f(vMax.x, vMax.y, vMin.z);
-		glVertex3f(vMax.x, vMax.y, vMax.z);
-		glVertex3f(vMax.x, vMin.y, vMax.z);
-		glEnd();
-
-		// 连接剩下四条线
-		glBegin(GL_LINES);
-		glVertex3f(vMin.x, vMin.y, vMin.z);
-		glVertex3f(vMax.x, vMin.y, vMin.z);
-
-		glVertex3f(vMin.x, vMax.y, vMin.z);
-		glVertex3f(vMax.x, vMax.y, vMin.z);
-
-		glVertex3f(vMin.x, vMax.y, vMax.z);
-		glVertex3f(vMax.x, vMax.y, vMax.z);
-
-		glVertex3f(vMin.x, vMin.y, vMax.z);
-		glVertex3f(vMax.x, vMin.y, vMax.z);
-		glEnd();
-
-		glPopMatrix();
-	}
-
-	void GLRenderer::RenderSphere(const Vector3f& point, float radius, unsigned int segment)
-	{
-		glBegin(GL_LINE_LOOP);
-		for (unsigned int i=0; i<segment; i++)
-		{
-			glVertex3f(point.x, point.y + radius * cos(float(i)/segment * Math::k2Pi), point.z + radius * sin(float(i)/segment * Math::k2Pi));
-		}
-		glEnd();
-
-		glBegin(GL_LINE_LOOP);
-		for (unsigned int i=0; i<segment; i++)
-		{
-			glVertex3f(point.x + radius * sin(float(i)/segment * Math::k2Pi), point.y + radius * cos(float(i)/segment * Math::k2Pi), point.z);
-		}
-		glEnd();
-
-		glBegin(GL_LINE_LOOP);
-		for (unsigned int i=0; i<segment; i++)
-		{
-			glVertex3f(point.x + radius * sin(float(i)/segment * Math::k2Pi), point.y, point.z + radius * cos(float(i)/segment * Math::k2Pi));
-		}
-		glEnd();
-	}
-
-	void GLRenderer::RenderLine(const Vector3f& begin, const Vector3f& end)
-	{
-		glBegin(GL_LINES);
-		glVertex3fv(begin.GetArray());
-		glVertex3fv(end.GetArray());
-		glEnd();
+		vbuffer->SetAsVertexDataSource();
+		ibuffer->RenderPrimitive(type);
 	}
 
 	void GLRenderer::SetAmbientColor(const Color4f& color)
@@ -576,25 +488,6 @@ namespace Gen
 	IDeviceTexture* GLRenderer::BuildCubeTexture()
 	{
 		return new GLCubeTexture();
-	}
-
-	IDeviceTexture* GLRenderer::BuildDepthTexture(const String& textureName, unsigned int width, unsigned int height)
-	{
-		//// TODO: 纹理类结构发生变化，这里需要修改
-		//if(m_TextureList.find(textureName) != m_TextureList.end())
-		//{
-		//	delete m_TextureList[textureName];
-		//}
-
-		//GLTexture* tex = new GLTexture();
-
-		//m_TextureList[textureName] = tex;
-		//glBindTexture(GL_TEXTURE_2D, tex->GetGLTextureID());
-		//glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, width, height, 0,
-		//	GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, NULL);
-
-		//return tex;
-		return NULL;
 	}
 
 	void GLRenderer::SetVertexColor(const Color4f& color)
@@ -659,8 +552,6 @@ namespace Gen
 
 	IGpuProgram* GLRenderer::LoadGpuProgram(const String& filename, const String& entry, GpuProgramType type)
 	{
-		if (!g_GpuPluginHandle) return NULL;
-
 		GpuProgramInfo info;
 		info.filename = filename;
 		info.entry = entry;
@@ -672,7 +563,7 @@ namespace Gen
 			return NULL;
 		}
 
-		IGpuProgram* program = (*g_LoadGpuProgramFunc)(filename, entry, type);
+		IGpuProgram* program = m_CgGLDevice.LoadGpuProgramFromFile(filename, entry, type);
 		m_GpuPrograms[info] = program;
 
 		return program;
@@ -681,8 +572,6 @@ namespace Gen
 	// 获取一个已有Shader
 	IGpuProgram* GLRenderer::GetGpuProgram(const String& filename, const String& entry, GpuProgramType type)
 	{
-		if (!g_GpuPluginHandle) return NULL;
-
 		GpuProgramInfo info;
 		info.filename = filename;
 		info.entry = entry;
@@ -692,6 +581,26 @@ namespace Gen
 			return NULL;
 
 		return m_GpuPrograms[info];
+	}
+
+	void GLRenderer::EnableGpuProfile(GpuProfile profile)
+	{
+		m_CgGLDevice.EnableProfile(profile);
+	}
+	
+	void GLRenderer::DisableGpuProfile(GpuProfile profile)
+	{
+		m_CgGLDevice.DisableProfile(profile);
+	}
+
+	void GLRenderer::BindGpuProgram(IGpuProgram* program)
+	{
+		m_CgGLDevice.BindCgProgram(program);
+	}
+
+	IEffect* GLRenderer::LoadEffect(const String& filename)
+	{
+		return m_CgGLDevice.LoadCgEffectFromFile(filename);
 	}
 
 	int GLRenderer::GetMaxLightsNumber()
@@ -763,26 +672,9 @@ namespace Gen
 	{
 		if (m_HardwareFeature.supportedFBO)
 			return new GLRenderTargetFBO();
-		return new GLRenderTargetTexture();
-	}
 
-	// 指定渲染目标
-	void GLRenderer::BindRenderTarget(IRenderTarget* rt)
-	{
-		AssertFatal(!m_RenderTarget, "GLRenderer::BindRenderTarget(): A render target has been assigned already.");
-		AssertFatal(rt, "GLRenderer::BindRenderTarget(): Unable to deal with a null render target.");
-
-		m_RenderTarget = rt;
-		rt->BindRenderTarget();
-	}
-
-	// 解除渲染目标，重新渲染到后台缓冲
-	void GLRenderer::UnbindRenderTarget()
-	{
-		AssertFatal(m_RenderTarget, "GLRenderer::UnbindRenderTarget(): Function called without a render target being assigned.");
-
-		m_RenderTarget->UnbindRenderTarget();
-		m_RenderTarget = NULL;
+		return NULL;
+		//return new GLRenderTargetTexture();
 	}
 
 	//-----------------------------------------------------------------------------------
@@ -817,15 +709,15 @@ namespace Gen
 			}
 	}
 
-	void GLRenderer::BindTextureRenderState(const TextureRenderState& texState, unsigned int texUnit)
+	void GLRenderer::BindTextureRenderState(IDeviceTexture* deviceTex, const TextureRenderState& texState, unsigned int texUnit)
 	{
 		// TODO: 将这个函数移植Renderer中
 		ToggleTexture(true, texUnit);
 
 		IDeviceTexture* texture;
-		if (texState.texture)
+		if (deviceTex)
 		{
-			texture = texState.texture;
+			texture = deviceTex;
 			//}
 			//else
 			//{
@@ -972,95 +864,6 @@ namespace Gen
 
 	}
 
-	void GLRenderer::BindGpuProgram(IGpuProgram* program, GpuProgramType type)
-	{
-		if (g_GpuPluginHandle)
-		{
-			//Matrix4 mvp = m_ProjMatrix * m_ViewMatrix * m_ModelMatrix;
-			//program->SetMatrix4Param("autoMatModelViewProj", mvp);
-
-			//(g_BindGpuProgramFunc)(program, type);
-		}
-	}
-
-	void GLRenderer::UnbindGpuProgram(GpuProgramType type)
-	{
-		if (g_GpuPluginHandle)
-		{
-			(g_UnbindGpuProgramFunc)(type);
-		}
-	}
-
-
-	GLint GLRenderer::GetFilterType(int type)
-	{
-		switch (type)
-		{
-		case FILTER_TYPE_NEAREST:
-			return GL_NEAREST;
-		case FILTER_TYPE_LINEAR:
-			return GL_LINEAR;
-		case FILTER_TYPE_NEAREST_MIPMAP_NEAREST:
-			return GL_NEAREST_MIPMAP_NEAREST;
-		case FILTER_TYPE_LINEAR_MIPMAP_NEAREST:
-			return GL_LINEAR_MIPMAP_NEAREST;
-		case FILTER_TYPE_NEAREST_MIPMAP_LINEAR:
-			return GL_NEAREST_MIPMAP_LINEAR;
-		case FILTER_TYPE_LINEAR_MIPMAP_LINEAR:
-			return GL_LINEAR_MIPMAP_LINEAR;
-		}
-
-		// 默认返回Nearest模式
-		return GL_NEAREST;
-	}
-
-	GLint GLRenderer::GetBlendFactor(int factor)
-	{
-		switch (factor)
-		{
-		case BLEND_FACTOR_ZERO:
-			return GL_ZERO;
-		case BLEND_FACTOR_ONE:
-			return GL_ONE;
-		case BLEND_FACTOR_SRC_COLOR:
-			return GL_SRC_COLOR;
-		case BLEND_FACTOR_ONE_MINUS_SRC_COLOR:
-			return GL_ONE_MINUS_SRC_COLOR;
-		case BLEND_FACTOR_SRC_ALPHA:
-			return GL_SRC_ALPHA;
-		case BLEND_FACTOR_ONE_MINUS_SRC_ALPHA:
-			return GL_ONE_MINUS_SRC_ALPHA;
-		case BLEND_FACTOR_DST_ALPHA:
-			return GL_DST_ALPHA;
-		case BLEND_FACTOR_ONE_MINUS_DST_ALPHA:
-			return GL_ONE_MINUS_DST_ALPHA;
-		case BLEND_FACTOR_DST_COLOR:
-			return GL_DST_COLOR;
-		case BLEND_FACTOR_ONE_MINUS_DST_COLOR:
-			return GL_ONE_MINUS_DST_COLOR;
-		case BLEND_FACTOR_SRC_ALPHA_SATURATE:
-			return GL_SRC_ALPHA_SATURATE;
-		}
-
-		// 传递其他非法参数，返回zero
-		return BLEND_FACTOR_ZERO;
-	}
-
-	GLint GLRenderer::GetTextureEnvironmentMode(int mode)
-	{
-		switch (mode)
-		{
-		case ENV_MODE_MODULATE:
-			return GL_MODULATE;
-		case ENV_MODE_REPLACE:
-			return GL_REPLACE;
-		case ENV_MODE_ADD:
-			return GL_ADD;
-		}
-
-		return GL_MODULATE;
-	}
-
 	//void GLRenderer::SetupMaterialWhite()
 	//{
 	//	for (int i=1; i<8; i++)
@@ -1091,7 +894,7 @@ namespace Gen
 		m_GpuPrograms.clear();
 	}
 
-	IRenderDevice* CreateRenderSystem()
+	IPlugin* CreatePluginInstance()
 	{
 		return new GLRenderer;
 	}

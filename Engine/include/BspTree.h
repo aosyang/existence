@@ -16,7 +16,7 @@
 #include "BspTriangle.h"
 
 #include <vector>
-using namespace std;
+
 
 namespace Gen
 {
@@ -41,10 +41,10 @@ namespace Gen
 
 		// add a BspTriangle to the tree
 		void AddTriangle( const BspTriangle& in );
-		void AddPolygonList( vector< BspTriangle >& in );
+		void AddPolygonList( std::vector< BspTriangle >& in );
 
 		void TraverseTree(
-			vector< BspTriangle* >* polyList,
+			std::vector< BspTriangle* >* polyList,
 			const Vector3f& loc );
 
 		// 线段与BSP树是否有交点
@@ -72,14 +72,14 @@ namespace Gen
 			bool           m_bIsLeaf;
 			bool           m_bIsSolid;
 
-			vector< BspTriangle > m_coplanarList;
+			std::vector< BspTriangle > m_coplanarList;
 
-			static int BestIndex( vector< BspTriangle >& polyList );
+			static int BestIndex( std::vector< BspTriangle >& polyList );
 
 		public:
 			BspNode( bool bIsSolid );                            // leaf constructor
 			BspNode( const BspTriangle& in );                // node constructor
-			BspNode( vector< BspTriangle >& in );            // node constructor
+			BspNode( std::vector< BspTriangle >& in );            // node constructor
 			~BspNode();
 
 			// we need to handle copying
@@ -89,7 +89,7 @@ namespace Gen
 			void AddTriangle( const BspTriangle& in );
 
 			void TraverseTree(
-				vector< BspTriangle* >* polyList,
+				std::vector< BspTriangle* >* polyList,
 				const Vector3f& loc );
 
 			bool IsLeaf()

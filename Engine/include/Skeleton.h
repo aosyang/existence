@@ -17,7 +17,7 @@
 #include <map>
 #include <set>
 
-using namespace std;
+
 
 namespace Gen
 {
@@ -104,7 +104,7 @@ namespace Gen
 		int				m_KeyFrameCount;		///< 关键帧数量
 		int				m_TicksPerSample;		///< 每采样tick数
 
-		typedef map<int, JointPoseAnimation*>	JointSet;
+		typedef std::map<int, JointPoseAnimation*>	JointSet;
 		JointSet			m_JointAnimationSet;
 
 	};
@@ -138,10 +138,10 @@ namespace Gen
 		// 每个顶点与骨骼对应的信息
 
 		SkeletalJoint*						m_RootJoint;		///< 根关节
-		typedef map<int, SkeletalJoint*>	JointList;
+		typedef std::map<int, SkeletalJoint*>	JointList;
 		JointList							m_JointList;		///< 关节列表，以标号为索引记录该骨骼拥有的全部关节
 
-		typedef map<const String, SkeletalAnimation*>	SkelAnimSet;
+		typedef std::map<const String, SkeletalAnimation*>	SkelAnimSet;
 		SkelAnimSet							m_AnimationSet;		///< 动画集合
 	};
 }

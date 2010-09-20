@@ -15,7 +15,7 @@
 #include <vector>
 #include <set>
 
-using namespace std;
+
 
 namespace Gen
 {
@@ -66,7 +66,7 @@ namespace Gen
 
 		// 在指定路径下搜索文件
 		// 注：路径必须是一个有效路径(即操作系统可识别的路径)
-		void FindFilesInDir(const String& basePath, vector<ResourceFileNameInfo>& foundFileList, bool recursive = false, const String& subPath = "");
+		void FindFilesInDir(const String& basePath, std::vector<ResourceFileNameInfo>& foundFileList, bool recursive = false, const String& subPath = "");
 
 		// 获取一个文件的扩展名，包括'.'
 		const String GetExtension(const String& filename) const;
@@ -79,7 +79,7 @@ namespace Gen
 		String	m_DataPath;			///< data相对路径
 		String	m_DataFullPath;		///< data绝对路径
 
-		set<String>		m_IgnoreList;
+		std::set<String>		m_IgnoreList;
 	};
 }
 

@@ -11,7 +11,7 @@
 #include <crtdbg.h>
 #include <fstream>
 
-using namespace std;
+
 #endif // #if defined __PLATFORM_WIN32
 
 namespace Gen
@@ -23,7 +23,7 @@ namespace Gen
 #if defined __PLATFORM_WIN32
 			_CrtSetDbgFlag ( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF );
 
-			ifstream fs;
+			std::ifstream fs;
 			fs.open("debugalloc.cfg");
 
 			if (!fs.is_open())

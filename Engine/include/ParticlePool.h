@@ -10,14 +10,14 @@
 #define _PARTICLEPOOL_H
 
 #include "IVertexBuffer.h"
-#include "RenderableObjectBase.h"
+#include "GameObject.h"
 #include "Particle.h"
 #include "Material.h"
 #include "ParticleEmitter.h"
 #include <list>
 #include <vector>
 
-using namespace std;
+
 
 namespace Gen
 {
@@ -25,10 +25,10 @@ namespace Gen
 
 	bool ParticleComparer(Particle lhs, Particle rhs);
 
-	class ParticlePool : public RenderableObjectBase
+	class ParticlePool : public GameObject
 	{
 		friend class ParticleEmitter;
-		DECLARE_FACTORY_OBJECT(ParticlePool, RenderableObjectBase);
+		DECLARE_FACTORY_OBJECT(ParticlePool, GameObject);
 	public:
 		// ----- Overwrite ISceneObject
 
@@ -36,13 +36,16 @@ namespace Gen
 
 		void Update(unsigned long deltaTime);
 
-		// ----- Overwrite IRenderableObject
-
+		// ----- Overwrite SceneObject
+	protected:
 		void RenderSingleObject();
 
+		//void DebugRender();
+
+	public:
 		// ----- ParticlePool Methods
-		inline Material* GetMaterial() const { return m_Material; }
-		void SetMaterial(Material* mat);
+		inline BaseMaterial* GetMaterial() const { return m_Material; }
+		void SetMaterial(BaseMaterial* mat);
 
 		// 池中粒子是否已满
 		bool IsFull() const { return (m_ActiveParticleCount>=m_PoolCapability); }
@@ -52,16 +55,16 @@ namespace Gen
 	private:
 		IVertexBuffer*		m_VertexBuffer;
 		IIndexBuffer*		m_IndexBuffer;
-		Material*			m_Material;
+		BaseMaterial*		m_Material;
 		ParticleEmitter*	m_Emitter;
 
 
 		unsigned int		m_PoolCapability;
 		unsigned int		m_ActiveParticleCount;
 
-		list<unsigned int>	m_FreeOffset;
+		std::list<unsigned int>	m_FreeOffset;
 
-		vector<Particle>		m_Particles;
+		std::vector<Particle>		m_Particles;
 
 		bool	m_SortByZOrder;
 		bool	m_VanishOnEmpty;		///< 粒子生命结束，销毁粒子池

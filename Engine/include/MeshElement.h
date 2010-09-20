@@ -16,7 +16,7 @@
 
 #include <fstream>
 
-using namespace std;
+
 
 namespace Gen
 {

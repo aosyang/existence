@@ -123,6 +123,8 @@ namespace Gen
 			return Vector3f(m[0][3], m[1][3], m[2][3]);
 		}
 
+		static Matrix4 BuildPrespectiveProjMatrix(float fovy, float aspect, float _near, float _far);
+
 		// 生成透视投影矩阵
 		static Matrix4 BuildPerspectiveProjection(float left, float right, float bottom, float top, float znear, float zfar);
 

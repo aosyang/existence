@@ -100,11 +100,8 @@ public:
 
 	bool OnNotifyQuitting();
 
-	void OnKeyPressed(unsigned int key);
-	void OnKeyReleased(unsigned int key) {}
-
-	void OnMousePressed(unsigned int id);
-	void OnMouseReleased(unsigned int id) {}
+	void OnKeyPressed(KeyCode key);
+	void OnMouseMoved(int x, int y, int rel_x, int rel_y);
 
 	void OnResizeWindow(unsigned int width, unsigned int height);
 

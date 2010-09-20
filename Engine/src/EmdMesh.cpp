@@ -10,7 +10,7 @@
 #include "MeshElement.h"
 #include <fstream>
 
-using namespace std;
+
 
 namespace Gen
 {
@@ -28,14 +28,17 @@ namespace Gen
 		BaseMesh::LoadImpl();
 
 		// TODO: 文件读取到内存中，通过指针访问
-		ifstream fin;
-		fin.open(m_Filename.Data(), ios_base::in|ios_base::binary);
+		std::ifstream fin;
+		fin.open(m_Filename.Data(), std::ios_base::in|std::ios_base::binary);
 
 		if (!fin.is_open())
 			return false;
 
 		char header[4];
 		fin.read((char*)header, 4);
+
+		Log.OutputTime();
+		Log << "Loading mesh from " << m_Filename << "\n";
 
 		if (strncmp(header, "EMDL", 4)!=0)		// No header, maybe old format
 		{
@@ -82,7 +85,7 @@ namespace Gen
 		skinName = m_Filename;
 		skinName.Replace(pos - 2, 3, "esk");
 
-		ifstream skinfin(skinName.Data());
+		std::ifstream skinfin(skinName.Data());
 
 		// 没有蒙皮就算了
 		if (skinfin.is_open())
@@ -121,7 +124,7 @@ namespace Gen
 	}
 
 	// 读入0.20版本的mesh格式
-	bool EmdMesh::LoadMesh_020(ifstream& fin)
+	bool EmdMesh::LoadMesh_020(std::ifstream& fin)
 	{
 		unsigned int materialCount = 1;	// 注：对于没有材质的模型，默认子模型数量为1
 		unsigned int lump;
@@ -144,7 +147,7 @@ namespace Gen
 						fin.read(matName, sizeof(char) * len);
 						matName[len] = 0;
 
-						Material* mat;
+						BaseMaterial* mat;
 						mat = MaterialManager::Instance().GetByName(matName);
 
 						AddMaterial(mat);

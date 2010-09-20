@@ -13,12 +13,12 @@
 
 #include <set>
 
-using namespace std;
+
 
 namespace Gen
 {
 	// TODO FIXME: 这方法无法保证手动重新SetZOrder的控件正确排序
-	class UIObjectComparer : public greater<BaseUIObject*>
+	class UIObjectComparer : public std::greater<BaseUIObject*>
 	{
 	public:
 		bool operator() (BaseUIObject* lhs,BaseUIObject* rhs) const
@@ -34,7 +34,7 @@ namespace Gen
 		}
 	};
 
-	typedef set<BaseUIObject*, UIObjectComparer> ChildrenUIObjectsSet;
+	typedef std::set<BaseUIObject*, UIObjectComparer> ChildrenUIObjectsSet;
 
 	class UIRootObject : public ISceneObject
 	{

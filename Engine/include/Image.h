@@ -11,7 +11,7 @@
 
 #include "EString.h"
 
-using namespace std;
+
 
 #include "FreeImage/freeimage.h"
 

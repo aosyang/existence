@@ -13,18 +13,18 @@
 
 namespace Gen
 {
-	class IRenderTarget
+	class IRenderTarget : public IDeviceTexture
 	{
 	public:
-		virtual ~IRenderTarget() {}
 
-		// 指定RT的渲染目的纹理
-		virtual void SetTexture(DeviceTexture2D* texture) = 0;
-		virtual DeviceTexture2D* GetTexture() const = 0;
+		// 注：不要在BeginRender和EndRender范围内调用这个函数
+		virtual void BuildRenderTarget(unsigned int width, unsigned int height, unsigned int bpp) = 0;
 
 		virtual void BindRenderTarget() = 0;
 		virtual void UnbindRenderTarget() = 0;
-		virtual void GenerateMipmap() = 0;
+		//virtual void GenerateMipmap() = 0;
+
+		virtual void Resize(unsigned int width, unsigned int height) = 0;
 	};
 
 }

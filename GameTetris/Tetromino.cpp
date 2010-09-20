@@ -218,8 +218,8 @@ bool Tetromino::Apply()
 	// TODO: 创建新的Block之前需要将旧的Block保存起来，方便退出程序时进行删除
 	BuildShape();
 
-	IAudioBuffer* buffer = Engine::Instance().AudioSystem()->GetAudioBuffer("down.wav");
-	Engine::Instance().AudioSystem()->CreateSourceInstance(buffer, Vector3f(0.0f, 0.0f, 0.0f));
+	//IAudioBuffer* buffer = Engine::Instance().AudioSystem()->GetAudioBuffer("down.wav");
+	//Engine::Instance().AudioSystem()->CreateSourceInstance(buffer, Vector3f(0.0f, 0.0f, 0.0f));
 
 	// GameOver的判定
 	if (!TryPosition(m_Position, m_RotType))

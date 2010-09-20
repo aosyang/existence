@@ -38,7 +38,7 @@ namespace Gen
 	}
 
 	ParticlePool::ParticlePool(SceneGraph* scene)
-	: RenderableObjectBase(scene),
+	: BaseClass(scene),
 	  m_Material(NULL),
 	  m_PoolCapability(100),
 	  m_ActiveParticleCount(0),
@@ -54,7 +54,7 @@ namespace Gen
 
 		m_VertexBuffer = Renderer::Instance().BuildVertexBuffer();
 		m_IndexBuffer = Renderer::Instance().BuildIndexBuffer();
-		m_VertexBuffer->CreateBuffer(VFormat_Position/*|VFormat_Normal*/|VFormat_Color|VFormat_Texcoord0, NULL, NULL, NULL, NULL, 4 * m_PoolCapability);
+		m_VertexBuffer->CreateBuffer(VFormat_Position|VFormat_Normal|VFormat_Color|VFormat_Texcoord0, NULL, NULL, NULL, NULL, 4 * m_PoolCapability);
 		m_IndexBuffer->CreateBuffer(NULL, 2 * m_PoolCapability);
 		m_IndexBuffer->SetIndexSize(0);
 	}
@@ -65,7 +65,7 @@ namespace Gen
 
 	void ParticlePool::Destroy()
 	{
-		RenderableObjectBase::Destroy();
+		BaseClass::Destroy();
 
 		SAFE_DELETE(m_VertexBuffer);
 		SAFE_DELETE(m_IndexBuffer);
@@ -73,19 +73,17 @@ namespace Gen
 
 	void ParticlePool::Update(unsigned long deltaTime)
 	{
-		RenderableObjectBase::Update(deltaTime);
+		BaseClass::Update(deltaTime);
 
 		int activeCount = 0;
 
 		// 更新所有粒子
-		vector<Particle>::iterator iter;
+		std::vector<Particle>::iterator iter;
 		for (iter=m_Particles.begin(); iter!=m_Particles.end(); iter++)
 		{
-			if (iter->m_Active)
+			if (iter->AdvanceTime(deltaTime))
 			{
-				iter->Update(deltaTime);
-
-				float bound = Math::Max(iter->m_Scale * iter->m_ScreenScaleX, iter->m_Scale * iter->m_ScreenScaleY);
+				float bound = Math::Max(iter->scale * iter->m_ScreenScaleX, iter->scale * iter->m_ScreenScaleY);
 				Vector3f size = Vector3f(bound, bound, bound) * 0.5f;
 				AABB aabb(iter->m_Position - size, iter->m_Position + size);
 				m_AABB.Expand(aabb);
@@ -102,7 +100,7 @@ namespace Gen
 
 	void ParticlePool::RenderSingleObject()
 	{
-		RenderableObjectBase::RenderSingleObject();
+		BaseClass::RenderSingleObject();
 
 		matView = Renderer::Instance().GetViewMatrix();
 		matViewInv = matView.GetInverseMatrix();
@@ -114,11 +112,35 @@ namespace Gen
 		BuildVertexData();
 
 		// TODO: 这样的粒子池不能够进行渲染，否则粒子方向会发生错误
-		Renderer::Instance().SetupMaterial(m_Material);
-		Renderer::Instance().RenderPrimitives(m_VertexBuffer, m_IndexBuffer, m_WorldTransform);
+		//Renderer::Instance().SetupMaterial(m_Material);
+		//Renderer::Instance().RenderPrimitives(m_VertexBuffer, m_IndexBuffer, m_WorldTransform);
+
+		RenderCommand cmd;
+		cmd.indexBuffer = m_IndexBuffer;
+		cmd.vertexBuffer = m_VertexBuffer;
+		cmd.primType = PRIM_TRIANGLES;
+		cmd.transform = m_WorldTransform;
+		cmd.material = m_Material;
+		cmd.renderOrder = m_RenderOrder;
+		cmd.sceneObj = this;
+
+		Renderer::Instance().SubmitRenderCommand(cmd);
 	}
 
-	void ParticlePool::SetMaterial(Material* mat)
+	//void ParticlePool::DebugRender()
+	//{
+	//	RenderCommand cmd;
+	//	cmd.indexBuffer = m_IndexBuffer;
+	//	cmd.vertexBuffer = m_VertexBuffer;
+	//	cmd.primType = PRIM_LINES;
+	//	cmd.transform = m_WorldTransform;
+	//	cmd.renderOrder = m_RenderOrder;
+	//	cmd.sceneObj = this;
+
+	//	Renderer::Instance().SubmitRenderCommand(cmd);
+	//}
+
+	void ParticlePool::SetMaterial(BaseMaterial* mat)
 	{
 		m_Material = mat;
 		if (mat) mat->Trigger();
@@ -126,8 +148,14 @@ namespace Gen
 
 	void ParticlePool::BuildVertexData()
 	{
+		Matrix4 transform = matViewInv;
+		Matrix3 localRot = transform.GetRotationMatrix();
+
+		// 计算顶点法线信息
+		Vector3f normal = localRot * Vector3f(0.0f, 0.0f, 1.0f);
+
 		// 每帧构造新的顶点缓冲，用于渲染
-		vector<Particle>::iterator iter = m_Particles.begin();
+		std::vector<Particle>::iterator iter = m_Particles.begin();
 		for (unsigned int i=0; i<m_ActiveParticleCount; i++, iter++)
 		{
 			// 更新顶点颜色
@@ -143,32 +171,37 @@ namespace Gen
 				Vector3f(0.5f, -0.5f, 0.0f) };
 
 			float new_pos[12];
+			float new_normal[12];
 
-			Matrix3 rotMat = Matrix3::BuildRollRotationMatrix(iter->m_ZRotation);
+			// 生成billboard顶点的方向
+			transform.SetPosition(iter->m_Position);
+
+			Matrix3 rotMat = Matrix3::BuildRollRotationMatrix(iter->spin);
 			for (int j=0; j<4; j++)
 			{
-				Vector3f point = rotMat * (points[j] * iter->m_Scale);
+				// 根据缩放等属性计算顶点位置信息
+				Vector3f point = rotMat * (points[j] * iter->scale);
 				//point.z = iter->m_ZOffset;
 				point.x *= iter->m_ScreenScaleX;
 				point.y *= iter->m_ScreenScaleY;
-
-				// 生成billboard顶点的方向
-				Matrix4 transform = matViewInv;
-				transform.SetPosition(iter->m_Position);
 
 				point = transform * point;
 
 				//point += iter->m_Position;
 				memcpy(&new_pos[j*3], point.GetArray(), sizeof(float) * 3);
+
+				memcpy(&new_normal[j*3], normal.GetArray(), sizeof(float) * 3);
 			}
 
 			m_VertexBuffer->ModifyVertexData(VFormat_Position, 12 * i/*iter->m_VertexOffset*/, sizeof(float) * 12, new_pos);
+			m_VertexBuffer->ModifyVertexData(VFormat_Normal, 12 * i, sizeof(float) * 12, new_normal);
 
 			float uv[] = { 0.0f, 1.0f,
 				1.0f, 1.0f,
 				0.0f, 0.0f,
 				1.0f, 0.0f };
 			m_VertexBuffer->ModifyVertexData(VFormat_Texcoord0, 8 * i, sizeof(float) * 8, uv);
+
 		}
 
 		// 更新索引缓冲数据，处理有效粒子数目变化的情况
@@ -192,20 +225,24 @@ namespace Gen
 
 		bool done = false;
 
-		vector<Particle>::iterator iter;
+		// 遍历粒子列表，如果有已经结束生命周期的粒子，重新利用它
+		std::vector<Particle>::iterator iter;
 		for (iter=m_Particles.begin(); iter!=m_Particles.end(); iter++)
 		{
 			if (!iter->m_Active)
 			{
 				*iter = particle;
 				m_ActiveParticleCount++;
+				done = true;
 				break;
 			}
 		}
 
+		// 没有可用闲置粒子，容量允许时添加一个新的粒子
 		if (!done && m_Particles.size()<m_PoolCapability)
 		{
 			m_Particles.push_back(particle);
+			m_ActiveParticleCount++;
 		}
 	}
 }

@@ -13,7 +13,7 @@
 namespace Gen
 {
 	Billboard::Billboard(SceneGraph* scene)
-	: RenderableObjectBase(scene),
+	: BaseClass(scene),
 	  m_Radius(10.0f),
 	  m_ZRotataion(0.0f),
 	  m_ZOffset(0.0f),
@@ -65,7 +65,7 @@ namespace Gen
 	{
 		UpdateVertexData();
 
-		RenderableObjectBase::Update(deltaTime);
+		BaseClass::Update(deltaTime);
 
 		//float n = Renderer::Instance().GetFrustum()->SphereInFrustum(m_WorldTransform.GetPosition(), 1.0f) / 10.0f;
 		//SetColor(Color4f(1.0f, 1.0f, 1.0f, max(n, 0.0f)));
@@ -73,7 +73,7 @@ namespace Gen
 
 	void Billboard::RenderSingleObject()
 	{
-		RenderableObjectBase::RenderSingleObject();
+		BaseClass::RenderSingleObject();
 
 		Matrix4 invViewMatrix = Renderer::Instance().GetViewMatrix().GetInverseMatrix();
 		Matrix4 billboardingMat = m_WorldTransform;
@@ -81,10 +81,28 @@ namespace Gen
 		//identityRotMatrix.MakeIdentity();
 		billboardingMat.SetRotation(invViewMatrix.GetRotationMatrix());
 
-		Renderer::Instance().SetupMaterial(m_Material);
-		Renderer::Instance().RenderPrimitives(m_VertexBuffer, m_IndexBuffer, billboardingMat);
+		RenderCommand cmd;
+		cmd.indexBuffer = m_IndexBuffer;
+		cmd.vertexBuffer = m_VertexBuffer;
+		cmd.primType = PRIM_TRIANGLES;
+		cmd.transform = billboardingMat;
+		cmd.material = m_Material;
+		cmd.renderOrder = m_RenderOrder;
+		cmd.sceneObj = this;
+
+		Renderer::Instance().SubmitRenderCommand(cmd);
+
+		//Renderer::Instance().SetupMaterial(m_Material);
+		//Renderer::Instance().RenderPrimitives(m_VertexBuffer, m_IndexBuffer, billboardingMat);
 	}
-	void Billboard::SetMaterial(Material* mat)
+
+	void Billboard::SetMaterial(const String& matName)
+	{
+		BaseMaterial* mat = MaterialManager::Instance().GetByName(matName);
+		SetMaterial(mat);
+	}
+
+	void Billboard::SetMaterial(BaseMaterial* mat)
 	{
 		m_Material = mat;
 		if (mat) mat->Trigger();

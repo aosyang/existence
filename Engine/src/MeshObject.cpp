@@ -15,8 +15,8 @@
 namespace Gen
 {
 	MeshObject::MeshObject(SceneGraph* scene)
-	: m_Mesh(NULL),
-	  RenderableObjectBase(scene),
+	: BaseClass(scene),
+	  m_Mesh(NULL),
 	  m_SubMeshCount(0),
 	  m_Materials(NULL)
 	  //m_FrustumCulling(true)
@@ -30,7 +30,7 @@ namespace Gen
 
 	bool MeshObject::OnSave(SceneSerializerNode* node)
 	{
-		if (!RenderableObjectBase::OnSave(node)) return false;
+		if (!BaseClass::OnSave(node)) return false;
 
 		node->SaveAttribute("MeshName", m_Mesh->GetResourceName());
 		return true;
@@ -38,29 +38,15 @@ namespace Gen
 
 	void MeshObject::OnRestore(SceneSerializerNode* node)
 	{
-		RenderableObjectBase::OnRestore(node);
+		BaseClass::OnRestore(node);
 		SetMesh(MeshManager::Instance().GetByName(node->GetAttribute("MeshName")));
-		CreateLightableObject();
+		//CreateLightableObject();
 	}
 
-	void MeshObject::RenderSingleObject()
+	void MeshObject::SetMesh(const String& meshName)
 	{
-		RenderableObjectBase::RenderSingleObject();
-
-		if (m_Mesh)
-		{
-			// TODO: 以后使用这种方式渲染
-			//m_Mesh->RenderMesh(&m_WorldTransform);
-
-			for (int i=0; i<m_Mesh->GetElementCount(); i++)
-			{
-				MeshElement* elem = m_Mesh->GetElement(i);
-				Renderer::Instance().SetupMaterial(m_Materials[i]);
-				Renderer::Instance().RenderPrimitives(m_Mesh->GetVertexBuffer(),
-													  elem->GetIndexBuffer(),
-													  m_WorldTransform);
-			}
-		}
+		BaseMesh* mesh = MeshManager::Instance().GetByName(meshName);
+		SetMesh(mesh);
 	}
 
 	void MeshObject::SetMesh(BaseMesh* mesh)
@@ -73,7 +59,7 @@ namespace Gen
 
 		m_SubMeshCount = m_Mesh->GetElementCount();
 
-		typedef Material* MaterialPtr;
+		typedef BaseMaterial* MaterialPtr;
 
 		// 分配材质指针数组，用于为每一个MeshObject指定不同的材质
 		m_Materials = new MaterialPtr[m_SubMeshCount];
@@ -86,15 +72,22 @@ namespace Gen
 		}
 
 		// 根据mesh的包围球半径更新对象包围球半径
-		m_BoundingSphereRadius = m_Mesh->GetBoundingRadius();
+		//m_BoundingSphereRadius = m_Mesh->GetBoundingRadius();
 
 		m_OBB.Reset();
 		m_OBB.Expand(m_Mesh->GetOBB());
+
+		m_BoundingSphereRadius = m_Mesh->GetBoundingRadius();
 	}
 
-	void MeshObject::SetMaterial(Material* mat, int index)
+	void MeshObject::SetMaterial(const String& matName, int subMeshIndex)
 	{
-		m_Materials[index] = mat;
+		SetMaterial(MaterialManager::Instance().GetByName(matName), subMeshIndex);
+	}
+
+	void MeshObject::SetMaterial(BaseMaterial* mat, int subMeshIndex)
+	{
+		m_Materials[subMeshIndex] = mat;
 		if (mat)
 			mat->Trigger();
 	}
@@ -215,4 +208,38 @@ namespace Gen
 	//	}
 	//
 	//}
+
+	void MeshObject::RenderSingleObject()
+	{
+		BaseClass::RenderSingleObject();
+
+		// 如果已经指定了模型，渲染该模型
+		if (m_Mesh)
+		{
+			// TODO: 以后使用这种方式渲染
+			//m_Mesh->RenderMesh(&m_WorldTransform);
+
+			for (int i=0; i<m_Mesh->GetElementCount(); i++)
+			{
+				MeshElement* elem = m_Mesh->GetElement(i);
+
+				RenderCommand cmd;
+				cmd.indexBuffer = elem->GetIndexBuffer();
+				cmd.vertexBuffer = m_Mesh->GetVertexBuffer();
+				cmd.primType = PRIM_TRIANGLES;
+				cmd.transform = m_WorldTransform;
+				cmd.material = m_Materials[i];
+				cmd.renderOrder = m_RenderOrder;
+				cmd.sceneObj = this;
+
+				Renderer::Instance().SubmitRenderCommand(cmd);
+
+				//Renderer::Instance().SetupMaterial(m_Materials[i]);
+				//Renderer::Instance().RenderPrimitives(m_Mesh->GetVertexBuffer(),
+				//									  elem->GetIndexBuffer(),
+				//									  m_WorldTransform);
+			}
+		}
+	}
+
 }

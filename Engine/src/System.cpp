@@ -23,7 +23,7 @@
 #include <algorithm>
 #include <fstream>
 
-using namespace std;
+
 
 namespace Gen
 {
@@ -56,6 +56,9 @@ namespace Gen
 
 		// 材质
 		RegisterExtensionManager(".emt", &MaterialManager::Instance());
+
+		// TODO: 这个扩展名应该放在OpenGL插件中，跟随插件一起提供
+		RegisterExtensionManager(".cgfx", &MaterialManager::Instance());
 
 		// 字体
 		RegisterExtensionManager(".ttf", &FontManager::Instance());
@@ -96,12 +99,12 @@ namespace Gen
 		}
 
 		// 从data路径搜索所有文件名称(包含子目录)
-		vector<ResourceFileNameInfo> list;
+		std::vector<ResourceFileNameInfo> list;
 		String dataPath = FileSystem::Instance().GetValidResourcePath(FileSystem::Instance().GetDataPath());
 		FileSystem::Instance().FindFilesInDir(dataPath, list, true);
 
 		// 根据扩展名，使用对应的读取函数载入资源
-		for (vector<ResourceFileNameInfo>::iterator iter=list.begin();
+		for (std::vector<ResourceFileNameInfo>::iterator iter=list.begin();
 			iter!=list.end();
 			iter++)
 		{
@@ -109,7 +112,7 @@ namespace Gen
 			if (m_ExtManagers.find(iter->ext)!=m_ExtManagers.end())
 			{
 				String msg;
-				msg.Format("Loading resource %s.", iter->filename.Data());
+				msg.Format("Resource %s found.", iter->filename.Data());
 				Log.MsgLn(msg);
 
 				// 对于文件的载入，使用文件基于$data路径的相对路径作为资源访问名称
@@ -119,7 +122,7 @@ namespace Gen
 
 				if (!m_ExtManagers[iter->ext]->CreateResourceHandles(&(*iter)))
 				{
-					msg.Format("FAILED loading resource %s.", iter->filename.Data());
+					msg.Format("Failed to create handle for resource %s!", iter->filename.Data());
 					Log.Error(msg);
 				}
 			}

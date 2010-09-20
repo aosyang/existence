@@ -85,6 +85,14 @@ void TetrisGame::StartGame()
 	}
 
 	Restart();
+
+	InputEventHandler<TetrisGame>* inputHandler =
+		new InputEventHandler<TetrisGame>(this,
+										  &TetrisGame::OnKeyPressed,
+										  NULL,
+										  &TetrisGame::OnMouseMoved);
+	Input->SetEventHandler(inputHandler);
+
 }
 
 void TetrisGame::Shutdown()
@@ -135,7 +143,7 @@ bool TetrisGame::OnNotifyQuitting()
 	return true;
 }
 
-void TetrisGame::OnKeyPressed(unsigned int key)
+void TetrisGame::OnKeyPressed(KeyCode key)
 {
 	switch (key)
 	{
@@ -150,9 +158,18 @@ void TetrisGame::OnKeyPressed(unsigned int key)
 	}
 }
 
-void TetrisGame::OnKeyReleased(unsigned int key)
+void TetrisGame::OnMouseMoved(int x, int y, int rel_x, int rel_y)
 {
+	// 按住鼠标右键调整视角
+	if (Input->GetMouseButtonDown(MB_Right))
+	{
+		float fx = -(float)rel_x / 5.0f;
+		float fy = -(float)rel_y / 5.0f;
 
+		System::Instance().CenterMouseCursor();
+
+		m_Camera->RotateLocal(fx, fy);
+	}
 }
 
 void TetrisGame::Update(unsigned long deltaTime)
@@ -163,7 +180,7 @@ void TetrisGame::Update(unsigned long deltaTime)
 		{
 			float boost;
 
-			if (Input::Instance().GetKeyDown(KC_LSHIFT))
+			if (Input->GetKeyDown(KC_LSHIFT))
 				boost = 4.0f;
 			else
 				boost = 1.0f;
@@ -171,35 +188,26 @@ void TetrisGame::Update(unsigned long deltaTime)
 			float forward = 0.0f;
 			float right = 0.0f;
 
-			if (Input::Instance().GetKeyDown(KC_W))
+			if (Input->GetKeyDown(KC_W))
 				forward += 0.1f * deltaTime / 10.0f * boost;
-			if (Input::Instance().GetKeyDown(KC_S))
+			if (Input->GetKeyDown(KC_S))
 				forward += -0.1f * deltaTime / 10.0f * boost;
-			if (Input::Instance().GetKeyDown(KC_A))
+			if (Input->GetKeyDown(KC_A))
 				right += -0.1f * deltaTime / 10.0f * boost;
-			if (Input::Instance().GetKeyDown(KC_D))
+			if (Input->GetKeyDown(KC_D))
 				right += 0.1f * deltaTime / 10.0f * boost;
 
 			m_Camera->MoveLocal(forward, right, 0.0f);
 
-			// 按住鼠标右键调整视角
-			if (Input::Instance().GetMouseButtonDown(MB_Right))
-			{
-				float x = -(float)Input::Instance().GetMouseRelX() / 5.0f;
-				float y = -(float)Input::Instance().GetMouseRelY() / 5.0f;
-
-				m_Camera->RotateLocal(x, y);
-			}
-
-			//if (Input::Instance().GetKeyDown(KC_UP))
+			//if (Input->GetKeyDown(KC_UP))
 			//	MoveUp();
-			if (Input::Instance().GetKeyDown(KC_DOWN))
+			if (Input->GetKeyDown(KC_DOWN))
 				MoveDown();
-			if (Input::Instance().GetKeyDown(KC_LEFT))
+			if (Input->GetKeyDown(KC_LEFT))
 				MoveLeft();
-			if (Input::Instance().GetKeyDown(KC_RIGHT))
+			if (Input->GetKeyDown(KC_RIGHT))
 				MoveRight();
-			//if (Input::Instance().GetKeyDown(KC_SPACE))
+			//if (Input->GetKeyDown(KC_SPACE))
 			//	Rotate();
 
 
@@ -243,18 +251,13 @@ void TetrisGame::Update(unsigned long deltaTime)
 
 void TetrisGame::RenderScene()
 {
-	RenderView rv;
-
-	rv.position = m_Camera->WorldTransform().GetPosition();
-	rv.viewMatrix = m_Camera->GetViewMatrix();
-	rv.projMatrix = m_Camera->GetProjMatrix();
-	rv.frustum = m_Camera->GetFrustum();
-
 	Renderer::Instance().SetViewport(0, 0, 0, 0);
 
 	// 设定渲染视点
-	m_Scene->SetupRenderView(rv);
+	m_Scene->SetupRenderView(m_Camera);
+	Renderer::Instance().BeginRender();
 	m_Scene->RenderScene();
+	Renderer::Instance().EndRender();
 }
 
 // 向上移动
@@ -294,7 +297,7 @@ void TetrisGame::MoveDown()
 	}
 
 	AudioBuffer* buffer = AudioManager::Instance().GetByName("move.wav");
-	Engine::Instance().AudioSystem()->CreateSourceInstance(buffer, Vector3f(0.0f, 0.0f, 0.0f));
+	//Engine::Instance().AudioSystem()->CreateSourceInstance(buffer, Vector3f(0.0f, 0.0f, 0.0f));
 }
 
 // 向左移动
@@ -313,8 +316,8 @@ void TetrisGame::MoveLeft()
 	//m_Tetromino->SetPosition(x, y);
 	m_Tetromino->MoveLeft();
 
-	IAudioBuffer* buffer = Engine::Instance().AudioSystem()->GetAudioBuffer("move.wav");
-	Engine::Instance().AudioSystem()->CreateSourceInstance(buffer, Vector3f(0.0f, 0.0f, 0.0f));
+	//IAudioBuffer* buffer = Engine::Instance().AudioSystem()->GetAudioBuffer("move.wav");
+	//Engine::Instance().AudioSystem()->CreateSourceInstance(buffer, Vector3f(0.0f, 0.0f, 0.0f));
 }
 
 // 向右移动
@@ -333,8 +336,8 @@ void TetrisGame::MoveRight()
 	//m_Tetromino->SetPosition(x, y);
 	m_Tetromino->MoveRight();
 
-	IAudioBuffer* buffer = Engine::Instance().AudioSystem()->GetAudioBuffer("move.wav");
-	Engine::Instance().AudioSystem()->CreateSourceInstance(buffer, Vector3f(0.0f, 0.0f, 0.0f));
+	//IAudioBuffer* buffer = Engine::Instance().AudioSystem()->GetAudioBuffer("move.wav");
+	//Engine::Instance().AudioSystem()->CreateSourceInstance(buffer, Vector3f(0.0f, 0.0f, 0.0f));
 }
 
 void TetrisGame::Rotate()
@@ -399,8 +402,8 @@ void TetrisGame::CheckAndRemove()
 
 	if (remove)
 	{
-		IAudioBuffer* buffer = Engine::Instance().AudioSystem()->GetAudioBuffer("remove.wav");
-		Engine::Instance().AudioSystem()->CreateSourceInstance(buffer, Vector3f(0.0f, 0.0f, 0.0f));
+		//IAudioBuffer* buffer = Engine::Instance().AudioSystem()->GetAudioBuffer("remove.wav");
+		//Engine::Instance().AudioSystem()->CreateSourceInstance(buffer, Vector3f(0.0f, 0.0f, 0.0f));
 	}
 }
 

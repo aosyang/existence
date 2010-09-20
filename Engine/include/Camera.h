@@ -163,6 +163,7 @@ namespace Gen
 
 		Matrix4		m_ViewMatrix;				///< 视矩阵
 		Matrix4		m_ViewOffset;				///< 视矩阵偏移，影响视矩阵而不影响摄像机原始位置，用于产生镜头振动等效果
+		Matrix4		m_ProjMatrix;				///< 投影矩阵
 		//Matrix4		m_Transform;				///< 摄像机变换矩阵
 
 		//Matrix3		m_YawMatrix;				///< 水平方向矩阵

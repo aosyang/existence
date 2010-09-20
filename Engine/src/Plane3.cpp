@@ -126,7 +126,7 @@ namespace Gen
 
 	// TODO : 这里需要修改
 	//bool Plane3::Split(const BspTriangle& in, BspTriangle* polyFront, BspTriangle* polyBack) const
-	bool Plane3::Split(const BspTriangle& in, vector<BspTriangle>& trianglesFront, vector<BspTriangle>& trianglesBack) const
+	bool Plane3::Split(const BspTriangle& in, std::vector<BspTriangle>& trianglesFront, std::vector<BspTriangle>& trianglesBack) const
 	{
 		// 以平面将一个三角形切割，并分到各个对应的子节点中
 		// 分割结果可能是以下情况：

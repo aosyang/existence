@@ -21,14 +21,14 @@ namespace Gen
 	{
 		BaseMesh::LoadImpl();
 
-		ifstream inputFile(m_Filename.Data(), ios::in|ios::binary);
+		std::ifstream inputFile(m_Filename.Data(), std::ios::in|std::ios::binary);
 
 		if (inputFile.fail())	// 无法打开文件
 			return false;
 
-		inputFile.seekg(0, ios::end);
+		inputFile.seekg(0, std::ios::end);
 		long fileSize = inputFile.tellg();
-		inputFile.seekg(0, ios::beg);
+		inputFile.seekg(0, std::ios::beg);
 
 		byte*  pBuffer = new byte[fileSize];
 		inputFile.read((char*)pBuffer, fileSize);
@@ -65,8 +65,8 @@ namespace Gen
 		MeshBuilder builder(nGroups);
 
 		// 记录材质列表和材质id列表
-		vector<Material*>	materialList;
-		vector<char>		materialIdList;
+		std::vector<Material*>	materialList;
+		std::vector<char>		materialIdList;
 
 		for (int i=0; i<nGroups; i++)
 		{
@@ -141,7 +141,7 @@ namespace Gen
 				if (tex)
 				{
 					tex->Trigger();
-					material->GetTextureRenderState()->texture = tex->GetDeviceTexture();
+					material->SetDeviceTexture(tex->GetDeviceTexture());
 				}
 				material->GetTextureRenderState()->textureName = texResName;
 			}

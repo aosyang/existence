@@ -7,7 +7,7 @@
 
 #include <vector>
 
-using namespace std;
+
 
 namespace Gen
 {
@@ -114,7 +114,7 @@ namespace Gen
 		//bool Clip(const BspTriangle& in, BspTriangle* out) const;
 
 		//bool Split(const BspTriangle& in, BspTriangle* polyFront, BspTriangle* polyBack) const;
-		bool Split(const BspTriangle& in, vector<BspTriangle>& trianglesFront, vector<BspTriangle>& trianglesBack) const;
+		bool Split(const BspTriangle& in, std::vector<BspTriangle>& trianglesFront, std::vector<BspTriangle>& trianglesBack) const;
 	};
 }
 

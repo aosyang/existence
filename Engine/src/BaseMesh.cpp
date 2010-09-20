@@ -116,7 +116,7 @@ namespace Gen
 		return m_MeshElements[index];
 	}
 
-	Material* BaseMesh::GetMaterial(unsigned int index)
+	BaseMaterial* BaseMesh::GetMaterial(unsigned int index)
 	{
 		if (index>=0 && index<m_Materials.size())
 			return m_Materials[index];
@@ -143,7 +143,7 @@ namespace Gen
 
 	void BaseMesh::UpdateElementsOBB()
 	{
-		for (vector<MeshElement*>::iterator iter=m_MeshElements.begin();
+		for (std::vector<MeshElement*>::iterator iter=m_MeshElements.begin();
 			 iter!=m_MeshElements.end();
 			 iter++)
 		{
@@ -154,7 +154,7 @@ namespace Gen
 
 	void BaseMesh::ClearMeshElements()
 	{
-		vector<MeshElement*>::iterator iter;
+		std::vector<MeshElement*>::iterator iter;
 		for (iter=m_MeshElements.begin(); iter!=m_MeshElements.end(); iter++)
 		{
 			delete (*iter);

@@ -9,20 +9,20 @@
 #define _LIGHTINGMANAGER_H
 
 #include "Singleton.h"
-#include "LightableObject.h"
 
 //#include <vector>
 //#include <list>
 #include <set>
 
-using namespace std;
+
 
 namespace Gen
 {
 	class Light;
+	class GameObject;
 
-	typedef set<LightableObject*>				LightableObjectList;
-	typedef set<Light*>							LightList;
+	typedef std::set<GameObject*>					LightableObjectList;
+	typedef std::set<Light*>							LightList;
 
 	// 静态光照与动态对象
 	// 动态光照与静态对象
@@ -41,8 +41,8 @@ namespace Gen
 	{
 		friend class Singleton<LightingManager>;
 	public:
-		void AddLightableObject(LightableObject* lightableObj);
-		void RemoveLightableObject(LightableObject* lightableObj);
+		void AddLightableObject(GameObject* lightableObj);
+		void RemoveLightableObject(GameObject* lightableObj);
 
 		void AddLight(Light* light);
 

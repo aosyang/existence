@@ -246,6 +246,19 @@ namespace Gen
 			texState.texture->BindTexture();
 	}
 
+	void D3D9Renderer::RenderVertexBuffer(IVertexBuffer* vbuffer, PrimitiveType type, const Matrix4& transform)
+	{
+		D3DXMATRIXA16 worldMat;
+		BuildD3DMatrix(transform, worldMat);
+
+		m_D3DDevice->SetTransform(D3DTS_WORLD, &worldMat);
+
+		D3D9VertexBuffer* d3d9VB = static_cast<D3D9VertexBuffer*>(vbuffer);
+
+		d3d9VB->SetAsVertexDataSource();
+		d3d9VB->RenderPrimitive(type);
+	}
+
 	void D3D9Renderer::RenderVertexBuffer(IVertexBuffer* vbuffer, IIndexBuffer* ibuffer, const Matrix4& transform)
 	{
 		D3DXMATRIXA16 worldMat;
@@ -262,22 +275,6 @@ namespace Gen
 		d3d9IB->RenderPrimitive();
 	}
 
-
-	void D3D9Renderer::RenderBox(const Vector3f& vMin, const Vector3f& vMax, const Matrix4& transform)
-	{
-
-	}
-
-	void D3D9Renderer::RenderSphere(const Vector3f& point, float radius, unsigned int segment)
-	{
-
-	}
-
-	void D3D9Renderer::RenderLine(const Vector3f& begin, const Vector3f& end)
-	{
-
-	}
-
 	void D3D9Renderer::SetAmbientColor(const Color4f& color)
 	{
 		m_D3DDevice->SetRenderState(D3DRS_AMBIENT, COLOR4F_TO_D3DCOLOR(color));
@@ -288,7 +285,7 @@ namespace Gen
 		return new D3D9Texture;
 	}
 
-	IDeviceTexture* D3D9Renderer::BuildCubeTexture(const String& textureName, unsigned int width, unsigned int height, unsigned int bpp, unsigned char* data[6])
+	IDeviceTexture* D3D9Renderer::BuildCubeTexture()
 	{
 		return NULL;
 	}
@@ -506,7 +503,7 @@ namespace Gen
 		}
 	}
 
-	IRenderDevice* CreateRenderSystem()
+	IPlugin* CreatePluginInstance()
 	{
 		return new D3D9Renderer;
 	}

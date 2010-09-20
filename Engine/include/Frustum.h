@@ -31,9 +31,6 @@ namespace Gen
 	public:
 		Frustum();
 
-		// 生成透视投影矩阵
-		Matrix4 BuildPrespectiveProjMatrix(float fovy = 45.0f, float aspect = 4.0f/3.0f, float near = 1.0f, float far = 100.0f);
-
 		// 根据投影矩阵和视矩阵生成视截体平面
 		void BuildFrustumPlanes(const Matrix4& projMatrix, const Matrix4& viewMatrix);
 
@@ -46,15 +43,9 @@ namespace Gen
 		// “球体-视截体”检测
 		float SphereInFrustum(const Vector3f& point, float radius);
 
-		Matrix4& ProjectionMatrix() { return m_ProjMatrix; }
-
 		Plane3 GetFrustumPlane(FrustumPlane plane) const { return m_FrustumPlanes[plane]; }
-
-		float	m_Left, m_Right, m_Bottom, m_Top;
 	private:
 		Plane3			m_FrustumPlanes[6];			///< 视截体平面
-
-		Matrix4			m_ProjMatrix;
 	};
 }
 

@@ -9,16 +9,16 @@
 #ifndef _DISTANTVIEWOBJECT_H
 #define _DISTANTVIEWOBJECT_H
 
-#include "MeshObject.h"
+#include "SceneObject.h"
 #include "BaseMesh.h"
 
 namespace Gen
 {
-	class DistantViewObject : public MeshObject
+	class DistantViewObject : public SceneObject
 	{
-		DECLARE_FACTORY_OBJECT(DistantViewObject, MeshObject);
+		DECLARE_FACTORY_OBJECT(DistantViewObject, SceneObject);
 	public:
-		// ----- Overwrite IRenderableObject
+		// ----- Overwrite SceneObject
 
 		void RenderSingleObject();
 
@@ -28,12 +28,20 @@ namespace Gen
 
 		// ----- DistantViewObject Methods
 
+		/// @brief
+		///	指定远景对象使用的模型
+		/// @param mesh
+		///		渲染用的模型
+		void SetMesh(BaseMesh* mesh);
+
 		// 模型位移比例
 		inline void SetOffsetScale(const Vector3f& scale) { m_OffsetScale = scale; }
 		inline Vector3f GetOffsetScale() const { return m_OffsetScale; }
 
 	private:
-		Vector3f		m_OffsetScale;
+		Vector3f		m_OffsetScale;		///< 位移偏量比例
+
+		BaseMesh*		m_Mesh;				///< 渲染时使用的模型
 	};
 }
 

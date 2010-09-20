@@ -443,6 +443,75 @@ namespace Gen
 		result.w = k0 * p.w + k1 * qw;
 
 		return result;
+
+		// --------------------------------------------------------------------
+
+		//// quaternion to return
+		//Quaternion result;
+
+		//// Calculate angle between them.
+		//float cosHalfTheta = p.w * q.w + p.x * q.x + p.y * q.y + p.z * q.z;
+		//// if p=q or p=-q then theta = 0 and we can return p
+		//if (abs(cosHalfTheta) >= 1.0){
+		//	result.w = p.w;result.x = p.x;result.y = p.y;result.z = p.z;
+		//	return result;
+		//}
+		//// Calculate temporary values.
+		//float halfTheta = acosf(cosHalfTheta);
+		//float sinHalfTheta = sqrtf(1.0f - cosHalfTheta*cosHalfTheta);
+		//// if theta = 180 degrees then result is not fully defined
+		//// we could rotate around any axis normal to p or q
+		//if (fabs(sinHalfTheta) < 0.001){ // fabs is floating point absolute
+		//	result.w = (p.w * 0.5f + q.w * 0.5f);
+		//	result.x = (p.x * 0.5f + q.x * 0.5f);
+		//	result.y = (p.y * 0.5f + q.y * 0.5f);
+		//	result.z = (p.z * 0.5f + q.z * 0.5f);
+		//	return result;
+		//}
+		//float ratioA = sinf((1 - t) * halfTheta) / sinHalfTheta;
+		//float ratioB = sinf(t * halfTheta) / sinHalfTheta; 
+		////calculate Quaternion.
+		//result.w = (p.w * ratioA + q.w * ratioB);
+		//result.x = (p.x * ratioA + q.x * ratioB);
+		//result.y = (p.y * ratioA + q.y * ratioB);
+		//result.z = (p.z * ratioA + q.z * ratioB);
+		//return result;
+
+		// --------------------------------------------------------------------
+
+		//Quaternion result;
+		//float fCos = DotProduct(p, q);
+		//float fAngle = acosf(fCos);
+
+		//if (fAngle>=0.0f)
+		//{
+		//	float fSin = sinf(fAngle);
+		//	float fInvSin = ((float)1.0f)/fSin;
+		//	float fTAngle = t * fAngle;
+		//	float fCoeff0 = sinf(fAngle - fTAngle)*fInvSin;
+		//	float fCoeff1 = sinf(fTAngle)*fInvSin;
+
+		//	// Profiling showed that the old line of code,
+		//	//   *this = fCoeff0*p + fCoeff1*q;
+		//	// was using a large number of cycles, more so than the sin and cos
+		//	// function calls.  The following inlined code is much faster.
+		//	result.w = fCoeff0*p.w + fCoeff1*q.w;
+		//	result.x = fCoeff0*p.x + fCoeff1*q.x;
+		//	result.y = fCoeff0*p.y + fCoeff1*q.y;
+		//	result.z = fCoeff0*p.z + fCoeff1*q.z;
+		//}
+		//else
+		//{
+		//	// Based on the problem with the code in the previous block, inlining
+		//	// the old code
+		//	//   *this = p;
+		//	result.w = p.w;
+		//	result.x = p.x;
+		//	result.y = p.y;
+		//	result.z = p.z;
+		//}
+
+		//return result;
 	}
 
 	float Quaternion::DotProduct (const Quaternion &a, const Quaternion &b){ return a.w * b.w + a.x * b.x + a.y * b.y + a.z * a.z; }

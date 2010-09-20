@@ -19,7 +19,7 @@
 #include <vector>
 #include <set>
 
-using namespace std;
+
 
 namespace Gen
 {
@@ -82,16 +82,16 @@ namespace Gen
 
 		bool				m_Dirty;				///< 是否需要更新字符信息
 
-		typedef vector<CharGlyphInfo> Characters;
+		typedef std::vector<CharGlyphInfo> Characters;
 		Characters			m_Characters;			///< 每个字的信息
 
 		DeviceTexture2D*	m_GlyphTexture;
-		set<wchar_t>		m_WideCharacters;		///< 字符集合，用于统计文本框当前使用的字符数量
+		std::set<wchar_t>		m_WideCharacters;		///< 字符集合，用于统计文本框当前使用的字符数量
 		int					m_CharacterPixelSize;	///< 字符尺寸
 		unsigned int		m_GlyphTexSize;			///< 字模纹理尺寸
 		int					m_VisibleCharCount;		///< 可见字符数目
 
-		typedef map<wchar_t, CharGlyphInfo>		CharacterGlyphInfo;
+		typedef std::map<wchar_t, CharGlyphInfo>		CharacterGlyphInfo;
 		CharacterGlyphInfo	m_CharGlyphInfo;
 
 		IVertexBuffer*		m_VertexBuffer;

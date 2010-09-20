@@ -11,7 +11,7 @@
 
 #include <fstream>
 
-using namespace std;
+
 
 namespace Gen
 {
@@ -71,7 +71,7 @@ namespace Gen
 
 	bool SkeletalAnimation::LoadFromFile(const String& filename)
 	{
-		ifstream fin(filename.Data());
+		std::ifstream fin(filename.Data());
 		if (!fin.is_open()) return false;
 
 		// 采样律
@@ -123,7 +123,7 @@ namespace Gen
 
 	bool Skeleton::LoadImpl()
 	{
-		ifstream fin(m_Filename.Data());
+		std::ifstream fin(m_Filename.Data());
 		if (!fin.is_open()) return false;
 
 		int jointId, parentId;
@@ -177,7 +177,7 @@ namespace Gen
 		animListName.Replace(pos - 2, 3, "eal");
 
 		// 打开动画列表文件
-		ifstream flist(animListName.Data());
+		std::ifstream flist(animListName.Data());
 		if (flist.is_open())
 		{
 			while(!flist.eof())

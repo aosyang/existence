@@ -15,23 +15,33 @@
 
 namespace Gen
 {
-	class GLRenderTargetFBO : public BaseRenderTarget
+	class GLRenderTargetFBO : public IRenderTarget
 	{
 	public:
 		GLRenderTargetFBO();
 		~GLRenderTargetFBO();
 
+		// ----- Overwrite IDeviceTexture
+		void BindTexture();
+
+		TextureType GetType() const { return TEXTURE_TYPE_2D; }
+
 		// ----- Overwrite IRenderTarget
-		void SetTexture(DeviceTexture2D* texture);
+		void BuildRenderTarget(unsigned int width, unsigned int height, unsigned int bpp);
 
 		void BindRenderTarget();
 		void UnbindRenderTarget();
 
+		void Resize(unsigned int width, unsigned int height);
+
 		// ----- GLRenderTargetFBO methods
 
+		void Destroy();
+
 	private:
-		GLuint			m_FBO;
-		GLuint			rboId;
+		GLuint	m_FBO;						///< Frame Buffer Object
+		GLuint	m_DepthBuffer;				///< Depth Render Buffer
+		GLuint	m_FrameBufferTexture;		///< Frame Buffer Texture
 	};
 }
 

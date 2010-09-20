@@ -9,7 +9,10 @@
 #include "Renderer.h"
 #include "Log.h"
 #include "MeshElement.h"
+#include "MeshManager.h"
+#include "SkeletonManager.h"
 #include "Skeleton.h"
+#include "DebugRenderer.h"
 
 namespace Gen
 {
@@ -21,14 +24,15 @@ namespace Gen
 		  m_VertexArray(NULL),
 		  m_NormalArray(NULL),
 		  m_CurrentAnimation(NULL),
-		  m_CurAnimationTime(0.0f)
+		  m_CurAnimationTime(0.0f),
+		  m_NeedUpdateMesh(true)
 	{
 	}
 
 	SkeletalMeshObject::~SkeletalMeshObject()
 	{
 		SAFE_DELETE(m_VertexBuffer);
-		SAFE_DELETE(m_RootJoint);
+		//SAFE_DELETE(m_RootJoint);
 		SAFE_DELETE_ARRAY(m_VertexArray);
 		SAFE_DELETE_ARRAY(m_NormalArray);
 	}
@@ -41,12 +45,20 @@ namespace Gen
 			AdvanceTime(deltaTime);
 
 			m_RootJoint->Update(m_CurAnimationTime);
+
+			m_NeedUpdateMesh = true;
 		}
 
 		// 更新顶点
 		//UpdateMesh();
 
-		MeshObject::Update(deltaTime);
+		BaseClass::Update(deltaTime);
+	}
+
+	void SkeletalMeshObject::SetMesh(const String& meshName)
+	{
+		BaseMesh* mesh = MeshManager::Instance().GetByName(meshName);
+		SetMesh(mesh);
 	}
 
 	void SkeletalMeshObject::SetMesh(BaseMesh* mesh)
@@ -73,16 +85,18 @@ namespace Gen
 	{
 		MeshObject::DebugRender();
 
-		m_RootJoint->DebugRender(m_WorldTransform);
+		//if (m_RootJoint)
+		//	m_RootJoint->DebugRender(m_WorldTransform);
 	}
 	
 	void SkeletalMeshObject::RenderSingleObject()
 	{
 		// 不要调用MeshObject的渲染方法
-		RenderableObjectBase::RenderSingleObject();
+		BaseClass::BaseClass::RenderSingleObject();
 
 		// 更新顶点
-		UpdateMesh();
+		if (m_NeedUpdateMesh)
+			UpdateMesh();
 
 		if (m_Mesh)
 		{
@@ -92,12 +106,31 @@ namespace Gen
 			for (int i=0; i<m_Mesh->GetElementCount(); i++)
 			{
 				MeshElement* elem = m_Mesh->GetElement(i);
-				Renderer::Instance().SetupMaterial(m_Materials[i]);
-				Renderer::Instance().RenderPrimitives(m_VertexBuffer,
-													  elem->GetIndexBuffer(),
-													  m_WorldTransform);
+
+				RenderCommand cmd;
+				cmd.indexBuffer = elem->GetIndexBuffer();
+				cmd.vertexBuffer = m_VertexBuffer;
+				cmd.primType = PRIM_TRIANGLES;
+				cmd.transform = m_WorldTransform;
+				cmd.material = m_Materials[i];
+				cmd.renderOrder = m_RenderOrder;
+				cmd.sceneObj = this;
+
+				Renderer::Instance().SubmitRenderCommand(cmd);
+
+
+				//Renderer::Instance().SetupMaterial(m_Materials[i]);
+				//Renderer::Instance().RenderPrimitives(m_VertexBuffer,
+				//									  elem->GetIndexBuffer(),
+				//									  m_WorldTransform);
 			}
 		}
+	}
+
+	void SkeletalMeshObject::SetSkeleton(const String& skelName)
+	{
+		Skeleton* skel = SkeletonManager::Instance().GetByName(skelName);
+		SetSkeleton(skel);
 	}
 
 	void SkeletalMeshObject::SetSkeleton(Skeleton* skeleton)
@@ -130,6 +163,11 @@ namespace Gen
 		m_CurAnimationTime = time;
 	}
 
+	void SkeletalMeshObject::AddJointAnchor(const String& anchorName, int jointId)
+	{
+		AddAnchor(anchorName, m_JointInstanceMap[jointId]);
+	}
+
 	void SkeletalMeshObject::CreateJointInstance()
 	{
 		if (!m_Skeleton) return;
@@ -158,7 +196,7 @@ namespace Gen
 		}
 
 		// 确立父子关系
-		for (map<int, SkeletalJointInstance*>::iterator iter=m_JointInstanceMap.begin();
+		for (std::map<int, RefPtr<SkeletalJointInstance> >::iterator iter=m_JointInstanceMap.begin();
 			 iter!=m_JointInstanceMap.end();
 			 iter++)
 		{
@@ -178,7 +216,7 @@ namespace Gen
 
 	void SkeletalMeshObject::AdvanceTime(unsigned long deltaTime)
 	{
-		m_CurAnimationTime += (float)deltaTime * 4.8f / m_CurrentAnimation->GetTicksPerSample();
+		m_CurAnimationTime += (float)deltaTime * 4.8f / m_CurrentAnimation->GetTicksPerSample()/* / 50.0f*/;
 
 		while (m_CurAnimationTime>=m_CurrentAnimation->GetKeyFrameCount() - 1)
 			m_CurAnimationTime -= m_CurrentAnimation->GetKeyFrameCount() - 1;
@@ -188,6 +226,9 @@ namespace Gen
 		
 	void SkeletalMeshObject::UpdateMesh()
 	{
+		// 没有赋予骨骼，不进行更新
+		if (!m_Skeleton) return;
+
 		int vertCount = m_Mesh->GetVertexCount();
 
 		//m_OBB.Reset();
@@ -222,7 +263,7 @@ namespace Gen
 				//Vector3f nInv = joint->GetOriginTransform().GetInverseMatrix().GetRotationMatrix() * n;
 
 				// 为每个顶点累积权重与变换
-				const Matrix4& boneTransform = m_JointInstanceMap[boneId]->GetBoneTransform();
+				const Matrix4& boneTransform = m_JointInstanceMap[boneId]->GetTransformToParentObject();
 				//const Matrix4& boneTransform = boneTrans;
 				p2 += boneTransform * pInv * weight;
 				//p2 += pInv * weight;
@@ -249,6 +290,8 @@ namespace Gen
 									 m_Mesh->GetColorArray(),
 									 m_Mesh->GetTexCoordArray(),
 									 vertCount);
+
+		m_NeedUpdateMesh = false;
 	}
 
 	// ----------------------------------- SkeletalJointInstance
@@ -263,17 +306,18 @@ namespace Gen
 
 	SkeletalJointInstance::~SkeletalJointInstance()
 	{
+		// NOTE: 使用了RefPtr，子关节无须删除
 		// 删除所有子节点
-		ChildrenJoints::iterator iter;
-		for (iter=m_ChildrenJoints.begin();
-			 iter!=m_ChildrenJoints.end();
-			 iter++)
-		{
-			delete (*iter);
-		}
+		//ChildrenJoints::iterator iter;
+		//for (iter=m_ChildrenJoints.begin();
+		//	 iter!=m_ChildrenJoints.end();
+		//	 iter++)
+		//{
+		//	delete (*iter);
+		//}
 	}
 
-	void SkeletalJointInstance::AddChildJoint(SkeletalJointInstance* child)
+	void SkeletalJointInstance::AddChildJoint(RefPtr<SkeletalJointInstance> child)
 	{
 		m_ChildrenJoints.insert(child);
 	}
@@ -281,22 +325,22 @@ namespace Gen
 	void SkeletalJointInstance::DebugRender(const Matrix4& world)
 	{
 		Matrix4 jointWorld = world * m_BoneTransform;
-		//Renderer::Instance().RenderBox(Vector3f(-1.0f, -1.0f, -1.0f), Vector3f(1.0f, 1.0f, 1.0f), Color4f(0.0f, 1.0f, 1.0f), jointWorld);
+		//DebugRender::Instance().DrawBox(Vector3f(-1.0f, -1.0f, -1.0f), Vector3f(1.0f, 1.0f, 1.0f), Color4f(0.0f, 1.0f, 1.0f), jointWorld);
 
 		//Vector3f pos = jointWorld.GetPosition();
 		//Vector3f right = jointWorld.GetRightVector();
 		//Vector3f up = jointWorld.GetUpVector();
 		//Vector3f forward = jointWorld.GetForwardVector();
-		//Renderer::Instance().RenderLine(pos, pos + right, Color4f(1.0f, 0.0f, 0.0f));
-		//Renderer::Instance().RenderLine(pos, pos + up, Color4f(0.0f, 1.0f, 0.0f));
-		//Renderer::Instance().RenderLine(pos, pos - forward, Color4f(0.0f, 0.0f, 1.0f));
+		//DebugRenderer::Instance().DrawLine(pos, pos + right, Color4f(1.0f, 0.0f, 0.0f));
+		//DebugRenderer::Instance().DrawLine(pos, pos + up, Color4f(0.0f, 1.0f, 0.0f));
+		//DebugRenderer::Instance().DrawLine(pos, pos - forward, Color4f(0.0f, 0.0f, 1.0f));
 
 		ChildrenJoints::iterator iter;
 		for (iter=m_ChildrenJoints.begin();
 			 iter!=m_ChildrenJoints.end();
 			 iter++)
 		{
-			Renderer::Instance().RenderLine(jointWorld.GetPosition(), (world * (*iter)->m_BoneTransform).GetPosition());
+			DebugRenderer::Instance().DrawLine(jointWorld.GetPosition(), (world * (*iter)->m_BoneTransform).GetPosition());
 			(*iter)->DebugRender(world);
 		}
 	}
@@ -309,10 +353,16 @@ namespace Gen
 			float floorVal = floor(animTime);
 			float ceilVal = ceil(animTime);
 
+#define USE_INTERPOLATION
+
+#if defined USE_INTERPOLATION
 			// 对位置和旋转量分别进行插值
 			Vector3f pos = (m_JointAnim->PosArray((int)ceilVal) - m_JointAnim->PosArray((int)floorVal)) * (animTime - floorVal) + m_JointAnim->PosArray((int)floorVal);
-			Quaternion quat;
-			quat = Quaternion::Slerp(m_JointAnim->QuatArray((int)floorVal), m_JointAnim->QuatArray((int)ceilVal), animTime - floorVal);
+			Quaternion quat = Quaternion::Slerp(m_JointAnim->QuatArray((int)floorVal), m_JointAnim->QuatArray((int)ceilVal), animTime - floorVal);
+#else
+			Vector3f pos = m_JointAnim->PosArray((int)floorVal);
+			Quaternion quat = m_JointAnim->QuatArray((int)floorVal);
+#endif
 			quat.Normalize();
 
 			m_Transform.MakeIdentity();

@@ -12,7 +12,7 @@
 
 #include <vector>
 
-using namespace std;
+
 
 namespace Gen
 {
@@ -26,7 +26,7 @@ namespace Gen
 		SceneObject* obj;
 	};
 
-	typedef vector<CollisionResult>		ObjectsCollisionInfos;
+	typedef std::vector<CollisionResult>		ObjectsCollisionInfos;
 
 	enum CollisionGroup
 	{

@@ -253,6 +253,14 @@ namespace Gen
 		m[2][3] = pos.z;
 	}
 
+	Matrix4 Matrix4::BuildPrespectiveProjMatrix(float fovy, float aspect, float _near, float _far)
+	{
+		float range = _near * tan(DEG_TO_RAD(fovy / 2));
+
+		return Matrix4::BuildPerspectiveProjection(-range * aspect, range * aspect, -range, range, _near, _far);
+	}
+
+
 	Matrix4 Matrix4::BuildPerspectiveProjection(float left, float right, float bottom, float top, float znear, float zfar)
 	{
 		float m00 = 2 * znear / (right - left);

@@ -20,7 +20,7 @@
 		<Configuration
 			Name="Release|Win32"
 			OutputDirectory="..\..\bin\$(ProjectName)\$(ConfigurationName)"
-			IntermediateDirectory="..\..\$(ProjectName)\obj\$(ConfigurationName)"
+			IntermediateDirectory="obj\$(ProjectName)\$(ConfigurationName)"
 			ConfigurationType="2"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
@@ -65,9 +65,9 @@
 				EnableFunctionLevelLinking="true"
 				EnableEnhancedInstructionSet="1"
 				FloatingPointModel="2"
-				PrecompiledHeaderFile=".\Release\MaxExporter.pch"
-				AssemblerListingLocation=".\Release\"
-				ObjectFile=".\Release\"
+				PrecompiledHeaderFile="obj\$(ProjectName)\$(ConfigurationName)\MaxExporter.pch"
+				AssemblerListingLocation="obj\$(ProjectName)\$(ConfigurationName)\"
+				ObjectFile="obj\$(ProjectName)\$(ConfigurationName)\"
 				ProgramDataBaseFileName="D:\program files\Autodesk\3ds Max 9\plugins\MaxExporter.dle.pdb"
 				WarningLevel="3"
 				SuppressStartupBanner="true"
@@ -104,7 +104,7 @@
 				OptimizeForWindows98="1"
 				SetChecksum="true"
 				BaseAddress="0x16860000"
-				ImportLibrary=".\Release\MaxExporter.lib"
+				ImportLibrary="obj\$(ProjectName)\$(ConfigurationName)\MaxExporter.lib"
 				TargetMachine="1"
 			/>
 			<Tool
@@ -130,12 +130,13 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
+				CommandLine="copy $(TargetPath) &quot;D:\Program Files\Autodesk\3ds Max 9\plugins\&quot; /y"
 			/>
 		</Configuration>
 		<Configuration
 			Name="Hybrid|Win32"
 			OutputDirectory="..\..\bin\$(ProjectName)\$(ConfigurationName)"
-			IntermediateDirectory="..\..\$(ProjectName)\obj\$(ConfigurationName)"
+			IntermediateDirectory="obj\$(ProjectName)\$(ConfigurationName)"
 			ConfigurationType="2"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
@@ -173,9 +174,9 @@
 				BufferSecurityCheck="true"
 				EnableEnhancedInstructionSet="1"
 				FloatingPointModel="2"
-				PrecompiledHeaderFile=".\Hybrid\MaxExporter.pch"
-				AssemblerListingLocation=".\Hybrid\"
-				ObjectFile=".\Hybrid\"
+				PrecompiledHeaderFile="obj\$(ProjectName)\$(ConfigurationName)\MaxExporter.pch"
+				AssemblerListingLocation="obj\$(ProjectName)\$(ConfigurationName)\"
+				ObjectFile="obj\$(ProjectName)\$(ConfigurationName)\"
 				ProgramDataBaseFileName="D:\program files\Autodesk\3ds Max 9\plugins\MaxExporter.dle.pdb"
 				WarningLevel="3"
 				SuppressStartupBanner="true"
@@ -210,7 +211,7 @@
 				ProgramDatabaseFile="D:\program files\Autodesk\3ds Max 9\plugins\MaxExporter.dle.pdb"
 				SubSystem="2"
 				BaseAddress="0x16860000"
-				ImportLibrary=".\Hybrid\MaxExporter.lib"
+				ImportLibrary="obj\$(ProjectName)\$(ConfigurationName)\MaxExporter.lib"
 				TargetMachine="1"
 			/>
 			<Tool
@@ -236,12 +237,13 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
+				CommandLine="copy $(TargetPath) &quot;D:\Program Files\Autodesk\3ds Max 9\plugins\&quot; /y"
 			/>
 		</Configuration>
 		<Configuration
 			Name="Debug|Win32"
 			OutputDirectory="..\..\bin\$(ProjectName)\$(ConfigurationName)"
-			IntermediateDirectory="..\..\$(ProjectName)\obj\$(ConfigurationName)"
+			IntermediateDirectory="obj\$(ProjectName)\$(ConfigurationName)"
 			ConfigurationType="2"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
@@ -280,9 +282,9 @@
 				BufferSecurityCheck="true"
 				EnableEnhancedInstructionSet="1"
 				FloatingPointModel="2"
-				PrecompiledHeaderFile=".\Debug\MaxExporter.pch"
-				AssemblerListingLocation=".\Debug\"
-				ObjectFile=".\Debug\"
+				PrecompiledHeaderFile="obj\$(ProjectName)\$(ConfigurationName)\MaxExporter.pch"
+				AssemblerListingLocation="obj\$(ProjectName)\$(ConfigurationName)\"
+				ObjectFile="obj\$(ProjectName)\$(ConfigurationName)\"
 				ProgramDataBaseFileName="D:\program files\Autodesk\3ds Max 9\plugins\MaxExporter.dle.pdb"
 				WarningLevel="3"
 				SuppressStartupBanner="true"
@@ -317,7 +319,7 @@
 				ProgramDatabaseFile="D:\program files\Autodesk\3ds Max 9\plugins\MaxExporter.dle.pdb"
 				SubSystem="2"
 				BaseAddress="0x16860000"
-				ImportLibrary=".\Debug\MaxExporter.lib"
+				ImportLibrary="obj\$(ProjectName)\$(ConfigurationName)\MaxExporter.lib"
 				TargetMachine="1"
 			/>
 			<Tool
@@ -343,7 +345,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy $(OutDir) &quot;E:\Program Files\Autodesk\3ds Max 9\plugins\&quot; /y"
+				CommandLine="copy $(TargetPath) &quot;D:\Program Files\Autodesk\3ds Max 9\plugins\&quot; /y"
 			/>
 		</Configuration>
 		<Configuration

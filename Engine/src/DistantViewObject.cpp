@@ -14,8 +14,9 @@
 namespace Gen
 {
 	DistantViewObject::DistantViewObject(SceneGraph* scene)
-	: MeshObject(scene),
-	  m_OffsetScale(0.0f, 0.0f, 0.0f)
+	: BaseClass(scene),
+	  m_OffsetScale(0.0f, 0.0f, 0.0f),
+	  m_Mesh(NULL)
 	{
 		// render very first
 		m_RenderOrder = 70;
@@ -27,7 +28,7 @@ namespace Gen
 
 	void DistantViewObject::RenderSingleObject()
 	{
-		RenderableObjectBase::RenderSingleObject();
+		BaseClass::RenderSingleObject();
 
 		// 将渲染时使用的变换矩阵进行hack
 		Matrix4 invViewMatrix = Renderer::Instance().GetViewMatrix().GetInverseMatrix();
@@ -43,14 +44,45 @@ namespace Gen
 		for (int i=0; i<m_Mesh->GetElementCount(); i++)
 		{
 			MeshElement* elem = m_Mesh->GetElement(i);
-			Renderer::Instance().SetupMaterial(m_Mesh->GetMaterial(i));
-			Renderer::Instance().RenderPrimitives(m_Mesh->GetVertexBuffer(), elem->GetIndexBuffer(), distviewMatrix);
+
+			RenderCommand cmd;
+			cmd.indexBuffer = elem->GetIndexBuffer();
+			cmd.vertexBuffer = m_Mesh->GetVertexBuffer();
+			cmd.primType = PRIM_TRIANGLES;
+			cmd.transform = distviewMatrix;
+			cmd.material = m_Mesh->GetMaterial(i);
+			cmd.renderOrder = m_RenderOrder;
+			cmd.sceneObj = this;
+
+			Renderer::Instance().SubmitRenderCommand(cmd);
+
+
+			//Renderer::Instance().SetupMaterial(m_Mesh->GetMaterial(i));
+			//Renderer::Instance().RenderPrimitives(m_Mesh->GetVertexBuffer(), elem->GetIndexBuffer(), distviewMatrix);
 		}
-		Renderer::Instance().ClearBuffer(false);
+		//Renderer::Instance().ClearBuffer(false);
 	}
 
 	bool DistantViewObject::IsCulled(Frustum* frustum)
 	{
+		// 远景对象将不会被剔除
 		return false;
+	}
+
+	void DistantViewObject::SetMesh(BaseMesh* mesh)
+	{
+		AssertFatal(mesh, "DistantViewObject::SetMesh() : Mesh cannot be null!");
+		m_Mesh = mesh;
+		mesh->Trigger();
+
+		// 将模型使用到的材质激活
+		for (int i=0; i<mesh->GetElementCount(); i++)
+		{
+			BaseMaterial* m = mesh->GetMaterial(i);
+			if (m) m->Trigger();
+		}
+
+		m_OBB.Reset();
+		m_OBB.Expand(m_Mesh->GetOBB());
 	}
 }

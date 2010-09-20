@@ -17,7 +17,7 @@
 
 #include <vector>
 
-using namespace std;
+
 
 namespace Gen
 {
@@ -124,7 +124,7 @@ namespace Gen
 		OggVorbis_File	m_OGGFile;
 
 		// “Ù∆µª∫≥Â ˝æ›
-		vector<char>	m_BufferData;
+		std::vector<char>	m_BufferData;
 	};
 
 	IAudioFileFormat* CreateOGGFileFormat(const String& filename)

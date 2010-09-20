@@ -34,14 +34,12 @@ namespace Gen
 		/// @copydoc MeshObject::SetMesh()
 		void SetMesh(BaseMesh* mesh);
 
-		// ----- Overwrite SceneObject
-		/// @copydoc SceneObject::DebugRender()
-		void DebugRender();
-
-		// ----- Overwrite IRenderableObject
-		void RenderSingleObject();
-
 		// ----- SkeletalMeshObject
+
+		void SetMesh(const String& meshName);
+
+		void SetSkeleton(const String& skelName);
+
 		/// @brief
 		/// 为骨骼模型对象指定骨骼信息
 		/// @param skeleton
@@ -62,6 +60,17 @@ namespace Gen
 		///		动画时间点(单位：秒)
 		void SetAnimationTime(float time);
 
+		// temp
+		void AddJointAnchor(const String& anchorName, int jointId);
+
+	protected:
+
+		// ----- Overwrite SceneObject
+		/// @copydoc SceneObject::DebugRender()
+		void DebugRender();
+
+		void RenderSingleObject();
+
 	protected:
 		/// @brief
 		/// 使用骨骼信息创建骨骼实例
@@ -78,17 +87,19 @@ namespace Gen
 		void UpdateMesh();
 
 	protected:
-		SkeletalJointInstance*		m_RootJoint;			///< 骨骼根结点
-		Skeleton*					m_Skeleton;				///< 骨骼信息
-		IVertexBuffer*				m_VertexBuffer;			///< 变形用顶点缓冲副本
+		RefPtr<SkeletalJointInstance>					m_RootJoint;			///< 骨骼根结点
+		Skeleton*										m_Skeleton;				///< 骨骼信息
+		IVertexBuffer*									m_VertexBuffer;			///< 变形用顶点缓冲副本
 
-		float*						m_VertexArray;			///< 顶点数组
-		float*						m_NormalArray;			///< 法线数组
+		float*											m_VertexArray;			///< 顶点数组
+		float*											m_NormalArray;			///< 法线数组
 
-		map<int, SkeletalJointInstance*>	m_JointInstanceMap;	///< 骨骼关节实例列表
+		std::map<int, RefPtr<SkeletalJointInstance> >	m_JointInstanceMap;		///< 骨骼关节实例列表
 
-		SkeletalAnimation*			m_CurrentAnimation;		///< 当前播放的动画
-		float						m_CurAnimationTime;		///< 当前动画时间
+		SkeletalAnimation*								m_CurrentAnimation;		///< 当前播放的动画
+		float											m_CurAnimationTime;		///< 当前动画时间
+
+		bool											m_NeedUpdateMesh;		///< 是否需要更新模型
 	};
 
 
@@ -98,7 +109,7 @@ namespace Gen
 	///		骨骼关节实例是根据骨骼信息为一个骨骼模型对象创建的关节实例对象。<br>
 	///		每个对象记录一个关节在某时刻的位置及旋转状态，骨骼模型对象记录一组<br>
 	///		骨骼关节实例的信息，并根据蒙皮和骨骼关节实例的状态调整顶点的位置。<br>
-	class SkeletalJointInstance
+	class SkeletalJointInstance : public Anchor
 	{
 		friend class Skeleton;
 	public:
@@ -113,6 +124,11 @@ namespace Gen
 		SkeletalJointInstance(int id, int parentId, Skeleton* skeleton);
 		~SkeletalJointInstance();
 
+		// ----- Overwrite Anchor
+		/// @copydoc Anchor::GetTransformToParentObject()
+		const Matrix4& GetTransformToParentObject() const { return m_BoneTransform; }
+
+		// ----- SkeletalJointInstance Methods
 		/// @brief
 		///	获取关节的id
 		int GetJointId() const { return m_JointId; }
@@ -122,14 +138,10 @@ namespace Gen
 		int GetParentId() const { return m_ParentId; }
 
 		/// @brief
-		///	获取该关节相对于骨骼层次根结点的变换
-		inline const Matrix4& GetBoneTransform() const { return m_BoneTransform; }
-
-		/// @brief
 		/// 添加一个子关节
 		/// @param child
 		///		子关节
-		void AddChildJoint(SkeletalJointInstance* child);
+		void AddChildJoint(RefPtr<SkeletalJointInstance> child);
 
 		/// @brief
 		/// 渲染调试信息
@@ -156,12 +168,12 @@ namespace Gen
 		int				m_JointId;			///< 关节id
 		int				m_ParentId;			///< 父节点id
 
-		typedef set<SkeletalJointInstance*>	ChildrenJoints;
+		typedef std::set< RefPtr<SkeletalJointInstance> >	ChildrenJoints;
 		ChildrenJoints	m_ChildrenJoints;	///< 子关节
 
 		JointPoseAnimation*	m_JointAnim;	///< 当前使用的关节动画
 
-		Matrix4			m_Transform;			///< 局部变换
+		//Matrix4			m_Transform;			///< 局部变换
 		Matrix4			m_BoneTransform;		///< 骨骼空间变换
 
 		Skeleton*		m_Skeleton;				///< 关键使用的骨骼资源

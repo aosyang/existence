@@ -39,7 +39,7 @@ namespace Gen
 		}
 	}
 
-	void BspTree::AddPolygonList( vector< BspTriangle >& in )
+	void BspTree::AddPolygonList( std::vector< BspTriangle >& in )
 	{
 		if( !m_pHead )
 		{
@@ -58,7 +58,7 @@ namespace Gen
 	}
 
 	void BspTree::TraverseTree(
-		vector<BspTriangle*>* polyList,
+		std::vector<BspTriangle*>* polyList,
 		const Vector3f& loc )
 	{
 		if( m_pHead )
@@ -123,7 +123,7 @@ namespace Gen
 		// all done.
 	}
 
-	BspTree::BspNode::BspNode( vector< BspTriangle >& in )
+	BspTree::BspNode::BspNode( std::vector< BspTriangle >& in )
 		: m_bIsLeaf( false )
 	{
 		// if the list is empty, we're bombing out.
@@ -141,7 +141,7 @@ namespace Gen
 		m_Triangle = splitPoly;
 
 		// take the rest of the polygons and divide them.
-		vector< BspTriangle > frontList, backList;
+		std::vector< BspTriangle > frontList, backList;
 
 		unsigned int i;
 		for( i=0; i<in.size(); i++ )
@@ -225,8 +225,8 @@ namespace Gen
 				break;
 			case plistSplit:
 				{
-					vector<BspTriangle> vFront;
-					vector<BspTriangle> vBack;
+					std::vector<BspTriangle> vFront;
+					std::vector<BspTriangle> vBack;
 
 					// split the BspTriangle, drop the halves down.
 					m_plane.Split( in, vFront, vBack);
@@ -244,7 +244,7 @@ namespace Gen
 		}
 	}
 
-	void BspTree::BspNode::TraverseTree( vector< BspTriangle* >* polyList,
+	void BspTree::BspNode::TraverseTree( std::vector< BspTriangle* >* polyList,
 		const Vector3f& loc )
 	{
 		if( m_bIsLeaf )
@@ -299,7 +299,7 @@ namespace Gen
 	// TODO: 最优分割面选择需要考虑到二叉树的平衡性
 	// weight = fabs(左数目-右数目)+分割数目
 	// 越小越优先考虑
-	int BspTree::BspNode::BestIndex( vector< BspTriangle >& polyList )
+	int BspTree::BspNode::BestIndex( std::vector< BspTriangle >& polyList )
 	{
 		/**
 		* The current hueristic is blind least-split
@@ -433,7 +433,7 @@ namespace Gen
 					return true;
 				}
 
-				vector< BspTriangle >::iterator iter;
+				std::vector< BspTriangle >::iterator iter;
 				for (iter=m_coplanarList.begin(); iter!=m_coplanarList.end(); iter++)
 				{
 					if (iter->IsAbove(pos))
@@ -464,7 +464,7 @@ namespace Gen
 					return true;
 				}
 
-				vector< BspTriangle >::iterator iter;
+				std::vector< BspTriangle >::iterator iter;
 				for (iter=m_coplanarList.begin(); iter!=m_coplanarList.end(); iter++)
 				{
 					if (iter->IsAbove(pos))
@@ -505,7 +505,7 @@ namespace Gen
 			}
 			else
 			{
-				//vector< BspTriangle >::iterator iter;
+				//std::vector< BspTriangle >::iterator iter;
 
 				//for (iter=m_coplanarList.begin(); iter!=m_coplanarList.end(); iter++)
 				for (unsigned int i=0; i<m_coplanarList.size(); i++)
@@ -545,7 +545,7 @@ namespace Gen
 					}
 				}
 
-				//vector< BspTriangle >::iterator iter;
+				//std::vector< BspTriangle >::iterator iter;
 				//for (iter=m_coplanarList.begin(); iter!=m_coplanarList.end()&&(!done); iter++)
 				for (unsigned int j=0; j<m_coplanarList.size() && (!pushed); j++)
 				{
@@ -649,7 +649,7 @@ namespace Gen
 			return false;
 
 		BspTriangle triangle;
-		vector<BspTriangle> triList;
+		std::vector<BspTriangle> triList;
 		for (int n=0; n<mesh->GetElementCount(); n++)
 		{
 			MeshElement* elem = mesh->GetElement(n);

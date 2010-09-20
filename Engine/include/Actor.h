@@ -8,15 +8,15 @@
 #ifndef _ACTOR_H
 #define _ACTOR_H
 
-#include "GameObjectBase.h"
+#include "GameObject.h"
 
 namespace Gen
 {
 	// Actor，动态游戏对象基类
 	// 在场景中可移动的物体属于这一类
-	class Actor : public GameObjectBase
+	class Actor : public GameObject
 	{
-		DECLARE_FACTORY_OBJECT(Actor, GameObjectBase)
+		DECLARE_FACTORY_OBJECT(Actor, GameObject)
 	};
 }
 

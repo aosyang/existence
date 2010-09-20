@@ -42,40 +42,6 @@ namespace Gen
 		virtual bool OnNotifyQuitting() = 0;
 
 		/// @brief
-		///	键盘按下事件回调函数
-		/// @param key
-		///		按键键码
-		/// @remarks
-		///		当用户按下键盘按键，引擎会调用这个方法，实现这个方法可以对按键进行响应
-		virtual void OnKeyPressed(unsigned int key) = 0;
-
-		/// @brief
-		/// 键盘松开事件回调函数
-		/// @param key
-		///		按键键码
-		/// @remarks
-		///		当用户松开键盘按键，引擎会调用这个方法，实现这个方法可以对按键进行响应
-		virtual void OnKeyReleased(unsigned int key) = 0;
-
-		/// @brief
-		///	按下鼠标按键事件回调函数
-		/// @param id
-		///		鼠标按键id
-		///	@remarks
-		///		当用户按下鼠标按键，引擎会调用这个方法，实现这个方法可以对鼠标按键进行响应
-		virtual void OnMousePressed(unsigned int id) {}
-
-		/// @brief
-		///	松开鼠标按键事件回调函数
-		/// @param id
-		///		鼠标按键id
-		///	@remarks
-		///		当用户松开鼠标按键，引擎会调用这个方法，实现这个方法可以对鼠标按键进行响应
-		virtual void OnMouseReleased(unsigned int id) {}
-
-		// TODO: to be pure virtual...
-
-		/// @brief
 		///	窗体缩放回调函数
 		/// @param width
 		///		窗体宽度

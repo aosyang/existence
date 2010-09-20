@@ -9,6 +9,7 @@
 #include "Platform.h"
 #include "Engine.h"
 #include "Renderer.h"
+#include "DebugRenderer.h"
 
 namespace Gen
 {
@@ -75,7 +76,7 @@ namespace Gen
 		float height = m_QuadTree->GetSize();
 		Vector3f vMin = Vector3f(m_OffsetX, 0.0f, m_OffsetZ);
 		Vector3f vMax = Vector3f(m_OffsetX + m_Size, height, m_OffsetZ + m_Size);
-		Renderer::Instance().RenderBox(vMin, vMax);
+		DebugRenderer::Instance().DrawBox(vMin, vMax);
 
 		if (m_ChildNode[0])
 			for (int i=0; i<4; i++)
@@ -92,7 +93,7 @@ namespace Gen
 #define VECTOR_GREATER(a, b) ((a.x > b.x) && (a.y > b.y) && (a.z > b.z))
 		if (VECTOR_GREATER(pos, vMin) && VECTOR_LESS(pos, vMax))
 		{
-			Renderer::Instance().RenderBox(vMin, vMax);
+			DebugRenderer::Instance().DrawBox(vMin, vMax);
 
 			if (!m_ChildNode[0]) return;
 
@@ -112,7 +113,7 @@ namespace Gen
 
 		if (VECTOR_GREATER(vMin, vNodeMin) && VECTOR_LESS(vMax, vNodeMax))
 		{
-			Renderer::Instance().RenderBox(vNodeMin, vNodeMax);
+			DebugRenderer::Instance().DrawBox(vNodeMin, vNodeMax);
 
 			if (!m_ChildNode[0]) return;
 

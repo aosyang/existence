@@ -55,8 +55,9 @@ namespace Gen
 									 texcoordArray,
 									 4);
 
+		Renderer::Instance().SetModelMatrix(Matrix4::IDENTITY);
 		Renderer::Instance().BindTextureRenderState(m_Texture->GetDeviceTexture());
-		Renderer::Instance().RenderPrimitives(m_VertexBuffer, m_IndexBuffer, Matrix4::IDENTITY);
+		Renderer::Instance().RenderPrimitives(m_VertexBuffer, m_IndexBuffer, PRIM_TRIANGLES);
 	}
 
 	void ImageUIControl::SetTexture(BaseTexture* texture)

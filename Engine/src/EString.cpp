@@ -40,9 +40,19 @@ namespace Gen
 		Format("%d", val);
 	}
 	
+	String::String(unsigned int val)
+	{
+		Format("%u", val);
+	}
+
 	String::String(long val)
 	{
-		Format("%ld", val);
+		Format("%d", val);
+	}
+	
+	String::String(unsigned long val)
+	{
+		Format("%u", val);
 	}
 
 	String::String(float val)
@@ -50,6 +60,10 @@ namespace Gen
 		Format("%f", val);
 	}
 
+	String::String(double val)
+	{
+		Format("%f", val);
+	}
 
 	bool String::operator==(const String& rhs) const
 	{
@@ -114,9 +128,7 @@ namespace Gen
 
 	String String::Substr(size_t begin, size_t len) const
 	{
-		if (len)
-			return String(m_String.substr(begin, len));
-		return String(m_String.substr(begin));
+		return String(m_String.substr(begin, len));
 	}
 
 	String& String::Replace(size_t pos, size_t len, const String& str)
@@ -136,6 +148,10 @@ namespace Gen
 		size_t header, tail;
 		header = this->FindFirstNotOf(" \t\r");
 		tail = this->FindLastNotOf(" \t\r");
+
+		// 字符串长度为0，不作处理
+		if (header==npos || tail==npos) return;
+
 		*this = this->Substr(header, tail - header + 1);
 	}
 

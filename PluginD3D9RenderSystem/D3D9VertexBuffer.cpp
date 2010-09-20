@@ -14,6 +14,8 @@ namespace Gen
 		: m_D3DVertexBuffer(NULL),
 		  m_VertexFormat(NULL),
 		  m_VertexNum(0),
+		  m_VertexSize(0),
+		  m_FVF(NULL),
 		  m_Locked(false)
 	{
 	}
@@ -44,27 +46,46 @@ namespace Gen
 			return false;
 		}
 
-		// 将数组形式原始数据保存到缓冲中
-		D3DVertex* vert = new D3DVertex[vertexNum];
-
 		//if (vertexArray && normalArray && textureCoordArray)
 		//{
+
+		if (m_VertexFormat & VFormat_Position && vertexArray)
+		{
+			m_VertexSize += 3 * sizeof(float);
+			m_FVF |= D3DFVF_XYZ;
+		}
+
+		if (m_VertexFormat & VFormat_Normal && normalArray)
+		{
+			m_VertexSize += 3 * sizeof(float);
+			m_FVF |= D3DFVF_NORMAL;
+		}
+
+		// Note: D3D的第一层纹理是D3DFVF_TEX1，而不是D3DFVF_TEX0，务必当心
+		if (m_VertexFormat & VFormat_Texcoord0 && textureCoordArray)
+		{
+			m_VertexSize += 2 * sizeof(float);
+			m_FVF |= D3DFVF_TEX1;
+		}
+
+		// 顶点数据
+		std::vector<float>	data;
 
 		int v = 0, n = 0, t = 0;
 		for (unsigned int i=0; i<vertexNum; i++)
 		{
 			if (m_VertexFormat & VFormat_Position && vertexArray)
 			{
-				vert[i].x = vertexArray[v++];
-				vert[i].y = vertexArray[v++];
-				vert[i].z = vertexArray[v++];
+				data.push_back(vertexArray[v++]);
+				data.push_back(vertexArray[v++]);
+				data.push_back(vertexArray[v++]);
 			}
 
 			if (m_VertexFormat & VFormat_Normal && normalArray)
 			{
-				vert[i].nx = -normalArray[n++];
-				vert[i].ny = -normalArray[n++];
-				vert[i].nz = -normalArray[n++];
+				data.push_back(-normalArray[n++]);
+				data.push_back(-normalArray[n++]);
+				data.push_back(-normalArray[n++]);
 			}
 
 			//vert[i].color = 0xFFFFFFFF;
@@ -73,17 +94,19 @@ namespace Gen
 			{
 				// 纹理坐标生成
 				// 注：d3d使用不同的uv坐标，需要进行手动转换
-				vert[i].u = textureCoordArray[t++];
-				vert[i].v = 1.0f - textureCoordArray[t++];
+				data.push_back(textureCoordArray[t++]);
+				data.push_back(1.0f - textureCoordArray[t++]);
 			}
 		}
 
 		//}
-		Lock();
-		SetVertexData(vert, vertexNum);
-		Unlock();
 
-		delete [] vert;
+		if (data.size())
+		{
+			Lock();
+			SetVertexData((void*)&data[0], vertexNum);
+			Unlock();
+		}
 
 		m_VertexNum = vertexNum;
 
@@ -100,6 +123,9 @@ namespace Gen
 
 		m_Vertices = NULL;
 		m_VertexNum = 0;
+
+		m_VertexSize = 0;
+		m_FVF = NULL;
 
 		m_Locked = false;
 	}
@@ -129,8 +155,25 @@ namespace Gen
 
 	void D3D9VertexBuffer::SetAsVertexDataSource()
 	{
-		g_d3ddevice->SetStreamSource(0, this->m_D3DVertexBuffer, 0, sizeof(D3DVertex));
-		g_d3ddevice->SetFVF(VB_FVF);
+		g_d3ddevice->SetStreamSource(0, this->m_D3DVertexBuffer, 0, m_VertexSize);
+		g_d3ddevice->SetFVF(m_FVF);
+	}
+
+	void D3D9VertexBuffer::RenderPrimitive(PrimitiveType type)
+	{
+		D3DPRIMITIVETYPE t;
+		switch (type)
+		{
+		case PRIM_LINES:
+			t = D3DPT_LINELIST;
+			break;
+		case PRIM_TRIANGLES:
+		default:
+			t = D3DPT_TRIANGLELIST;
+			break;
+		}
+
+		g_d3ddevice->DrawPrimitive(t, 0, this->m_VertexNum);
 	}
 
 	// -------------------------- D3D9IndexBuffer

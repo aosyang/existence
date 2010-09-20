@@ -15,9 +15,6 @@ namespace Gen
 
 		virtual void Update(unsigned long deltaTime) = 0;
 
-		// 对象在这个周期内是否已经被更新过
-		virtual bool IsUpdated() = 0;
-
 		virtual const String GetTypeName() const = 0;
 	};
 }

@@ -52,6 +52,8 @@ namespace Gen
 		void ModifyVertexData(VertexFormat dataFormat, int offset,  int size, void* data);
 		void SetAsVertexDataSource();
 
+		void RenderPrimitive(PrimitiveType type);
+
 		UINT GetVertexNum() const { return m_VertexNum; }
 	private:
 		IDirect3DVertexBuffer9*		m_D3DVertexBuffer;
@@ -59,6 +61,9 @@ namespace Gen
 		int							m_VertexFormat;
 		void*						m_Vertices;
 		UINT						m_VertexNum;
+
+		UINT						m_VertexSize;
+		DWORD						m_FVF;				///< 顶点格式
 
 		bool						m_Locked;	///< 标识缓冲是否已锁定
 	};

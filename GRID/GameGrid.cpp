@@ -84,11 +84,11 @@ void GameGrid::StartGame()
 	m_MarkerStart = FACTORY_CREATE(m_Scene, MeshObject);
 	m_MarkerStart->SetMesh(marker);
 	m_MarkerStart->SetMaterial(matMarkerStart, 0);
-	m_MarkerStart->CreateLightableObject();
+	//m_MarkerStart->CreateLightableObject();
 	m_MarkerGoal = FACTORY_CREATE(m_Scene, MeshObject);
 	m_MarkerGoal->SetMesh(marker);
 	m_MarkerGoal->SetMaterial(matMarkerGoal, 0);
-	m_MarkerGoal->CreateLightableObject();
+	//m_MarkerGoal->CreateLightableObject();
 
 	//m_IntersectionObject = FACTORY_CREATE(m_Scene, MeshObject);
 	//m_IntersectionObject->SetMesh(m_MeshBox);
@@ -104,6 +104,13 @@ void GameGrid::StartGame()
 			{
 				m_World[x][y][z].pos = Point3(x, y, z);
 			}
+
+	InputEventHandler<GameGrid>* inputHandler =
+		new InputEventHandler<GameGrid>(this,
+										&GameGrid::OnKeyPressed,
+										NULL,
+										&GameGrid::OnMouseMoved);
+	Input->SetEventHandler(inputHandler);
 }
 
 
@@ -117,10 +124,17 @@ bool GameGrid::OnNotifyQuitting()
 	return true;
 }
 
-void GameGrid::OnKeyPressed(unsigned int key)
+void GameGrid::OnKeyPressed(KeyCode key)
 {
 	switch(key)
 	{
+	case KC_P:
+		{
+			static bool debugRender = false;
+			debugRender = !debugRender;
+			DebugRenderer::ToggleSceneObjectDebugRender(debugRender);
+		}
+		break;
 	case KC_SPACE:
 		m_Mode++;
 		if (m_Mode >= NUM_MODE)
@@ -150,7 +164,7 @@ void GameGrid::OnKeyPressed(unsigned int key)
 	case KC_Q:
 		{
 			int n = 1;
-			if (Input::Instance().GetKeyDown(KC_LCONTROL))
+			if (Input->GetKeyDown(KC_LCONTROL))
 				n = 10;
 			m_Layer = Math::Clamp<int>(0, WORLD_SIZE-1, m_Layer+n);
 			m_BasePlane->SetPosition(Vector3f(0.0f, m_Layer - 0.05f, 0.0f));
@@ -159,7 +173,7 @@ void GameGrid::OnKeyPressed(unsigned int key)
 	case KC_E:
 		{
 			int n = 1;
-			if (Input::Instance().GetKeyDown(KC_LCONTROL))
+			if (Input->GetKeyDown(KC_LCONTROL))
 				n = 10;
 			m_Layer = Math::Clamp<int>(0, WORLD_SIZE-1, m_Layer-n);
 			m_BasePlane->SetPosition(Vector3f(0.0f, m_Layer - 0.05f, 0.0f));
@@ -199,8 +213,16 @@ void GameGrid::OnKeyPressed(unsigned int key)
 	}
 }
 
-void GameGrid::OnMousePressed(unsigned int id)
+void GameGrid::OnMouseMoved(int x, int y, int rel_x, int rel_y)
 {
+	// 按住鼠标右键调整视角
+	if (Input->GetMouseButtonDown(MB_Right))
+	{
+		float x = -(float)rel_x / 5.0f;
+		float y = -(float)rel_y / 5.0f;
+
+		m_Camera->RotateLocal(x, y);
+	}
 }
 
 void GameGrid::OnResizeWindow(unsigned int width, unsigned int height)
@@ -217,12 +239,11 @@ void GameGrid::OnResizeWindow(unsigned int width, unsigned int height)
 void GameGrid::Update(unsigned long deltaTime)
 {
 	char buf[1024] = "\0";
-	char textFPS[1024] = "\0";
 
 	// Base camera movements
 	float boost;
 
-	if (Input::Instance().GetKeyDown(KC_LSHIFT))
+	if (Input->GetKeyDown(KC_LSHIFT))
 		boost = 4.0f;
 	else
 		boost = 1.0f;
@@ -230,31 +251,21 @@ void GameGrid::Update(unsigned long deltaTime)
 	float forward = 0.0f;
 	float right = 0.0f;
 
-	if (Input::Instance().GetKeyDown(KC_W))
+	if (Input->GetKeyDown(KC_W))
 		forward += 0.1f * deltaTime / 10.0f * boost;
-	if (Input::Instance().GetKeyDown(KC_S))
+	if (Input->GetKeyDown(KC_S))
 		forward += -0.1f * deltaTime / 10.0f * boost;
-	if (Input::Instance().GetKeyDown(KC_A))
+	if (Input->GetKeyDown(KC_A))
 		right += -0.1f * deltaTime / 10.0f * boost;
-	if (Input::Instance().GetKeyDown(KC_D))
+	if (Input->GetKeyDown(KC_D))
 		right += 0.1f * deltaTime / 10.0f * boost;
 
 	m_Camera->MoveLocal(forward, right, 0.0f);
 
-	if (Input::Instance().GetKeyDown(KC_ESCAPE))
+	if (Input->GetKeyDown(KC_ESCAPE))
 		Engine::Instance().SetQuitting(true);
 
-
-	// 按住鼠标右键调整视角
-	if (Input::Instance().GetMouseButtonDown(MB_Right))
-	{
-		float x = -(float)Input::Instance().GetMouseRelX() / 5.0f;
-		float y = -(float)Input::Instance().GetMouseRelY() / 5.0f;
-
-		m_Camera->RotateLocal(x, y);
-	}
-
-	if (Input::Instance().GetMouseButtonDown(MB_Left))
+	if (Input->GetMouseButtonDown(MB_Left))
 	{
 		switch (m_Mode)
 		{
@@ -355,7 +366,8 @@ void GameGrid::Update(unsigned long deltaTime)
 	m_Scene->UpdateScene(deltaTime);
 
 	unsigned int fps = Engine::Instance().GetFPS();
-	sprintf(textFPS, "FPS: %d\nMode: %s", fps, m_ModeName.Data());
+	String textFPS;
+	textFPS.Format("FPS: %d\nMode: %s\n%d\n%d", fps, m_ModeName.Data(), Input->GetMousePosX(), Input->GetMousePosY());
 
 	m_UIFps->SetText(textFPS);
 
@@ -364,20 +376,16 @@ void GameGrid::Update(unsigned long deltaTime)
 
 void GameGrid::RenderScene()
 {
-	RenderView rv;
-
-	rv.position = m_Camera->WorldTransform().GetPosition();
-	rv.viewMatrix = m_Camera->GetViewMatrix();
-	rv.projMatrix = m_Camera->GetProjMatrix();
-	rv.frustum = m_Camera->GetFrustum();
 
 	// 全屏渲染
 	Renderer::Instance().SetViewport(0, 0, 0, 0);
 	//Renderer::Instance().SetViewport(160, 120, 320, 240);
 
 	// 设定渲染视点
-	m_Scene->SetupRenderView(rv);
+	m_Scene->SetupRenderView(m_Camera);
+	Renderer::Instance().BeginRender();
 	m_Scene->RenderScene();
+	Renderer::Instance().EndRender();
 }
 
 // 射线与基准平面求交
@@ -388,8 +396,8 @@ bool GameGrid::GetIntersectionPoint(Vector3f& point)
 	unsigned int width = param->width;
 	unsigned int height = param->height;
 
-	float x = (float)Input::Instance().GetMouseAbsX() / width;
-	float y = (float)Input::Instance().GetMouseAbsY() / height;
+	float x = (float)Input->GetMousePosX() / width;
+	float y = (float)Input->GetMousePosY() / height;
 
 
 	Ray ray = m_Camera->GetCameraRay(x, y);
@@ -415,7 +423,7 @@ void GameGrid::AddBox(const Point3& pos)
 		obj->SetPosition(p);
 		obj->SetMaterial(m_BoxMaterial, 0);
 
-		obj->CreateLightableObject();
+		//obj->CreateLightableObject();
 
 		grid->obj = obj;
 	}

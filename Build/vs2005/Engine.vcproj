@@ -18,7 +18,7 @@
 		<Configuration
 			Name="Debug|Win32"
 			OutputDirectory="..\..\bin\libs"
-			IntermediateDirectory="..\..\$(ProjectName)\obj\$(ConfigurationName)"
+			IntermediateDirectory="obj\$(ProjectName)\$(ConfigurationName)"
 			ConfigurationType="4"
 			CharacterSet="2"
 			>
@@ -85,7 +85,7 @@
 		<Configuration
 			Name="Release|Win32"
 			OutputDirectory="..\..\bin\libs"
-			IntermediateDirectory="..\..\$(ProjectName)\obj\$(ConfigurationName)"
+			IntermediateDirectory="obj\$(ProjectName)\$(ConfigurationName)"
 			ConfigurationType="4"
 			CharacterSet="2"
 			WholeProgramOptimization="1"
@@ -282,11 +282,39 @@
 			Name="Renderer"
 			>
 			<File
+				RelativePath="..\..\Engine\src\BaseMaterial.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Engine\include\BaseMaterial.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\Engine\include\Color4f.h"
 				>
 			</File>
 			<File
+				RelativePath="..\..\Engine\src\DebugRenderer.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Engine\include\DebugRenderer.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Engine\src\EffectMaterial.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Engine\include\EffectMaterial.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\Engine\include\IDeviceTexture.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Engine\include\IEffect.h"
 				>
 			</File>
 			<File
@@ -330,6 +358,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\Engine\src\RenderTarget.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Engine\include\RenderTarget.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\Engine\src\Texture.cpp"
 				>
 			</File>
@@ -362,7 +398,19 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\Engine\include\IPlugin.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Engine\src\Log.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\Engine\include\Log.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Engine\src\Plugin.cpp"
 				>
 			</File>
 			<File
@@ -543,14 +591,6 @@
 			</File>
 			<File
 				RelativePath="..\..\Engine\include\Light.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\Engine\src\LightableObject.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\Engine\include\LightableObject.h"
 				>
 			</File>
 			<File
@@ -887,33 +927,15 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\Engine\src\GameObjectBase.cpp"
+				RelativePath="..\..\Engine\src\GameObject.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\Engine\include\GameObjectBase.h"
+				RelativePath="..\..\Engine\include\GameObject.h"
 				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\..\Engine\include\IObject.h"
-				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-					/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath="..\..\Engine\include\IRenderableObject.h"
 				>
 				<FileConfiguration
 					Name="Debug|Win32"
@@ -951,21 +973,6 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\Engine\src\RenderableObjectBase.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\Engine\include\RenderableObjectBase.h"
-				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-					/>
-				</FileConfiguration>
-			</File>
-			<File
 				RelativePath="..\..\Engine\src\SceneObject.cpp"
 				>
 			</File>
@@ -979,6 +986,14 @@
 			</File>
 			<File
 				RelativePath="..\..\Engine\include\SkeletalMeshObject.h"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="RefPtr"
+			>
+			<File
+				RelativePath="..\..\Engine\include\RefPtr.h"
 				>
 			</File>
 		</Filter>

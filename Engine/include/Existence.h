@@ -15,8 +15,10 @@ namespace Gen
 	class IRenderDevice;
 	class IVertexBuffer;
 	class BaseTexture;
+	class RenderTarget;
 	class IGame;
 	class ISceneObject;
+	class ILogReciever;
 
 	// Math
 	class Vector3f;
@@ -32,20 +34,22 @@ namespace Gen
 	class LightingManager;
 	class ILight;
 	class Light;
-	class LightableObject;
 	class ShadowManager;
+
+	// Material
+	class BaseMaterial;
+	class Material;
+	class MaterialManager;
 
 	class Color4f;
 	class CameraShakeEffect;
-	class Material;
-	class Input;
 	class Timer;
 	class System;
 	class Font;
 	class FontManager;
 	class NullAudioSystem;
 	class BspTree;
-	class Log;
+	class LogManager;
 	class Image;
 	class String;
 
@@ -53,14 +57,18 @@ namespace Gen
 	class MeshManager;
 	class SkeletonManager;
 	class Renderer;
+	class DebugRenderer;
 	class AudioManager;
 
 	class BaseMesh;
+	class MeshElement;
 	class EmdMesh;
 	class Ms3dMesh;
 
 	class SceneGraph;
 	class SceneSerializer;
+
+	class RefObject;
 
 	class SceneObject;
 	class SceneRootObject;
@@ -78,7 +86,7 @@ namespace Gen
 
 	class FileSystem;
 
-	class GameObjectBase;
+	class GameObject;
 	class Actor;
 
 	class EGUIManager;
@@ -93,6 +101,7 @@ namespace Gen
 #include "Debug.h"
 
 #include "Texture.h"
+#include "RenderTarget.h"
 #include "IRenderDevice.h"
 #include "IVertexBuffer.h"
 #include "MathUtil.h"
@@ -109,7 +118,7 @@ namespace Gen
 #include "Light.h"
 #include "LightingManager.h"
 #include "ShadowManager.h"
-#include "LightableObject.h"
+#include "BaseMaterial.h"
 #include "Material.h"
 #include "Singleton.h"
 #include "Input.h"
@@ -131,14 +140,18 @@ namespace Gen
 #include "TextureManager.h"
 #include "SkeletonManager.h"
 #include "Renderer.h"
+#include "DebugRenderer.h"
 #include "AudioManager.h"
 
 #include "BaseMesh.h"
+#include "MeshElement.h"
 #include "EmdMesh.h"
 #include "Ms3dMesh.h"
 
 #include "SceneGraph.h"
 #include "SceneSerializer.h"
+
+#include "RefPtr.h"
 
 #include "ISceneObject.h"
 #include "SceneObject.h"
@@ -157,7 +170,7 @@ namespace Gen
 
 #include "FileSystem.h"
 
-#include "GameObjectBase.h"
+#include "GameObject.h"
 #include "Actor.h"
 
 #include "EGUIManager.h"

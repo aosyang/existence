@@ -11,6 +11,7 @@
 
 #include "IRenderDevice.h"
 #include "GLHardwareFeature.h"
+#include "CgGLDevice.h"
 
 #include "GL/glew.h"
 
@@ -22,12 +23,6 @@ namespace Gen
 {
 	typedef IVertexBuffer*(*FactoryCreateVertexBufferFunc)();
 	typedef IIndexBuffer*(*FactoryCreateIndexBufferFunc)();
-
-	typedef void(*CREATEGPUPLUGIN)();
-	typedef void(*DESTROYGPUPLUGIN)();
-	typedef IGpuProgram*(*LOADGPUPROGRAM)(const String&, const String&, GpuProgramType);
-	typedef void(*BINDGPUPROGRAM)(IGpuProgram*, GpuProgramType);
-	typedef void(*UNBINDGPUPROGRAM)(GpuProgramType);
 
 	struct GpuProgramInfo
 	{
@@ -49,7 +44,7 @@ namespace Gen
 		}
 	};
 
-	typedef map<GpuProgramInfo, IGpuProgram*> GpuPrograms;
+	typedef std::map<GpuProgramInfo, IGpuProgram*> GpuPrograms;
 
 	class GLRenderer : public IRenderDevice
 	{
@@ -66,8 +61,6 @@ namespace Gen
 		//inline HWND GetHwnd() { return m_hWnd; }
 		//void* GetHwnd();
 
-		void SetGpuPluginName(const String& filename);
-
 		bool Initialize(RenderWindowParam* windowParam);
 		void Shutdown();
 
@@ -77,8 +70,11 @@ namespace Gen
 
 		void SetViewport(int left, int bottom, unsigned int width, unsigned int height);
 
+		void SetModelMatrix(const Matrix4& modelMat);
 		void SetViewMatrix(const Matrix4& viewMat);
 		void SetProjectionMatrix(const Matrix4& projMat);
+
+		const Matrix4& GetModelMatrix() const { return m_ModelMatrix; }
 
 		void ClearBuffer(bool color, bool depth, bool stencil);
 
@@ -94,27 +90,23 @@ namespace Gen
 		// 切换到指定纹理单元
 		void ActiveTextureUnit(unsigned int index);
 
-		void BeginRender();
+		void BeginRender(IRenderTarget* rt);
 		void EndRender();
 		void SwapBuffer();
 
-		void BindTextureRenderState(const TextureRenderState& texState, unsigned int texUnit = 0);
+		void BindTextureRenderState(IDeviceTexture* deviceTex, const TextureRenderState& texState, unsigned int texUnit = 0);
 
-		void RenderVertexBuffer(IVertexBuffer* vbuffer, IIndexBuffer* ibuffer, const Matrix4& transform);
-
-		void RenderBox(const Vector3f& vMin, const Vector3f& vMax, const Matrix4& transform);
-		void RenderSphere(const Vector3f& point, float radius, unsigned int segment);
-		void RenderLine(const Vector3f& begin, const Vector3f& end);
+		void RenderVertexBuffer(IVertexBuffer* vbuffer, PrimitiveType type);
+		void RenderVertexBuffer(IVertexBuffer* vbuffer, IIndexBuffer* ibuffer, PrimitiveType type);
 
 		void SetAmbientColor(const Color4f& color);
 
 		IDeviceTexture* BuildTexture();
 		IDeviceTexture* BuildCubeTexture();
 
-		// 构造阴影映射用的贴图 for test only
-		IDeviceTexture* BuildDepthTexture(const String& textureName, unsigned int width, unsigned int height);
-
 		// Materials
+
+		// TODO: 这个只有OpenGL有效，考虑去掉这种方法
 		void SetVertexColor(const Color4f& color);
 		void SetMaterialAmbientColor(const Color4f& color);
 		void SetMaterialDiffuseColor(const Color4f& color);
@@ -130,8 +122,12 @@ namespace Gen
 		// 获取一个已有Shader
 		IGpuProgram* GetGpuProgram(const String& filename, const String& entry, GpuProgramType type);
 
-		void BindGpuProgram(IGpuProgram* program, GpuProgramType type);
-		void UnbindGpuProgram(GpuProgramType type);
+		void EnableGpuProfile(GpuProfile profile);
+		void DisableGpuProfile(GpuProfile profile);
+		void BindGpuProgram(IGpuProgram* program);
+
+		// 载入cgfx材质
+		IEffect* LoadEffect(const String& filename);
 
 		int GetMaxLightsNumber();
 
@@ -142,17 +138,12 @@ namespace Gen
 
 		// Render target
 		IRenderTarget* CreateRenderTarget();
-		void BindRenderTarget(IRenderTarget* rt);
-		void UnbindRenderTarget();
 	protected:
 
 		// 创建OpenGL矩阵
 		//   从Matrix4转换为OpenGL所使用的float[16]
 		void BuildGLMatrix(const Matrix4& mat, float* glMat);
 
-		GLint GetFilterType(int type);
-		GLint GetBlendFactor(int factor);
-		GLint GetTextureEnvironmentMode(int mode);
 		//void SetupMaterialWhite();
 
 		void UnloadGpuPrograms();
@@ -164,8 +155,6 @@ namespace Gen
 #elif defined __PLATFORM_LINUX
 		GLXContext      m_Context;
 #endif	// #if defined __PLATFORM_WIN32
-
-		String			m_PluginName;
 
 		Matrix4			m_ModelMatrix;
 		Matrix4			m_ViewMatrix;
@@ -179,9 +168,11 @@ namespace Gen
 
 		FactoryCreateVertexBufferFunc	m_VertexBufferFactoryFunc;		///< 顶点缓冲工厂函数
 		FactoryCreateIndexBufferFunc	m_IndexBufferFactoryFunc;		///< 索引缓冲工厂函数
+
+		CgGLDevice		m_CgGLDevice;
 	};
 
-	extern "C" DLLEXPORT IRenderDevice* CreateRenderSystem();
+	extern "C" DLLEXPORT IPlugin* CreatePluginInstance();
 }
 
 #endif

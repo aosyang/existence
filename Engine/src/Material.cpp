@@ -6,9 +6,8 @@
 /// Copyright (c) 2009 by Mwolf
 //-----------------------------------------------------------------------------------
 #include "Material.h"
-#include "Engine.h"
 #include "TextureManager.h"
-#include "FileSystem.h"
+#include "Renderer.h"
 
 #include "tinyxml/tinyxml.h"
 
@@ -39,7 +38,7 @@ namespace Gen
 	void ReadRSGenMode(TextureRenderState* rs, const String& val);
 	void ReadRSEnvMode(TextureRenderState* rs, const String& val);
 
-	static map<const String, TextureWrapType>	g_TexWrapTypeTable;
+	static std::map<const String, TextureWrapType>	g_TexWrapTypeTable;
 	static String g_TexWrapTypeStringTable[] =
 	{
 		"WRAP_TYPE_CLAMP",
@@ -95,7 +94,7 @@ namespace Gen
 	static int mat_init = InitializeMaterialFunc();
 
 	Material::Material(const String& filename)
-	: Resource(filename),
+	: BaseMaterial(filename),
 	  m_Lighting(true),
 	  //m_Ambient(0.2f, 0.2f, 0.2f),
 	  m_Ambient(0.5f, 0.5f, 0.5f),
@@ -114,8 +113,11 @@ namespace Gen
 	  m_VertexProgram(NULL),
 	  m_FragmentProgram(NULL)
 	{
-		for (int i=1; i<8; i++)
+		for (int i=0; i<8; i++)
+		{
 			m_TextureLayerEnabled[i] = false;
+			m_DeviceTextures[i] = NULL;
+		}
 		m_TextureLayerEnabled[0] = true;
 	}
 
@@ -180,12 +182,30 @@ namespace Gen
 				if (tex)
 				{
 					tex->Trigger();
-					m_TextureRenderState[i].texture = tex->GetDeviceTexture();
+					m_DeviceTextures[i] = tex->GetDeviceTexture();
 				}
 			}
 		}
 
 		return true;
+	}
+
+	void Material::UsePassState(unsigned int i)
+	{
+		AssertFatal(i>=0 && i<GetPassCount(), "Material::UsePassState() : Pass index out of boundary.");
+		Renderer::Instance().SetupMaterial(this);
+	}
+
+	void Material::ResetPassState(unsigned int i)
+	{
+		AssertFatal(i>=0 && i<GetPassCount(), "Material::ResetPassState() : Pass index out of boundary.");
+	}
+
+	void Material::SetTexture(const String& texName, unsigned int index)
+	{
+		BaseTexture* tex = TextureManager::Instance().GetByName(texName);
+
+		SetTexture(tex, index);
 	}
 
 	void Material::SetTexture(BaseTexture* tex, unsigned int index)
@@ -196,9 +216,21 @@ namespace Gen
 			if (m_IsResourceLoaded)
 			{
 				tex->Trigger();
-				m_TextureRenderState[index].texture = tex->GetDeviceTexture();
+				m_DeviceTextures[index] = tex->GetDeviceTexture();
 			}
 		}
+	}
+
+	void Material::SetVertexProgram(IGpuProgram* program)
+	{
+		AssertFatal(program->GetType()==GPU_VERTEX_PROGRAM, "Material::SetVertexProgram() : Invalid gpu program type");
+		m_VertexProgram = program;
+	}
+
+	void Material::SetFragmentProgram(IGpuProgram* program)
+	{
+		AssertFatal(program->GetType()==GPU_FRAGMENT_PROGRAM, "Material::SetFragmentProgram() : Invalid gpu program type");
+		m_FragmentProgram = program;
 	}
 
 	void Material::SaveToFile(const String& filename, bool outputDefault)
@@ -418,53 +450,6 @@ namespace Gen
 	void ReadRSEnvMode(TextureRenderState* rs, const String& val)
 	{
 		rs->envMode = (TextureEnvMode)val.ToInt();
-	}
-
-	// ----------------------------------- MaterialManager
-	MaterialManager::MaterialManager()
-	{
-	}
-
-	bool MaterialManager::CreateResourceHandles(ResourceFileNameInfo* resName)
-	{
-		String relativePathName = resName->path + CORRECT_SLASH + resName->filename;
-
-		// 打开材质脚本，获取材质名称
-		TiXmlDocument matDoc(relativePathName.Data());
-		matDoc.LoadFile();
-
-		TiXmlElement* elem = matDoc.FirstChildElement();
-
-		if (!elem) return false;
-
-		const char* name = elem->Attribute("name");
-		if (!name) return false;
-
-		AssertFatal(m_ResourceMap.find(name)==m_ResourceMap.end(),
-					"MaterialManager::CreateResourceHandles(): Specified resource name already exists.");
-
-		Material* material = new Material(relativePathName);
-		m_ResourceMap[name] = material;
-		material->m_ResourceName = name;
-
-		return true;
-	}
-
-	Material* MaterialManager::Create(const String& resName)
-	{
-		String name = CheckResName(resName);
-
-		Material* material = new Material("");
-		m_ResourceMap[name] = material;
-		material->m_ResourceName = name;
-		material->m_IsResourceLoaded = true;
-
-		return material;
-	}
-
-	Material* MaterialManager::GetByName(const String& resName)
-	{
-		return static_cast<Material*>(GetResourceByName(resName));
 	}
 
 }

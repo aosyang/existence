@@ -10,10 +10,11 @@
 
 #include "Singleton.h"
 #include "Platform.h"
+#include "EString.h"
 
 #include <map>
 
-using namespace std;
+
 
 namespace Gen
 {
@@ -90,7 +91,7 @@ namespace Gen
 		String				m_TitleName;
 
 		// 使用扩展名注册的资源管理器
-		typedef map<const String, ResourceManagerBase*>	ExtManagers;
+		typedef std::map<const String, ResourceManagerBase*>	ExtManagers;
 		ExtManagers			m_ExtManagers;
 	};
 }

@@ -9,6 +9,7 @@
 #include "Engine.h"
 #include "System.h"
 #include "Renderer.h"
+#include "DebugRenderer.h"
 
 namespace Gen
 {
@@ -28,6 +29,7 @@ namespace Gen
 
 		m_ViewMatrix.MakeIdentity();
 		m_ViewOffset.MakeIdentity();
+		m_ProjMatrix.MakeIdentity();
 
 		//m_YawMatrix.MakeIdentity();
 		//m_PitchMatrix.MakeIdentity();
@@ -44,13 +46,15 @@ namespace Gen
 		// 注：摄像机对象必须先更新自身矩阵，否则计算的视截体和视矩阵将是上一帧的位置
 		SceneObject::Update(deltaTime);
 
+		// note: 绑定在其他物体上的摄像机子节点无法仅使用变量判别是否需要更新，暂时全部更新
+
 		// 如果视矩阵发生过改变，更新之
-		if (m_MatrixOutOfData)
-		{
+		//if (m_MatrixOutOfData)
+		//{
 			UpdateViewMatrix();
 			UpdateFrustum();
 			m_MatrixOutOfData = false;
-		}
+		//}
 
 	}
 	
@@ -60,11 +64,11 @@ namespace Gen
 		Vector3f vMin = Vector3f(-1.0f, -1.0f, -1.0f);
 		Vector3f vMax = Vector3f(1.0f, 1.0f, 1.0f);
 	
-		Matrix4 matViewProjInv = (m_Frustum.ProjectionMatrix() * m_ViewMatrix).GetInverseMatrix();
+		Matrix4 matViewProjInv = (m_ProjMatrix * m_ViewMatrix).GetInverseMatrix();
 	
 		// 渲染摄像机的视截体
-		Renderer::Instance().RenderBox(vMin, vMax, Color4f(1.0f, 1.0f, 1.0f), /*m_WorldTransform * */matViewProjInv);
-		//Renderer::Instance().RenderLine(nearPointWorld, farPointWorld);
+		DebugRenderer::Instance().DrawBox(vMin, vMax, Color4f(1.0f, 1.0f, 1.0f), /*m_WorldTransform * */matViewProjInv);
+		//DebugRenderer::Instance().DrawLine(nearPointWorld, farPointWorld);
 
 		SceneObject::DebugRender();
 	}
@@ -128,7 +132,7 @@ namespace Gen
 
 		//Matrix4 matProjInv = m_Frustum.ProjectionMatrix().GetInverseMatrix();
 		//Matrix4 matViewInv = m_ViewMatrix.GetInverseMatrix();
-		Matrix4 matViewProjInv = (m_Frustum.ProjectionMatrix() * m_ViewMatrix).GetInverseMatrix();
+		Matrix4 matViewProjInv = (m_ProjMatrix * m_ViewMatrix).GetInverseMatrix();
 
 		//nearPointWorld = matViewInv * nearPoint;
 		//farPointWorld = matViewInv * farPoint;
@@ -158,7 +162,7 @@ namespace Gen
 
 	const Matrix4& Camera::GetProjMatrix()
 	{
-		return m_Frustum.ProjectionMatrix();
+		return m_ProjMatrix;
 	}
 
 	const Matrix4& Camera::GetViewMatrix()
@@ -169,46 +173,14 @@ namespace Gen
 	void Camera::UpdateViewMatrix()
 	{
 		// View Matrix必须从世界空间“退回”摄像机移动所造成的修改
-
-		Matrix4 viewTransform = m_WorldTransform * m_ViewOffset;
-
-		// 获取旋转矩阵的转置矩阵(3x3)
-		m_ViewMatrix.m[0][0] = viewTransform.m[0][0]; m_ViewMatrix.m[1][0] = viewTransform.m[0][1]; m_ViewMatrix.m[2][0] = viewTransform.m[0][2]; 
-		m_ViewMatrix.m[0][1] = viewTransform.m[1][0]; m_ViewMatrix.m[1][1] = viewTransform.m[1][1]; m_ViewMatrix.m[2][1] = viewTransform.m[1][2]; 
-		m_ViewMatrix.m[0][2] = viewTransform.m[2][0]; m_ViewMatrix.m[1][2] = viewTransform.m[2][1]; m_ViewMatrix.m[2][2] = viewTransform.m[2][2]; 
-
-		// 填充4x4视矩阵的其余位置
-		m_ViewMatrix.m[3][0] = 0.0f;
-		m_ViewMatrix.m[3][1] = 0.0f;
-		m_ViewMatrix.m[3][2] = 0.0f;
-		m_ViewMatrix.m[3][3] = 1.0f;
-
-		// 计算位移
-		float x = viewTransform.m[0][3];
-		float y = viewTransform.m[1][3];
-		float z = viewTransform.m[2][3];
-
-		float vx = viewTransform.m[0][0] * x + viewTransform.m[1][0] * y + viewTransform.m[2][0] * z;
-		float vy = viewTransform.m[0][1] * x + viewTransform.m[1][1] * y + viewTransform.m[2][1] * z;
-		float vz = viewTransform.m[0][2] * x + viewTransform.m[1][2] * y + viewTransform.m[2][2] * z;
-
-		m_ViewMatrix.m[0][3] = -vx;
-		m_ViewMatrix.m[1][3] = -vy;
-		m_ViewMatrix.m[2][3] = -vz;
+		m_ViewMatrix = (m_WorldTransform * m_ViewOffset).GetInverseMatrix();
 	}
 
 	void Camera::UpdateFrustum()
 	{
 		// 更新平头视截体的投影矩阵
-		m_Frustum.BuildPrespectiveProjMatrix(m_FOVy, m_Aspect, m_NearClippingDistance, m_FarClippingDistance);
+		m_ProjMatrix = Matrix4::BuildPrespectiveProjMatrix(m_FOVy, m_Aspect, m_NearClippingDistance, m_FarClippingDistance);
 
-		//m_Frustum.BuildOrthographicProjMatrix(-m_Aspect/2, m_Aspect/2, -0.5f, 0.5f, m_NearClippingDistance, m_FarClippingDistance);
-
-		//Renderer::Instance().ProjectionMatrix() = m_Frustum.ProjectionMatrix();
-
-		m_Frustum.BuildFrustumPlanes(m_Frustum.ProjectionMatrix(), m_ViewMatrix/* * m_WorldTransform*/);
-
-		//Renderer::Instance().NotifyUpdateProjectionMatrix();
-
+		m_Frustum.BuildFrustumPlanes(m_ProjMatrix, m_ViewMatrix);
 	}
 }
