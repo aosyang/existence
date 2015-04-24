@@ -41,7 +41,7 @@ namespace Gen
 		///	为渲染对象准备光照
 		/// @par
 		///		游戏对象将根据光照管理器设置光照状态
-		void SetupLightForRendering();
+		//void SetupLightForRendering();
 
 		// ----- GameObject Methods
 

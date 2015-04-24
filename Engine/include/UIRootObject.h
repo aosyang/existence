@@ -12,7 +12,7 @@
 #include "BaseUIObject.h"
 
 #include <set>
-
+#include <functional>
 
 
 namespace Gen

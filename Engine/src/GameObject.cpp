@@ -5,16 +5,32 @@
 /// 
 /// Copyright (c) 2009 by Mwolf
 //-----------------------------------------------------------------------------------
-#include "GameObjectBase.h"
+#include "GameObject.h"
 
 namespace Gen
 {
-	GameObjectBase::GameObjectBase(SceneGraph* scene)
+	GameObject::GameObject(SceneGraph* scene)
 	: SceneObject(scene)
 	{
 	}
 
-	GameObjectBase::~GameObjectBase()
+	GameObject::~GameObject()
+	{
+	}
+
+	void GameObject::Destroy()
+	{
+	}
+
+	//void GameObject::SetupLightForRendering()
+	//{
+	//}
+
+	void GameObject::AddEffectiveLight(Light* light)
+	{
+	}
+
+	void GameObject::ClearEffectiveLights()
 	{
 	}
 
